@@ -2,320 +2,204 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Plottwisme - Red Social Cinéfila, Cartelera & Comunidad</title>
-  
-  <!-- CDN Libraries -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plottwisme - Red Social Cinéfila</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <!-- Typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .font-brand { font-family: 'Outfit', sans-serif; }
-    .font-mono { font-family: 'JetBrains Mono', monospace; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #090d16; }
-    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
-  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-amber-500 selection:text-slate-950">
+<body class="bg-slate-950 text-slate-100 min-h-screen">
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useMemo } = React;
-
-    const INITIAL_USERS = [
-      {
-        id: 'u1',
-        name: 'Carlos Ruiz',
-        age: 26,
-        location: 'Madrid Centro',
-        distanceKm: 2.4,
-        role: 'critic',
-        roleLabel: 'Crítico Certificado',
-        verified: true,
-        bio: 'Devoto del cine de autor y la ciencia ficción dura. Siempre listo para debatir sobre Villeneuve y Nolan con un buen café antes de la función.',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-        topMovies: ['Dune: Parte 2', 'Blade Runner 2049', 'Oppenheimer'],
-        favoriteGenres: ['Sci-Fi', 'Thriller', 'Drama'],
-        affinity: 97
-      },
-      {
-        id: 'u2',
-        name: 'Elena Montero',
-        age: 24,
-        location: 'Salamanca / Retiro',
-        distanceKm: 3.8,
-        role: 'director',
-        roleLabel: 'Cineasta Indie',
-        verified: true,
-        bio: 'Directora de cortos amateur. Me apasionan el montaje expresivo, las bandas sonoras y el cine coreano.',
-        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
-        topMovies: ['Parasite', 'Perfect Blue', 'Drive My Car'],
-        favoriteGenres: ['Psicológico', 'Misterio', 'Anime'],
-        affinity: 93
-      }
-    ];
-
-    const INITIAL_BILLBOARD = [
-      {
-        id: 'm1',
-        title: 'Dune: Parte Dos',
-        director: 'Denis Villeneuve',
-        genre: 'Ciencia Ficción',
-        duration: '166 min',
-        rating: '9.4',
-        poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80',
-        theater: 'Cine Capitol • Sala IMAX',
-        showtimes: ['17:30', '20:15', '22:45'],
-        synopsis: 'Paul Atreides se une a Chani y a los Fremen mientras busca venganza contra los conspiradores.'
-      },
-      {
-        id: 'm2',
-        title: 'The Substance',
-        director: 'Coralie Fargeat',
-        genre: 'Body Horror',
-        duration: '141 min',
-        rating: '8.9',
-        poster: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-        theater: 'Cines Callao',
-        showtimes: ['18:00', '20:30'],
-        synopsis: 'Una celebridad en declive decide usar una droga que replica una versión más joven de sí misma.'
-      }
-    ];
+    const { useState } = React;
 
     function App() {
+      const [theme, setTheme] = useState('dark');
       const [activeTab, setActiveTab] = useState('radar');
-      const [candidates, setCandidates] = useState(INITIAL_USERS);
-      const [currentIndex, setCurrentIndex] = useState(0);
       const [matches, setMatches] = useState([]);
-      const [currentUser, setCurrentUser] = useState(null);
-      const [showAuthModal, setShowAuthModal] = useState(false);
-      const [authMode, setAuthMode] = useState('login');
-      const [authForm, setAuthForm] = useState({ email: '', password: '', name: '', role: 'Cinéfilo Entusiasta' });
+      const [inviteCount, setInviteCount] = useState(0);
+      const [isPremium, setIsPremium] = useState(false);
+      const [location, setLocation] = useState('Detectar mi ubicación');
+      
+      // Filtros de Preferencias
+      const [genreFilter, setGenreFilter] = useState('Todos');
 
-      const currentCandidate = candidates[currentIndex];
+      const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
-      const handleAuthSubmit = (e) => {
-        e.preventDefault();
-        const user = {
-          name: authForm.name || authForm.email.split('@')[0],
-          email: authForm.email,
-          role: authForm.role || 'Cinéfilo Entusiasta'
-        };
-        setCurrentUser(user);
-        setShowAuthModal(false);
+      const getGeoLocation = () => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            () => setLocation('Ubicación detectada (Cerca de ti)'),
+            () => setLocation('Ubicación no disponible')
+          );
+        }
+      };
+
+      const handleInvite = () => {
+        const newCount = inviteCount + 1;
+        setInviteCount(newCount);
+        if (newCount >= 10) setIsPremium(true);
       };
 
       return (
-        <div class="flex flex-col min-h-screen bg-slate-950 text-slate-100">
-
-          {/* BARRA SUPERIOR */}
-          <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
-            <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-gray-100 text-slate-900'}`}>
+          
+          {/* BARRA DE NAVEGACIÓN COMPLETA */}
+          <header className={`border-b p-4 sticky top-0 z-50 ${theme === 'dark' ? 'border-slate-800 bg-slate-950/90 backdrop-blur' : 'border-gray-300 bg-white/90 backdrop-blur'}`}>
+            <div className="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-4">
+              <h1 className="font-black text-2xl text-amber-500 tracking-wider">PLOTTWISME</h1>
               
-              <div class="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('radar')}>
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-slate-950 font-black font-brand text-lg">
-                  P
-                </div>
-                <h1 class="text-xl font-black font-brand tracking-tight bg-gradient-to-r from-amber-400 to-rose-400 bg-clip-text text-transparent">
-                  Plottwisme
-                </h1>
-              </div>
-
-              {/* NAVEGACIÓN */}
-              <nav class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+              <nav className="flex flex-wrap gap-2 text-xs font-bold uppercase">
                 {[
-                  { id: 'radar', label: 'Radar', icon: '🎯' },
-                  { id: 'cinema', label: 'Cartelera', icon: '🎬' },
-                  { id: 'profile', label: 'Mi Perfil', icon: '👤' }
+                  { id: 'radar', label: '🎯 Radar' },
+                  { id: 'cartelera', label: '🎬 Cartelera' },
+                  { id: 'criticos', label: '✍️ Críticos' },
+                  { id: 'recomienda', label: '💡 Recomendaciones' },
+                  { id: 'foros', label: '💬 Foros' },
+                  { id: 'matches', label: '🍿 Matches' },
+                  { id: 'perfil', label: '👤 Mi Perfil' }
                 ].map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    class={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      activeTab === tab.id ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      activeTab === tab.id 
+                        ? 'bg-amber-500 text-slate-950 font-black shadow' 
+                        : 'hover:bg-slate-800 hover:text-white'
                     }`}
                   >
-                    {tab.icon} {tab.label}
+                    {tab.label}
                   </button>
                 ))}
               </nav>
 
-              {/* BOTÓN SESIÓN / CREAR CUENTA */}
-              <div>
-                {currentUser ? (
-                  <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                    <span class="text-white">{currentUser.name}</span>
-                    <button onClick={() => setCurrentUser(null)} class="text-slate-500 hover:text-rose-400 ml-1">🚪</button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowAuthModal(true)}
-                    class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider shadow-lg transition-all"
-                  >
-                    Crear Cuenta / Entrar
-                  </button>
-                )}
-              </div>
-
+              <button onClick={toggleTheme} className="p-2 bg-slate-800 text-white rounded-xl text-sm">🌓</button>
             </div>
           </header>
 
-          {/* CONTENIDO PRINCIPAL */}
-          <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6">
-
-            {/* TAB: RADAR */}
+          <main className="max-w-5xl mx-auto p-6">
+            
+            {/* RADAR & GEOLOCALIZACIÓN */}
             {activeTab === 'radar' && (
-              <div class="flex flex-col items-center">
-                {currentCandidate ? (
-                  <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-                    <div class="relative h-80 w-full">
-                      <img src={currentCandidate.avatar} class="w-full h-full object-cover" />
-                      <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent"></div>
-                      <div class="absolute bottom-4 left-4">
-                        <h2 class="text-xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
-                        <p class="text-xs text-amber-400">📍 {currentCandidate.location}</p>
-                      </div>
-                    </div>
-                    <div class="p-5 space-y-4">
-                      <p class="text-xs text-slate-300 italic">"{currentCandidate.bio}"</p>
-                      <div class="flex justify-center gap-4 pt-2">
-                        <button onClick={() => setCurrentIndex(prev => prev + 1)} class="w-12 h-12 rounded-full bg-slate-800 text-rose-400 text-lg flex items-center justify-center">✖</button>
-                        <button onClick={() => { setMatches([currentCandidate, ...matches]); setCurrentIndex(prev => prev + 1); }} class="w-14 h-14 rounded-full bg-amber-500 text-slate-950 text-xl font-bold flex items-center justify-center">🍿</button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div class="text-center py-12 bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6">
-                    <p class="text-sm font-bold text-white mb-4">¡Has visto todos los perfiles!</p>
-                    <button onClick={() => setCurrentIndex(0)} class="bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs uppercase">Reiniciar Radar</button>
-                  </div>
-                )}
+              <div className="space-y-6">
+                <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                  <h2 className="font-bold text-lg mb-2">📍 Cine cerca de ti</h2>
+                  <p className="text-xs text-slate-400 mb-4">Usa la geolocalización para descubrir personas y funciones en tu zona.</p>
+                  <button onClick={getGeoLocation} className="bg-amber-500 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs">
+                    {location}
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* TAB: CARTELERA */}
-            {activeTab === 'cinema' && (
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {INITIAL_BILLBOARD.map(m => (
-                  <div key={m.id} class="bg-slate-900 border border-slate-800 rounded-3xl p-4 flex gap-4">
-                    <img src={m.poster} class="w-24 h-36 object-cover rounded-xl" />
-                    <div class="space-y-1 text-xs">
-                      <h3 class="text-base font-bold text-white">{m.title}</h3>
-                      <p class="text-amber-400">{m.genre} • {m.duration}</p>
-                      <p class="text-slate-400">{m.theater}</p>
-                      <div class="flex gap-1 pt-2">
-                        {m.showtimes.map(t => (
-                          <span key={t} class="bg-slate-800 px-2 py-1 rounded font-mono font-bold text-slate-200">{t}</span>
-                        ))}
+            {/* SECCIÓN DE CRÍTICOS DE CINE */}
+            {activeTab === 'criticos' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">Críticas Certificadas</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center">CR</div>
+                      <div>
+                        <h4 className="font-bold text-sm">Carlos Ruiz ★★★★☆</h4>
+                        <span className="text-xs text-amber-500 font-semibold">Crítico Certificado</span>
                       </div>
                     </div>
+                    <p className="text-xs text-slate-400 italic">"Dune 2 es un triunfo visual sin precedentes. Villeneuve logra mantener el ritmo sin perder la complejidad política de la obra."</p>
                   </div>
-                ))}
+                </div>
               </div>
             )}
 
-            {/* TAB: MI PERFIL */}
-            {activeTab === 'profile' && (
-              <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md mx-auto space-y-4 text-xs">
-                <h2 class="text-lg font-black text-white">Mi Perfil Cinéfilo</h2>
-                <p class="text-slate-400">Si no has iniciado sesión, crea tu cuenta con el botón superior para personalizar tus datos.</p>
-                <button onClick={() => setShowAuthModal(true)} class="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase">
-                  Registrarse / Iniciar Sesión
-                </button>
+            {/* RECOMENDACIONES & PREFERENCIAS CINEMATOGRÁFICAS */}
+            {activeTab === 'recomienda' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-black text-amber-500">Recomendaciones para ti</h2>
+                  <select 
+                    onChange={(e) => setGenreFilter(e.target.value)}
+                    className="bg-slate-800 text-white text-xs p-2 rounded-xl border border-slate-700"
+                  >
+                    <option value="Todos">Todos los géneros</option>
+                    <option value="Sci-Fi">Ciencia Ficción</option>
+                    <option value="Drama">Drama</option>
+                    <option value="Terror">Terror</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {['Oppenheimer', 'Blade Runner 2049', 'The Substance', 'Parasite'].map((title, i) => (
+                    <div key={i} className={`p-4 rounded-2xl border text-center ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div className="h-36 bg-slate-800 rounded-xl mb-2 flex items-center justify-center text-xs text-slate-500">Poster</div>
+                      <h4 className="font-bold text-xs">{title}</h4>
+                      <p className="text-[10px] text-amber-500 mt-1">98% Coincidencia</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* FOROS DE DISCUSIÓN */}
+            {activeTab === 'foros' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">Foros de Discusión Cinéfila</h2>
+                <div className="space-y-3">
+                  {[
+                    { title: '¿Es Denis Villeneuve el mejor director de la década?', replies: 42, category: 'Debate' },
+                    { title: 'Teorías sobre el final de Inception (El Origen)', replies: 128, category: 'Teorías' },
+                    { title: 'Cine de autor independiente: Recomendaciones 2026', replies: 19, category: 'Recomendaciones' }
+                  ].map((forum, index) => (
+                    <div key={index} className={`p-4 rounded-2xl border flex justify-between items-center ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-md">{forum.category}</span>
+                        <h4 className="font-bold text-sm mt-1">{forum.title}</h4>
+                      </div>
+                      <span className="text-xs text-slate-400 font-mono">{forum.replies} resp.</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* MATCHES */}
+            {activeTab === 'matches' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-black text-amber-500">Tus Matches Cinéfilos</h2>
+                <p className="text-xs text-slate-400">Aún no hay coincidencias activas. ¡Explora en el Radar!</p>
+              </div>
+            )}
+
+            {/* PERFIL & INVITACIONES PREMIUM */}
+            {activeTab === 'perfil' && (
+              <div className="space-y-6">
+                <div className={`p-8 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                  <h3 className="text-xl font-black mb-2">Estado: {isPremium ? '👑 PREMIUM' : 'Usuario Estándar'}</h3>
+                  {!isPremium && (
+                    <div className="space-y-4">
+                      <p className="text-xs text-slate-400">Invita a 10 amigos para desbloquear la versión Premium sin costo.</p>
+                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div className="bg-amber-500 h-full" style={{ width: `${(inviteCount / 10) * 100}%` }}></div>
+                      </div>
+                      <button onClick={handleInvite} className="bg-amber-500 text-slate-950 font-black px-6 py-2 rounded-xl text-xs uppercase">
+                        Invitar Amigo ({inviteCount}/10)
+                      </button>
+                    </div>
+                  )}
+                  <div className="mt-8 text-xs text-slate-400">
+                    <p className="font-bold mb-1 text-slate-200">Condiciones Premium:</p>
+                    <ul className="list-disc pl-4 space-y-1">
+                      <li>Matches ilimitados diarios.</li>
+                      <li>Acceso a foros privados con directores y críticos.</li>
+                      <li>Experiencia 100% libre de anuncios.</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             )}
 
           </main>
-
-          {/* MODAL CREAR CUENTA / LOGIN */}
-          {showAuthModal && (
-            <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-              <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative shadow-2xl">
-                <button onClick={() => setShowAuthModal(false)} class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold">✖</button>
-                
-                <div class="text-center">
-                  <h3 class="text-lg font-black text-white">
-                    {authMode === 'login' ? 'Iniciar Sesión' : 'Crear Perfil Cinéfilo'}
-                  </h3>
-                </div>
-
-                <form onSubmit={handleAuthSubmit} class="space-y-3 text-xs">
-                  {authMode === 'register' && (
-                    <div>
-                      <label class="block text-slate-400 mb-1">Nombre Completo:</label>
-                      <input
-                        type="text"
-                        placeholder="Ej. Sofia Valdés"
-                        value={authForm.name}
-                        onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })}
-                        class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500"
-                        required
-                      />
-                    </div>
-                  )}
-
-                  <div>
-                    <label class="block text-slate-400 mb-1">Correo Electrónico:</label>
-                    <input
-                      type="email"
-                      placeholder="tu@email.com"
-                      value={authForm.email}
-                      onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
-                      class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label class="block text-slate-400 mb-1">Contraseña:</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      value={authForm.password}
-                      onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
-                      class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500"
-                      required
-                    />
-                  </div>
-
-                  <button type="submit" class="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider shadow-md">
-                    {authMode === 'login' ? 'Entrar' : 'Crear Cuenta'}
-                  </button>
-                </form>
-
-                <div class="text-center pt-2 border-t border-slate-800 text-xs">
-                  {authMode === 'login' ? (
-                    <p class="text-slate-400">
-                      ¿No tienes cuenta?{' '}
-                      <button onClick={() => setAuthMode('register')} class="text-amber-400 font-bold hover:underline">
-                        Regístrate aquí
-                      </button>
-                    </p>
-                  ) : (
-                    <p class="text-slate-400">
-                      ¿Ya tienes cuenta?{' '}
-                      <button onClick={() => setAuthMode('login')} class="text-amber-400 font-bold hover:underline">
-                        Inicia sesión
-                      </button>
-                    </p>
-                  )}
-                </div>
-
-              </div>
-            </div>
-          )}
-
         </div>
       );
     }
