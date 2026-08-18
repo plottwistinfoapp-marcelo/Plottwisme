@@ -18,23 +18,35 @@
     function App() {
       const [theme, setTheme] = useState('dark');
       const [activeTab, setActiveTab] = useState('radar');
-      const [matches, setMatches] = useState([]);
       const [inviteCount, setInviteCount] = useState(0);
       const [isPremium, setIsPremium] = useState(false);
       const [location, setLocation] = useState('Detectar mi ubicación');
       
-      // Filtros de Preferencias
-      const [genreFilter, setGenreFilter] = useState('Todos');
+      const [currentUser, setCurrentUser] = useState(null);
+      const [showAuthModal, setShowAuthModal] = useState(false);
+      const [authMode, setAuthMode] = useState('register');
+      const [showPremiumModal, setShowPremiumModal] = useState(false);
+      const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
 
       const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
+      // LOGICA DE GEOLOCALIZACIÓN DINÁMICA
       const getGeoLocation = () => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
-            () => setLocation('Ubicación detectada (Cerca de ti)'),
+            () => {
+              const radio = isPremium ? 500 : 100;
+              setLocation(`Buscando cinéfilos en un radio de ${radio} km`);
+            },
             () => setLocation('Ubicación no disponible')
           );
         }
+      };
+
+      const handleAuthSubmit = (e) => {
+        e.preventDefault();
+        setCurrentUser({ name: authForm.name || authForm.email.split('@')[0], email: authForm.email });
+        setShowAuthModal(false);
       };
 
       const handleInvite = () => {
@@ -46,8 +58,7 @@
       return (
         <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-gray-100 text-slate-900'}`}>
           
-          {/* BARRA DE NAVEGACIÓN COMPLETA */}
-          <header className={`border-b p-4 sticky top-0 z-50 ${theme === 'dark' ? 'border-slate-800 bg-slate-950/90 backdrop-blur' : 'border-gray-300 bg-white/90 backdrop-blur'}`}>
+          <header className={`border-b p-4 sticky top-0 z-40 ${theme === 'dark' ? 'border-slate-800 bg-slate-950/90 backdrop-blur' : 'border-gray-300 bg-white/90 backdrop-blur'}`}>
             <div className="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-4">
               <h1 className="font-black text-2xl text-amber-500 tracking-wider">PLOTTWISME</h1>
               
@@ -58,152 +69,91 @@
                   { id: 'criticos', label: '✍️ Críticos' },
                   { id: 'recomienda', label: '💡 Recomendaciones' },
                   { id: 'foros', label: '💬 Foros' },
-                  { id: 'matches', label: '🍿 Matches' },
                   { id: 'perfil', label: '👤 Mi Perfil' }
                 ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
-                      activeTab === tab.id 
-                        ? 'bg-amber-500 text-slate-950 font-black shadow' 
-                        : 'hover:bg-slate-800 hover:text-white'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 font-black shadow' : 'hover:bg-slate-800 hover:text-white'}`}>{tab.label}</button>
                 ))}
               </nav>
 
-              <button onClick={toggleTheme} className="p-2 bg-slate-800 text-white rounded-xl text-sm">🌓</button>
+              <div className="flex items-center gap-3">
+                <button onClick={toggleTheme} className="p-2 bg-slate-800 text-white rounded-xl text-sm">🌓</button>
+                {currentUser ? (
+                  <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span className="text-white">{currentUser.name}</span>
+                  </div>
+                ) : (
+                  <button onClick={() => { setAuthMode('register'); setShowAuthModal(true); }} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider shadow">Crear Cuenta</button>
+                )}
+              </div>
             </div>
           </header>
 
           <main className="max-w-5xl mx-auto p-6">
             
-            {/* RADAR & GEOLOCALIZACIÓN */}
             {activeTab === 'radar' && (
               <div className="space-y-6">
                 <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
                   <h2 className="font-bold text-lg mb-2">📍 Cine cerca de ti</h2>
-                  <p className="text-xs text-slate-400 mb-4">Usa la geolocalización para descubrir personas y funciones en tu zona.</p>
-                  <button onClick={getGeoLocation} className="bg-amber-500 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs">
-                    {location}
-                  </button>
+                  <p className="text-xs text-slate-400 mb-4">{isPremium ? 'Estás en modo Premium: Alcance de 500km' : 'Estás en modo Gratuito: Alcance de 100km'}</p>
+                  <button onClick={getGeoLocation} className="bg-amber-500 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs">{location}</button>
                 </div>
               </div>
             )}
 
-            {/* SECCIÓN DE CRÍTICOS DE CINE */}
-            {activeTab === 'criticos' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-black text-amber-500">Críticas Certificadas</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center">CR</div>
-                      <div>
-                        <h4 className="font-bold text-sm">Carlos Ruiz ★★★★☆</h4>
-                        <span className="text-xs text-amber-500 font-semibold">Crítico Certificado</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-400 italic">"Dune 2 es un triunfo visual sin precedentes. Villeneuve logra mantener el ritmo sin perder la complejidad política de la obra."</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* RECOMENDACIONES & PREFERENCIAS CINEMATOGRÁFICAS */}
-            {activeTab === 'recomienda' && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-black text-amber-500">Recomendaciones para ti</h2>
-                  <select 
-                    onChange={(e) => setGenreFilter(e.target.value)}
-                    className="bg-slate-800 text-white text-xs p-2 rounded-xl border border-slate-700"
-                  >
-                    <option value="Todos">Todos los géneros</option>
-                    <option value="Sci-Fi">Ciencia Ficción</option>
-                    <option value="Drama">Drama</option>
-                    <option value="Terror">Terror</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {['Oppenheimer', 'Blade Runner 2049', 'The Substance', 'Parasite'].map((title, i) => (
-                    <div key={i} className={`p-4 rounded-2xl border text-center ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                      <div className="h-36 bg-slate-800 rounded-xl mb-2 flex items-center justify-center text-xs text-slate-500">Poster</div>
-                      <h4 className="font-bold text-xs">{title}</h4>
-                      <p className="text-[10px] text-amber-500 mt-1">98% Coincidencia</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* FOROS DE DISCUSIÓN */}
-            {activeTab === 'foros' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-black text-amber-500">Foros de Discusión Cinéfila</h2>
-                <div className="space-y-3">
-                  {[
-                    { title: '¿Es Denis Villeneuve el mejor director de la década?', replies: 42, category: 'Debate' },
-                    { title: 'Teorías sobre el final de Inception (El Origen)', replies: 128, category: 'Teorías' },
-                    { title: 'Cine de autor independiente: Recomendaciones 2026', replies: 19, category: 'Recomendaciones' }
-                  ].map((forum, index) => (
-                    <div key={index} className={`p-4 rounded-2xl border flex justify-between items-center ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                      <div>
-                        <span className="text-[10px] font-bold uppercase bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-md">{forum.category}</span>
-                        <h4 className="font-bold text-sm mt-1">{forum.title}</h4>
-                      </div>
-                      <span className="text-xs text-slate-400 font-mono">{forum.replies} resp.</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* MATCHES */}
-            {activeTab === 'matches' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-black text-amber-500">Tus Matches Cinéfilos</h2>
-                <p className="text-xs text-slate-400">Aún no hay coincidencias activas. ¡Explora en el Radar!</p>
-              </div>
-            )}
-
-            {/* PERFIL & INVITACIONES PREMIUM */}
             {activeTab === 'perfil' && (
-              <div className="space-y-6">
+              <div className="space-y-6 max-w-xl mx-auto">
                 <div className={`p-8 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                  <h3 className="text-xl font-black mb-2">Estado: {isPremium ? '👑 PREMIUM' : 'Usuario Estándar'}</h3>
-                  {!isPremium && (
-                    <div className="space-y-4">
-                      <p className="text-xs text-slate-400">Invita a 10 amigos para desbloquear la versión Premium sin costo.</p>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                        <div className="bg-amber-500 h-full" style={{ width: `${(inviteCount / 10) * 100}%` }}></div>
+                  {!currentUser ? (
+                    <div className="text-center space-y-4">
+                      <h3 className="text-xl font-black text-white">Únete a Plottwisme</h3>
+                      <button onClick={() => { setAuthMode('register'); setShowAuthModal(true); }} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase text-xs tracking-wider">Crear Cuenta Ahora</button>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+                        <div><h3 className="text-lg font-bold">{currentUser.name}</h3><p className="text-xs text-slate-400">{currentUser.email}</p></div>
+                        <span className="px-3 py-1 bg-amber-500/20 text-amber-500 rounded-full text-xs font-bold">{isPremium ? '👑 PREMIUM' : 'GRATIS'}</span>
                       </div>
-                      <button onClick={handleInvite} className="bg-amber-500 text-slate-950 font-black px-6 py-2 rounded-xl text-xs uppercase">
-                        Invitar Amigo ({inviteCount}/10)
-                      </button>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-xs font-bold"><span>Invitaciones para Premium</span><span className="text-amber-500">{inviteCount}/10</span></div>
+                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden"><div className="bg-amber-500 h-full transition-all" style={{ width: `${(inviteCount / 10) * 100}%` }}></div></div>
+                        <button onClick={handleInvite} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs">➕ Simular Invitación</button>
+                      </div>
+                      <button onClick={() => setShowPremiumModal(true)} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black py-3 rounded-xl uppercase text-xs tracking-wider shadow">Beneficios Premium</button>
                     </div>
                   )}
-                  <div className="mt-8 text-xs text-slate-400">
-                    <p className="font-bold mb-1 text-slate-200">Condiciones Premium:</p>
-                    <ul className="list-disc pl-4 space-y-1">
-                      <li>Matches ilimitados diarios.</li>
-                      <li>Acceso a foros privados con directores y críticos.</li>
-                      <li>Experiencia 100% libre de anuncios.</li>
-                    </ul>
-                  </div>
                 </div>
               </div>
             )}
-
           </main>
+
+          {showAuthModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative shadow-2xl">
+                <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold">✖</button>
+                <h3 className="text-lg font-black text-center text-white">{authMode === 'register' ? 'Crear Cuenta' : 'Iniciar Sesión'}</h3>
+                <form onSubmit={handleAuthSubmit} className="space-y-3 text-xs">
+                  <div><label className="block text-slate-400 mb-1">Correo:</label><input type="email" required onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" /></div>
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">Confirmar</button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {showPremiumModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 relative shadow-2xl">
+                <button onClick={() => setShowPremiumModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold">✖</button>
+                <h3 className="text-xl font-black text-amber-500 text-center">Plottwisme Premium</h3>
+                <p className="text-xs text-slate-400 text-center">Desbloquea radar de 500km y mucho más.</p>
+                <button onClick={() => { setIsPremium(true); setShowPremiumModal(false); }} className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase text-xs">Activar Modo Premium</button>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
-
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
