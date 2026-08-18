@@ -17,30 +17,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    .font-brand {
-      font-family: 'Outfit', sans-serif;
-    }
-    .font-mono {
-      font-family: 'JetBrains+Mono', monospace;
-    }
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #090d16;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #1e293b;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #f59e0b;
-    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-brand { font-family: 'Outfit', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #090d16; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-amber-500 selection:text-slate-950">
@@ -49,7 +32,6 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    // --- BASE DE DATOS Y PERFILES CINÉFILOS ---
     const INITIAL_USERS = [
       {
         id: 'u1',
@@ -63,10 +45,8 @@
         bio: 'Devoto del cine de autor y la ciencia ficción dura. Siempre listo para debatir sobre Villeneuve y Nolan con un buen café antes de la función.',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
         topMovies: ['Dune: Parte 2', 'Blade Runner 2049', 'Oppenheimer'],
-        favoriteGenres: ['Sci-Fi', 'Thriller', 'Drama', 'Cine Negro'],
-        affinity: 97,
-        reviewsCount: 48,
-        ratingAvg: 4.9
+        favoriteGenres: ['Sci-Fi', 'Thriller', 'Drama'],
+        affinity: 97
       },
       {
         id: 'u2',
@@ -77,47 +57,11 @@
         role: 'director',
         roleLabel: 'Cineasta Indie',
         verified: true,
-        bio: 'Directora de cortos amateur. Me apasionan el montaje expresivo, las bandas sonoras y el cine coreano. ¿Alguien para ir a la cinemateca?',
+        bio: 'Directora de cortos amateur. Me apasionan el montaje expresivo, las bandas sonoras y el cine coreano.',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
         topMovies: ['Parasite', 'Perfect Blue', 'Drive My Car'],
-        favoriteGenres: ['Psicológico', 'Misterio', 'Anime', 'Autor'],
-        affinity: 93,
-        reviewsCount: 32,
-        ratingAvg: 4.8
-      },
-      {
-        id: 'u3',
-        name: 'Mateo Fernández',
-        age: 29,
-        location: 'Chamberí',
-        distanceKm: 5.1,
-        role: 'general',
-        roleLabel: 'Cinéfilo Pro',
-        verified: false,
-        bio: 'Coleccionista de 4K Blu-ray y adicto a las maratones de terror contemporáneo (A24 / Neon). Si la película tiene atmósfera densa, cuenta conmigo.',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
-        topMovies: ['The Witch', 'Hereditary', 'The Substance'],
-        favoriteGenres: ['Terror', 'Fantasía', 'Comedia Negra'],
-        affinity: 89,
-        reviewsCount: 19,
-        ratingAvg: 4.7
-      },
-      {
-        id: 'u4',
-        name: 'Sofía Valdés',
-        age: 27,
-        location: 'Malasaña',
-        distanceKm: 1.5,
-        role: 'student',
-        roleLabel: 'Estudiante de Guion',
-        verified: false,
-        bio: 'Analizo arcos de personajes y diálogos afilados. Fan incondicional de Greta Gerwig, Wes Anderson y los clásicos franceses de los 60.',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80',
-        topMovies: ['Lady Bird', 'The Grand Budapest Hotel', 'Past Lives'],
-        favoriteGenres: ['Comedia', 'Romance', 'Drama de Época'],
-        affinity: 91,
-        reviewsCount: 27,
-        ratingAvg: 4.6
+        favoriteGenres: ['Psicológico', 'Misterio', 'Anime'],
+        affinity: 93
       }
     ];
 
@@ -125,889 +69,257 @@
       {
         id: 'm1',
         title: 'Dune: Parte Dos',
-        originalTitle: 'Dune: Part Two',
         director: 'Denis Villeneuve',
-        genre: 'Ciencia Ficción / Épico',
+        genre: 'Ciencia Ficción',
         duration: '166 min',
         rating: '9.4',
         poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80',
-        theater: 'Cine Capitol • Sala IMAX Láser',
-        distance: '1.2 km',
+        theater: 'Cine Capitol • Sala IMAX',
         showtimes: ['17:30', '20:15', '22:45'],
-        synopsis: 'Paul Atreides se une a Chani y a los Fremen mientras busca venganza contra los conspiradores que destruyeron a su familia.'
+        synopsis: 'Paul Atreides se une a Chani y a los Fremen mientras busca venganza contra los conspiradores.'
       },
       {
         id: 'm2',
         title: 'The Substance',
-        originalTitle: 'La Sustancia',
         director: 'Coralie Fargeat',
-        genre: 'Body Horror / Thriller',
+        genre: 'Body Horror',
         duration: '141 min',
         rating: '8.9',
         poster: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-        theater: 'Cines Callao • Sala 1 Digital',
-        distance: '1.8 km',
-        showtimes: ['18:00', '20:30', '23:00'],
-        synopsis: 'Una celebridad en declive decide usar una droga del mercado negro que replica temporalmente una versión más joven y perfecta de sí misma.'
-      },
-      {
-        id: 'm3',
-        title: 'Pobres Criaturas',
-        originalTitle: 'Poor Things',
-        director: 'Yorgos Lanthimos',
-        genre: 'Comedia Negra / Surrealismo',
-        duration: '141 min',
-        rating: '9.1',
-        poster: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80',
-        theater: 'Yelmo Cines Ideal • V.O.S.E.',
-        distance: '2.5 km',
-        showtimes: ['16:45', '19:15', '21:50'],
-        synopsis: 'La fantástica evolución de Bella Baxter, una joven resucitada por el excéntrico doctor Godwin Baxter que explora el mundo sin prejuicios.'
+        theater: 'Cines Callao',
+        showtimes: ['18:00', '20:30'],
+        synopsis: 'Una celebridad en declive decide usar una droga que replica una versión más joven de sí misma.'
       }
     ];
 
-    const INITIAL_STREAMING = [
-      {
-        id: 's1',
-        title: 'Severance (Temporada 2)',
-        platform: 'Apple TV+',
-        type: 'Serie',
-        rating: '9.3',
-        tag: 'Tendencia',
-        cover: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=500&auto=format&fit=crop&q=80',
-        synopsis: 'Mark Scout lidera un equipo en Lumon Industries cuyos empleados han pasado por un procedimiento de separación quirúrgica entre recuerdos laborales y personales.'
-      },
-      {
-        id: 's2',
-        title: 'The Bear (Temporada 3)',
-        platform: 'Disney+ / Hulu',
-        type: 'Serie',
-        rating: '9.2',
-        tag: 'Imperdible',
-        cover: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=80',
-        synopsis: 'Carmy Berzatto lucha por elevar su restaurante de sándwiches a la alta gastronomía mientras enfrenta tensiones en la cocina.'
-      },
-      {
-        id: 's3',
-        title: 'Anatomía de una Caída',
-        platform: 'Filmin / Prime',
-        type: 'Película',
-        rating: '8.8',
-        tag: 'Cine de Autor',
-        cover: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500&auto=format&fit=crop&q=80',
-        synopsis: 'Una mujer es sospechosa del asesinato de su marido y su hijo ciego se enfrenta a un dilema moral como único testigo presencial.'
-      }
-    ];
-
-    const INITIAL_FORUM = [
-      {
-        id: 'f1',
-        author: 'Elena Montero',
-        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
-        role: 'Cineasta Indie',
-        tag: 'Debates Calientes',
-        movieTitle: 'The Substance',
-        hasSpoilers: true,
-        title: '¿Qué opinan del clímax y la alegoría sobre los estándares de belleza?',
-        content: 'La transformación final de Demi Moore y Margaret Qualley no busca simplemente el choque visual gore; es un descenso a la locura psicológica por el rechazo mediático. Los planos cerrados generan una claustrofobia impecable.',
-        likes: 42,
-        replies: 14,
-        createdAt: 'Hace 2 horas',
-        comments: [
-          { id: 'c1', author: 'Carlos Ruiz', text: 'Totalmente de acuerdo. El diseño de producción con esos pasillos estériles refleja el vacío total de la fama.', time: 'Hace 1 hora' },
-          { id: 'c2', author: 'Mateo Fernández', text: 'El trabajo de maquillaje prostético merece todas las nominaciones este año.', time: 'Hace 35 min' }
-        ]
-      },
-      {
-        id: 'f2',
-        author: 'Carlos Ruiz',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-        role: 'Crítico Certificado',
-        tag: 'Estrenos & Salas',
-        movieTitle: 'Dune: Parte Dos',
-        hasSpoilers: false,
-        title: 'El diseño sonoro de Hans Zimmer y Greig Fraser en salas IMAX Láser',
-        content: 'La mezcla de frecuencias subgraves durante el montaje con los gusanos de arena de Shai-Hulud crea una experiencia visceral en sala de cine. Es una obra que justifica ir a la sala más grande posible.',
-        likes: 76,
-        replies: 23,
-        createdAt: 'Hace 5 horas',
-        comments: [
-          { id: 'c3', author: 'Sofía Valdés', text: 'La vi en el Capitol y vibraba literalmente la butaca. Impresionante.', time: 'Hace 3 horas' }
-        ]
-      }
-    ];
-
-    const INITIAL_ROOMS = [
-      {
-        id: 'r1',
-        name: '🍿 Cita Cinéfila: Sala IMAX Madrid',
-        topic: 'Organizando grupo para la función de 20:15 en Cine Capitol',
-        members: 9,
-        activeBadge: 'En Vivo',
-        messages: [
-          { id: 1, sender: 'Carlos R.', role: 'Crítico', text: '¿Quién se suma a la sesión de las 20:15 en fila F?' },
-          { id: 2, sender: 'Elena M.', role: 'Cineasta', text: '¡Yo ya tengo la butaca F12 reservada! Nos vemos 20 min antes en la entrada.' },
-          { id: 3, sender: 'Sofía V.', role: 'Guionista', text: '¡Me sumo! Llevo palomitas y luego comentamos el guion en la cafetería de enfrente.' }
-        ]
-      },
-      {
-        id: 'r2',
-        name: '🎬 Tertulia A24 & Cine de Terror Psicológico',
-        topic: 'Debatiendo el final de Heretic, The Witch y Midsommar',
-        members: 18,
-        activeBadge: 'Activa',
-        messages: [
-          { id: 1, sender: 'Mateo F.', role: 'Moderador', text: 'Bienvenidos a la sala. Hoy estamos debatiendo los temas de Herejía y manipulación psicológica en el cine contemporáneo.' }
-        ]
-      },
-      {
-        id: 'r3',
-        name: '📽️ Club de Guionistas & Cortometrajistas',
-        topic: 'Revisión colaborativa de ideas y estructura narrativa',
-        members: 12,
-        activeBadge: 'Nueva',
-        messages: [
-          { id: 1, sender: 'Elena M.', role: 'Cineasta', text: '¿Alguien que domine la estructura del viaje del héroe para darle feedback a mi sinopsis de corto?' }
-        ]
-      }
-    ];
-
-    // --- COMPONENTE PRINCIPAL ---
     function App() {
-      const [activeTab, setActiveTab] = useState('radar'); // 'radar' | 'cinema' | 'streaming' | 'forums' | 'rooms' | 'profile'
+      const [activeTab, setActiveTab] = useState('radar');
       const [candidates, setCandidates] = useState(INITIAL_USERS);
       const [currentIndex, setCurrentIndex] = useState(0);
       const [matches, setMatches] = useState([]);
-      const [likesAvailable, setLikesAvailable] = useState(12);
-      const [showMatchModal, setShowMatchModal] = useState(null);
-      
-      // Foros & Debate State
-      const [forumThreads, setForumThreads] = useState(INITIAL_FORUM);
-      const [selectedThread, setSelectedThread] = useState(null);
-      const [newThreadTitle, setNewThreadTitle] = useState('');
-      const [newThreadContent, setNewThreadContent] = useState('');
-      const [newThreadMovie, setNewThreadMovie] = useState('Dune: Parte Dos');
-      const [newThreadSpoilers, setNewThreadSpoilers] = useState(false);
-      const [replyText, setReplyText] = useState('');
-
-      // Salas & Chat State
-      const [chatRooms, setChatRooms] = useState(INITIAL_ROOMS);
-      const [activeRoomId, setActiveRoomId] = useState(INITIAL_ROOMS[0].id);
-      const [roomInput, setRoomInput] = useState('');
-
-      // Perfil de Usuario Propio
-      const [myProfile, setMyProfile] = useState({
-        name: 'Alex Rivera',
-        age: 25,
-        location: 'Madrid, España',
-        role: 'Cinéfilo Entusiasta',
-        bio: 'Amante de las bandas sonoras orquestales, el cyberpunk y las películas que te hacen pensar durante días después de salir de la sala.',
-        topMovies: ['Interstellar', 'Arrival', 'Whiplash'],
-        favoriteGenres: ['Sci-Fi', 'Drama', 'Thriller', 'Misterio']
-      });
+      const [currentUser, setCurrentUser] = useState(null);
+      const [showAuthModal, setShowAuthModal] = useState(false);
+      const [authMode, setAuthMode] = useState('login');
+      const [authForm, setAuthForm] = useState({ email: '', password: '', name: '', role: 'Cinéfilo Entusiasta' });
 
       const currentCandidate = candidates[currentIndex];
-      const activeRoom = useMemo(() => chatRooms.find(r => r.id === activeRoomId) || chatRooms[0], [chatRooms, activeRoomId]);
 
-      // Handlers de Match
-      const handleSwipe = (direction) => {
-        if (!currentCandidate) return;
-        if (direction === 'like') {
-          if (likesAvailable <= 0) {
-            alert('¡Has alcanzado tu límite de likes semanal! Invita a un amigo o desbloquea tu insignia de crítico.');
-            return;
-          }
-          setLikesAvailable(prev => prev - 1);
-          setMatches(prev => [currentCandidate, ...prev]);
-          setShowMatchModal(currentCandidate);
-        }
-        setCurrentIndex(prev => prev + 1);
-      };
-
-      // Handler para publicar nuevo debate
-      const handleCreateThread = (e) => {
+      const handleAuthSubmit = (e) => {
         e.preventDefault();
-        if (!newThreadTitle.trim() || !newThreadContent.trim()) return;
-        const newThread = {
-          id: 'f_' + Date.now(),
-          author: myProfile.name,
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-          role: myProfile.role,
-          tag: 'Comunidad',
-          movieTitle: newThreadMovie,
-          hasSpoilers: newThreadSpoilers,
-          title: newThreadTitle,
-          content: newThreadContent,
-          likes: 1,
-          replies: 0,
-          createdAt: 'Justo ahora',
-          comments: []
+        const user = {
+          name: authForm.name || authForm.email.split('@')[0],
+          email: authForm.email,
+          role: authForm.role || 'Cinéfilo Entusiasta'
         };
-        setForumThreads([newThread, ...forumThreads]);
-        setNewThreadTitle('');
-        setNewThreadContent('');
-        setNewThreadSpoilers(false);
-      };
-
-      // Handler para responder a debate
-      const handleAddReply = (threadId) => {
-        if (!replyText.trim()) return;
-        const newComment = {
-          id: 'c_' + Date.now(),
-          author: myProfile.name,
-          text: replyText,
-          time: 'Justo ahora'
-        };
-        setForumThreads(forumThreads.map(t => {
-          if (t.id === threadId) {
-            return {
-              ...t,
-              replies: t.replies + 1,
-              comments: [...t.comments, newComment]
-            };
-          }
-          return t;
-        }));
-        setReplyText('');
-      };
-
-      // Handler para enviar mensajes en sala
-      const handleSendMessage = (e) => {
-        e.preventDefault();
-        if (!roomInput.trim()) return;
-        const msg = {
-          id: Date.now(),
-          sender: myProfile.name,
-          role: myProfile.role,
-          text: roomInput
-        };
-        setChatRooms(chatRooms.map(r => {
-          if (r.id === activeRoomId) {
-            return { ...r, messages: [...r.messages, msg] };
-          }
-          return r;
-        }));
-        setRoomInput('');
+        setCurrentUser(user);
+        setShowAuthModal(false);
       };
 
       return (
         <div class="flex flex-col min-h-screen bg-slate-950 text-slate-100">
 
-          {/* NAVBAR PRINCIPAL */}
-          <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-3">
-            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+          {/* BARRA SUPERIOR */}
+          <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
+            <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
               
-              {/* BRAND LOGO */}
-              <div class="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('radar')}>
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-600 p-0.5 flex items-center justify-center shadow-lg shadow-amber-500/20">
-                  <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-amber-400 font-bold text-xl font-brand">
-                    P
-                  </div>
+              <div class="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('radar')}>
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-slate-950 font-black font-brand text-lg">
+                  P
                 </div>
-                <div>
-                  <h1 class="text-xl font-black font-brand tracking-tight bg-gradient-to-r from-amber-400 via-orange-300 to-rose-400 bg-clip-text text-transparent">
-                    Plottwisme
-                  </h1>
-                  <p class="text-[10px] text-slate-400 font-medium tracking-wider uppercase">Cine, Cartelera & Match</p>
-                </div>
+                <h1 class="text-xl font-black font-brand tracking-tight bg-gradient-to-r from-amber-400 to-rose-400 bg-clip-text text-transparent">
+                  Plottwisme
+                </h1>
               </div>
 
-              {/* NAVEGACIÓN MODULAR */}
-              <nav class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-2xl border border-slate-800 overflow-x-auto max-w-full">
+              {/* NAVEGACIÓN */}
+              <nav class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
                 {[
                   { id: 'radar', label: 'Radar', icon: '🎯' },
                   { id: 'cinema', label: 'Cartelera', icon: '🎬' },
-                  { id: 'streaming', label: 'Streaming', icon: '📺' },
-                  { id: 'forums', label: 'Foros', icon: '💬' },
-                  { id: 'rooms', label: 'Salas', icon: '🎙️' },
                   { id: 'profile', label: 'Mi Perfil', icon: '👤' }
                 ].map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    class={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
-                      activeTab === tab.id
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md shadow-amber-500/20'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    class={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      activeTab === tab.id ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    <span>{tab.icon}</span>
-                    <span>{tab.label}</span>
+                    {tab.icon} {tab.label}
                   </button>
                 ))}
               </nav>
 
-              {/* CONTADOR DE LIKES */}
-              <div class="hidden md:flex items-center gap-2 bg-slate-900 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs">
-                <span class="text-amber-400 font-black">🍿 {likesAvailable} Likes Semanales</span>
+              {/* BOTÓN SESIÓN / CREAR CUENTA */}
+              <div>
+                {currentUser ? (
+                  <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span class="text-white">{currentUser.name}</span>
+                    <button onClick={() => setCurrentUser(null)} class="text-slate-500 hover:text-rose-400 ml-1">🚪</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider shadow-lg transition-all"
+                  >
+                    Crear Cuenta / Entrar
+                  </button>
+                )}
               </div>
 
             </div>
           </header>
 
-          {/* MAIN CONTAINER */}
-          <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8">
+          {/* CONTENIDO PRINCIPAL */}
+          <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6">
 
-            {/* TAB 1: RADAR CINÉFILO */}
+            {/* TAB: RADAR */}
             {activeTab === 'radar' && (
-              <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                
-                {/* TARJETA CENTRAL DE AFINIDAD */}
-                <div class="lg:col-span-2 flex flex-col items-center">
-                  {currentCandidate ? (
-                    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative transition-all duration-300">
-                      
-                      {/* FOTO & BADGES SUPERIORES */}
-                      <div class="relative h-96 w-full overflow-hidden bg-slate-950">
-                        <img
-                          src={currentCandidate.avatar}
-                          alt={currentCandidate.name}
-                          class="w-full h-full object-cover object-center"
-                        />
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-
-                        {/* PORCENTAJE DE COMPATIBILIDAD */}
-                        <div class="absolute top-4 right-4 bg-slate-950/80 backdrop-blur-md border border-amber-500/60 px-3.5 py-1.5 rounded-full text-xs font-black text-amber-300 flex items-center gap-1 shadow-xl">
-                          <span>✨ {currentCandidate.affinity}% Match Cinéfilo</span>
-                        </div>
-
-                        {/* BADGE DE ROL */}
-                        <div class="absolute top-4 left-4 bg-rose-600/90 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-bold text-white uppercase tracking-wider shadow">
-                          {currentCandidate.roleLabel}
-                        </div>
-
-                        {/* INFORMACIÓN DEL USUARIO */}
-                        <div class="absolute bottom-4 left-4 right-4">
-                          <h2 class="text-2xl font-black text-white">{currentCandidate.name}, <span class="font-normal text-slate-300">{currentCandidate.age}</span></h2>
-                          <p class="text-xs text-amber-300 flex items-center gap-1 mt-0.5 font-medium">
-                            📍 {currentCandidate.location} • a {currentCandidate.distanceKm} km de tu ubicación
-                          </p>
-                        </div>
+              <div class="flex flex-col items-center">
+                {currentCandidate ? (
+                  <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="relative h-80 w-full">
+                      <img src={currentCandidate.avatar} class="w-full h-full object-cover" />
+                      <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent"></div>
+                      <div class="absolute bottom-4 left-4">
+                        <h2 class="text-xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
+                        <p class="text-xs text-amber-400">📍 {currentCandidate.location}</p>
                       </div>
-
-                      {/* DETALLES Y GUSTOS */}
-                      <div class="p-6 space-y-4">
-                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
-                          "{currentCandidate.bio}"
-                        </p>
-
-                        {/* TOP PELÍCULAS */}
-                        <div>
-                          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">🎬 Top Películas Imprescindibles:</p>
-                          <div class="flex flex-wrap gap-1.5">
-                            {currentCandidate.topMovies.map(movie => (
-                              <span key={movie} class="bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs px-3 py-1 rounded-xl font-semibold">
-                                {movie}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* GÉNEROS */}
-                        <div>
-                          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">🏷️ Géneros Predilectos:</p>
-                          <div class="flex flex-wrap gap-1.5">
-                            {currentCandidate.favoriteGenres.map(g => (
-                              <span key={g} class="bg-slate-800 text-slate-300 text-xs px-2.5 py-1 rounded-lg">
-                                {g}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* BOTONES DE DECISIÓN */}
-                        <div class="flex items-center justify-center gap-6 pt-4 border-t border-slate-800">
-                          <button
-                            onClick={() => handleSwipe('pass')}
-                            class="w-14 h-14 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 flex items-center justify-center text-xl shadow-lg transition-transform active:scale-90"
-                            title="Pasar"
-                          >
-                            ✖
-                          </button>
-                          <button
-                            onClick={() => handleSwipe('like')}
-                            class="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 text-slate-950 font-black flex items-center justify-center text-2xl shadow-xl shadow-amber-500/30 transition-transform active:scale-95 hover:scale-105"
-                            title="Hacer Match Cinéfilo"
-                          >
-                            🍿
-                          </button>
-                        </div>
+                    </div>
+                    <div class="p-5 space-y-4">
+                      <p class="text-xs text-slate-300 italic">"{currentCandidate.bio}"</p>
+                      <div class="flex justify-center gap-4 pt-2">
+                        <button onClick={() => setCurrentIndex(prev => prev + 1)} class="w-12 h-12 rounded-full bg-slate-800 text-rose-400 text-lg flex items-center justify-center">✖</button>
+                        <button onClick={() => { setMatches([currentCandidate, ...matches]); setCurrentIndex(prev => prev + 1); }} class="w-14 h-14 rounded-full bg-amber-500 text-slate-950 text-xl font-bold flex items-center justify-center">🍿</button>
                       </div>
-
                     </div>
-                  ) : (
-                    <div class="text-center py-16 px-6 bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full shadow-xl">
-                      <div class="text-5xl mb-4">🎟️</div>
-                      <h3 class="text-xl font-bold text-white mb-2">¡Has visto todos los perfiles de tu radar!</h3>
-                      <p class="text-xs text-slate-400 mb-6 leading-relaxed">Pronto se sumarán más cinéfilos en tu zona y cerca de tus salas de cine preferidas.</p>
-                      <button
-                        onClick={() => { setCandidates(INITIAL_USERS); setCurrentIndex(0); }}
-                        class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-500/20"
-                      >
-                        Reiniciar Radar
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* LISTA LATERAL DE MATCHES & CITAS */}
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4">
-                  <div class="flex items-center justify-between">
-                    <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                      <span>✨ Mis Matches Cinéfilos</span>
-                    </h3>
-                    <span class="text-xs bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full font-bold">
-                      {matches.length}
-                    </span>
                   </div>
-
-                  {matches.length === 0 ? (
-                    <div class="text-center py-10 px-4 text-slate-500 text-xs leading-relaxed">
-                      Aún no tienes matches activos. Haz clic en 🍿 cuando encuentres a alguien con afinidad cinéfila.
-                    </div>
-                  ) : (
-                    <div class="space-y-3 max-h-[420px] overflow-y-auto pr-1">
-                      {matches.map(m => (
-                        <div key={m.id} class="flex items-center gap-3 bg-slate-950 p-3 rounded-2xl border border-slate-800 hover:border-amber-500/40 transition-all">
-                          <img src={m.avatar} alt={m.name} class="w-12 h-12 rounded-xl object-cover" />
-                          <div class="flex-1 min-w-0">
-                            <h4 class="text-xs font-bold text-white truncate">{m.name}</h4>
-                            <p class="text-[10px] text-amber-400 truncate">Afinidad: {m.affinity}% • {m.topMovies[0]}</p>
-                          </div>
-                          <button
-                            onClick={() => setActiveTab('rooms')}
-                            class="bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-xs px-2.5 py-1.5 rounded-xl text-slate-200 font-bold transition-all"
-                          >
-                            Chat
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
+                ) : (
+                  <div class="text-center py-12 bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6">
+                    <p class="text-sm font-bold text-white mb-4">¡Has visto todos los perfiles!</p>
+                    <button onClick={() => setCurrentIndex(0)} class="bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs uppercase">Reiniciar Radar</button>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* TAB 2: CARTELERA Y HORARIOS DE CINE */}
+            {/* TAB: CARTELERA */}
             {activeTab === 'cinema' && (
-              <div class="space-y-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h2 class="text-2xl font-black text-white">🎬 Cartelera y Salas en tu Ciudad</h2>
-                    <p class="text-xs text-slate-400">Funciones disponibles hoy con formatos especiales (IMAX Láser, V.O.S.E.)</p>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {INITIAL_BILLBOARD.map(movie => (
-                    <div key={movie.id} class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition-all shadow-xl">
-                      <div>
-                        <div class="h-52 w-full overflow-hidden relative">
-                          <img src={movie.poster} alt={movie.title} class="w-full h-full object-cover" />
-                          <div class="absolute top-3 right-3 bg-slate-950/85 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-black text-amber-400 border border-amber-500/30">
-                            ★ {movie.rating}
-                          </div>
-                        </div>
-
-                        <div class="p-5 space-y-3">
-                          <div>
-                            <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">{movie.genre} • {movie.duration}</span>
-                            <h3 class="text-lg font-black text-white">{movie.title}</h3>
-                            <p class="text-xs text-slate-400">Dirección: {movie.director}</p>
-                          </div>
-
-                          <p class="text-xs text-slate-300 leading-relaxed line-clamp-2">{movie.synopsis}</p>
-
-                          <div class="p-3 bg-slate-950 rounded-2xl border border-slate-800">
-                            <div class="flex items-center justify-between text-[11px] text-slate-300 font-medium mb-2">
-                              <span>📍 {movie.theater}</span>
-                              <span class="text-amber-400">{movie.distance}</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                              {movie.showtimes.map(time => (
-                                <span key={time} class="bg-slate-800 border border-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded-lg font-mono font-bold">
-                                  {time}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="p-5 pt-0">
-                        <button
-                          onClick={() => setActiveTab('rooms')}
-                          class="w-full bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition-all flex items-center justify-center gap-2"
-                        >
-                          <span>🍿 Proponer Cita Cinéfila</span>
-                        </button>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {INITIAL_BILLBOARD.map(m => (
+                  <div key={m.id} class="bg-slate-900 border border-slate-800 rounded-3xl p-4 flex gap-4">
+                    <img src={m.poster} class="w-24 h-36 object-cover rounded-xl" />
+                    <div class="space-y-1 text-xs">
+                      <h3 class="text-base font-bold text-white">{m.title}</h3>
+                      <p class="text-amber-400">{m.genre} • {m.duration}</p>
+                      <p class="text-slate-400">{m.theater}</p>
+                      <div class="flex gap-1 pt-2">
+                        {m.showtimes.map(t => (
+                          <span key={t} class="bg-slate-800 px-2 py-1 rounded font-mono font-bold text-slate-200">{t}</span>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* TAB 3: CATÁLOGO STREAMING */}
-            {activeTab === 'streaming' && (
-              <div class="space-y-6">
-                <div>
-                  <h2 class="text-2xl font-black text-white">📺 Recomendaciones de Streaming</h2>
-                  <p class="text-xs text-slate-400">Series y cine de autor recomendados por críticos certificados</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {INITIAL_STREAMING.map(item => (
-                    <div key={item.id} class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition-all shadow-xl">
-                      <div>
-                        <div class="h-44 w-full overflow-hidden relative">
-                          <img src={item.cover} alt={item.title} class="w-full h-full object-cover" />
-                          <div class="absolute top-3 left-3 bg-amber-500 text-slate-950 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">
-                            {item.tag}
-                          </div>
-                          <div class="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-amber-300">
-                            ★ {item.rating}
-                          </div>
-                        </div>
-
-                        <div class="p-5 space-y-2">
-                          <span class="text-[10px] font-mono text-indigo-400 font-bold uppercase">{item.platform} • {item.type}</span>
-                          <h3 class="text-base font-bold text-white">{item.title}</h3>
-                          <p class="text-xs text-slate-300 leading-relaxed">{item.synopsis}</p>
-                        </div>
-                      </div>
-
-                      <div class="p-5 pt-0">
-                        <button
-                          onClick={() => {
-                            setNewThreadMovie(item.title);
-                            setActiveTab('forums');
-                          }}
-                          class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 rounded-xl text-xs transition-all"
-                        >
-                          💬 Iniciar Debate en Foros
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 4: FOROS Y CRÍTICA */}
-            {activeTab === 'forums' && (
-              <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* LISTA DE DEBATES */}
-                <div class="lg:col-span-2 space-y-4">
-                  <div>
-                    <h2 class="text-2xl font-black text-white">💬 Foros de Debate & Teorías</h2>
-                    <p class="text-xs text-slate-400">Análisis sin censura, opiniones técnicas y debates con aviso de spoilers</p>
-                  </div>
-
-                  <div class="space-y-4">
-                    {forumThreads.map(thread => (
-                      <div key={thread.id} class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-                        <div class="flex items-center justify-between flex-wrap gap-2">
-                          <div class="flex items-center gap-3">
-                            <img src={thread.avatar} alt={thread.author} class="w-10 h-10 rounded-full object-cover" />
-                            <div>
-                              <div class="flex items-center gap-2">
-                                <h4 class="text-xs font-bold text-white">{thread.author}</h4>
-                                <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">{thread.role}</span>
-                              </div>
-                              <p class="text-[10px] text-amber-400 font-mono">Película: {thread.movieTitle} • {thread.createdAt}</p>
-                            </div>
-                          </div>
-                          {thread.hasSpoilers && (
-                            <span class="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] px-2.5 py-0.5 rounded-full font-bold">
-                              ⚠️ CONTIENE SPOILERS
-                            </span>
-                          )}
-                        </div>
-
-                        <h3 class="text-base font-bold text-white">{thread.title}</h3>
-                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">{thread.content}</p>
-
-                        {/* RESPUESTAS AL DEBATE */}
-                        {thread.comments && thread.comments.length > 0 && (
-                          <div class="bg-slate-950 p-3.5 rounded-2xl space-y-2 border border-slate-800/80">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Respuestas recientes:</p>
-                            {thread.comments.map(c => (
-                              <div key={c.id} class="text-xs text-slate-300 border-l-2 border-amber-500/60 pl-2.5 py-0.5">
-                                <span class="font-bold text-white">{c.author}: </span>
-                                {c.text}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* INPUT PARA RESPONDER */}
-                        <div class="flex gap-2 pt-2 border-t border-slate-800">
-                          <input
-                            type="text"
-                            placeholder="Escribe tu opinión en este debate..."
-                            value={selectedThread === thread.id ? replyText : ''}
-                            onFocus={() => setSelectedThread(thread.id)}
-                            onChange={(e) => setReplyText(e.target.value)}
-                            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
-                          />
-                          <button
-                            onClick={() => handleAddReply(thread.id)}
-                            class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs transition-all"
-                          >
-                            Responder
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* FORMULARIO CREAR DEBATE */}
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 h-fit shadow-xl">
-                  <h3 class="font-bold text-sm text-white">✍️ Iniciar Nuevo Debate</h3>
-                  <form onSubmit={handleCreateThread} class="space-y-3.5 text-xs">
-                    <div>
-                      <label class="block text-slate-400 mb-1">Película / Título:</label>
-                      <input
-                        type="text"
-                        value={newThreadMovie}
-                        onChange={(e) => setNewThreadMovie(e.target.value)}
-                        class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label class="block text-slate-400 mb-1">Título del Tema:</label>
-                      <input
-                        type="text"
-                        placeholder="Ej. ¿Qué opinan del montaje sonoro?"
-                        value={newThreadTitle}
-                        onChange={(e) => setNewThreadTitle(e.target.value)}
-                        class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label class="block text-slate-400 mb-1">Tu Análisis o Pregunta:</label>
-                      <textarea
-                        rows="4"
-                        placeholder="Escribe tus argumentos y teoría..."
-                        value={newThreadContent}
-                        onChange={(e) => setNewThreadContent(e.target.value)}
-                        class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500"
-                        required
-                      ></textarea>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="spoilersCheck"
-                        checked={newThreadSpoilers}
-                        onChange={(e) => setNewThreadSpoilers(e.target.checked)}
-                        class="rounded bg-slate-950 border-slate-800 text-amber-500 focus:ring-0"
-                      />
-                      <label htmlFor="spoilersCheck" class="text-slate-300 cursor-pointer">
-                        Este tema contiene Spoilers
-                      </label>
-                    </div>
-
-                    <button
-                      type="submit"
-                      class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider transition-all shadow-md shadow-amber-500/20"
-                    >
-                      Publicar en Foros
-                    </button>
-                  </form>
-                </div>
-
-              </div>
-            )}
-
-            {/* TAB 5: SALAS EN VIVO */}
-            {activeTab === 'rooms' && (
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-[580px]">
-                
-                {/* LISTA DE SALAS */}
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3 overflow-y-auto shadow-xl">
-                  <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400 mb-2">Salas de Debate Activas</h3>
-                  {chatRooms.map(room => (
-                    <div
-                      key={room.id}
-                      onClick={() => setActiveRoomId(room.id)}
-                      class={`p-3.5 rounded-2xl cursor-pointer transition-all border ${
-                        activeRoomId === room.id
-                          ? 'bg-slate-950 border-amber-500 shadow-md'
-                          : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
-                      }`}
-                    >
-                      <div class="flex items-center justify-between mb-1">
-                        <h4 class="text-xs font-bold text-white truncate">{room.name}</h4>
-                        <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-bold">
-                          {room.activeBadge}
-                        </span>
-                      </div>
-                      <p class="text-[11px] text-slate-400 line-clamp-1">{room.topic}</p>
-                      <span class="text-[10px] text-amber-400 mt-2 block font-mono">👥 {room.members} miembros</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* ÁREA DE MENSAJES Y CHAT */}
-                <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl flex flex-col justify-between overflow-hidden shadow-xl">
-                  
-                  {/* HEADER */}
-                  <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-                    <div>
-                      <h3 class="text-sm font-bold text-white">{activeRoom.name}</h3>
-                      <p class="text-xs text-slate-400">{activeRoom.topic}</p>
-                    </div>
-                  </div>
-
-                  {/* MENSAJES */}
-                  <div class="p-4 flex-1 overflow-y-auto space-y-3">
-                    {activeRoom.messages.map(msg => (
-                      <div key={msg.id} class={`flex flex-col ${msg.sender === myProfile.name ? 'items-end' : 'items-start'}`}>
-                        <div class="flex items-center gap-1.5 mb-0.5">
-                          <span class="text-[10px] text-slate-400 font-bold">{msg.sender}</span>
-                          <span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.2 rounded">{msg.role}</span>
-                        </div>
-                        <div class={`text-xs px-3.5 py-2 rounded-2xl max-w-[80%] ${
-                          msg.sender === myProfile.name
-                            ? 'bg-amber-500 text-slate-950 font-semibold'
-                            : 'bg-slate-800 text-slate-200'
-                        }`}>
-                          {msg.text}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* INPUT */}
-                  <form onSubmit={handleSendMessage} class="p-3 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="Escribe tu mensaje en la sala..."
-                      value={roomInput}
-                      onChange={(e) => setRoomInput(e.target.value)}
-                      class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
-                    />
-                    <button
-                      type="submit"
-                      class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all"
-                    >
-                      Enviar
-                    </button>
-                  </form>
-
-                </div>
-
-              </div>
-            )}
-
-            {/* TAB 6: PERFIL PROPIO */}
+            {/* TAB: MI PERFIL */}
             {activeTab === 'profile' && (
-              <div class="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-                <div class="flex items-center gap-4">
-                  <div class="w-16 h-16 rounded-2xl bg-amber-500 text-slate-950 font-black text-2xl flex items-center justify-center shadow-lg">
-                    {myProfile.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h2 class="text-xl font-black text-white">{myProfile.name}, {myProfile.age}</h2>
-                    <p class="text-xs text-amber-400">{myProfile.role} • 📍 {myProfile.location}</p>
-                  </div>
-                </div>
-
-                <div class="space-y-4 text-xs">
-                  <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Biografía Cinéfila:</label>
-                    <textarea
-                      rows="3"
-                      value={myProfile.bio}
-                      onChange={(e) => setMyProfile({ ...myProfile, bio: e.target.value })}
-                      class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500"
-                    ></textarea>
-                  </div>
-
-                  <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Top 3 Películas Favoritas (separadas por coma):</label>
-                    <input
-                      type="text"
-                      value={myProfile.topMovies.join(', ')}
-                      onChange={(e) => setMyProfile({ ...myProfile, topMovies: e.target.value.split(',').map(s => s.trim()) })}
-                      class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label class="block text-slate-400 mb-1 font-bold">Géneros Preferidos (separados por coma):</label>
-                    <input
-                      type="text"
-                      value={myProfile.favoriteGenres.join(', ')}
-                      onChange={(e) => setMyProfile({ ...myProfile, favoriteGenres: e.target.value.split(',').map(s => s.trim()) })}
-                      class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-
-                  <div class="pt-2">
-                    <button
-                      onClick={() => alert('¡Tu perfil cinéfilo ha sido actualizado!')}
-                      class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider transition-all"
-                    >
-                      Guardar Cambios
-                    </button>
-                  </div>
-                </div>
+              <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md mx-auto space-y-4 text-xs">
+                <h2 class="text-lg font-black text-white">Mi Perfil Cinéfilo</h2>
+                <p class="text-slate-400">Si no has iniciado sesión, crea tu cuenta con el botón superior para personalizar tus datos.</p>
+                <button onClick={() => setShowAuthModal(true)} class="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase">
+                  Registrarse / Iniciar Sesión
+                </button>
               </div>
             )}
 
           </main>
 
-          {/* MODAL MATCH CELEBRATION */}
-          {showMatchModal && (
+          {/* MODAL CREAR CUENTA / LOGIN */}
+          {showAuthModal && (
             <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-              <div class="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
-                <div class="text-4xl animate-bounce">🍿✨</div>
-                <h3 class="text-xl font-black text-white">¡Match Cinéfilo Encontrado!</h3>
-                <p class="text-xs text-slate-300 leading-relaxed">
-                  Tú y <b>{showMatchModal.name}</b> comparten una afinidad del <b>{showMatchModal.affinity}%</b> y adoran películas similares.
-                </p>
-                <div class="flex gap-2 pt-2">
-                  <button
-                    onClick={() => {
-                      setShowMatchModal(null);
-                      setActiveTab('rooms');
-                    }}
-                    class="flex-1 bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase transition-all shadow-lg"
-                  >
-                    Abrir Chat
-                  </button>
-                  <button
-                    onClick={() => setShowMatchModal(null)}
-                    class="bg-slate-800 text-slate-300 font-bold py-2.5 px-4 rounded-xl text-xs hover:bg-slate-700"
-                  >
-                    Seguir
-                  </button>
+              <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative shadow-2xl">
+                <button onClick={() => setShowAuthModal(false)} class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold">✖</button>
+                
+                <div class="text-center">
+                  <h3 class="text-lg font-black text-white">
+                    {authMode === 'login' ? 'Iniciar Sesión' : 'Crear Perfil Cinéfilo'}
+                  </h3>
                 </div>
+
+                <form onSubmit={handleAuthSubmit} class="space-y-3 text-xs">
+                  {authMode === 'register' && (
+                    <div>
+                      <label class="block text-slate-400 mb-1">Nombre Completo:</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Sofia Valdés"
+                        value={authForm.name}
+                        onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })}
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label class="block text-slate-400 mb-1">Correo Electrónico:</label>
+                    <input
+                      type="email"
+                      placeholder="tu@email.com"
+                      value={authForm.email}
+                      onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
+                      class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-slate-400 mb-1">Contraseña:</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={authForm.password}
+                      onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+                      class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500"
+                      required
+                    />
+                  </div>
+
+                  <button type="submit" class="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider shadow-md">
+                    {authMode === 'login' ? 'Entrar' : 'Crear Cuenta'}
+                  </button>
+                </form>
+
+                <div class="text-center pt-2 border-t border-slate-800 text-xs">
+                  {authMode === 'login' ? (
+                    <p class="text-slate-400">
+                      ¿No tienes cuenta?{' '}
+                      <button onClick={() => setAuthMode('register')} class="text-amber-400 font-bold hover:underline">
+                        Regístrate aquí
+                      </button>
+                    </p>
+                  ) : (
+                    <p class="text-slate-400">
+                      ¿Ya tienes cuenta?{' '}
+                      <button onClick={() => setAuthMode('login')} class="text-amber-400 font-bold hover:underline">
+                        Inicia sesión
+                      </button>
+                    </p>
+                  )}
+                </div>
+
               </div>
             </div>
           )}
-
-          {/* FOOTER */}
-          <footer class="border-t border-slate-900 bg-slate-950 py-4 px-6 text-center text-xs text-slate-500">
-            Plottwisme • Plataforma Cinéfila Unificada • Todos los derechos reservados
-          </footer>
 
         </div>
       );
     }
 
-    // MONTAJE FINAL EN EL DOM
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
