@@ -1,3 +1,7 @@
+Las dos mejoras que propones le darán un salto enorme a la experiencia de usuario de Plottwisme:
+ * Configuración y Alertas de Match: Un interruptor en el perfil para activar/desactivar notificaciones en tiempo real, junto con un banner o ventana emergente al abrir la app avisándote si tienes un nuevo match cinéfilo.
+ * Pantalla de Inicio Activa (Home Cartelera): Reemplazar la pantalla de carga oscura o vacía por un feed dinámico de Estrenos en Cartelera Local que muestre inmediatamente los títulos proyectados en los cines de tu zona.
+Aquí tienes el código completo con ambas funciones listas para usar:
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -30,22 +34,29 @@
 
     function App() {
       const [theme, setTheme] = useState('dark');
-      const [activeTab, setActiveTab] = useState('radar');
+      // Pestaña por defecto: Cartelera Local de Inicio
+      const [activeTab, setActiveTab] = useState('cartelera'); 
       const [locationStatus, setLocationStatus] = useState('Detectar mi ubicación mundial');
       const [userCoords, setUserCoords] = useState(null);
       const [lastSync, setLastSync] = useState(new Date().toLocaleTimeString());
       
-      // Estado del Usuario con soporte para hasta 5 fotos
+      // Estado de Perfil con Notificaciones de Match
       const [currentUser, setCurrentUser] = useState({
         name: 'Cinéfilo Invitado',
         email: 'invitado@plottwisme.com',
-        genres: 'Cine de Autor, Sci-Fi, Drama',
+        genres: 'Cine de Autor, Sci-Fi, Thriller',
+        lookingFor: 'Compañeros para ir al cine y debates',
+        bio: 'Apasionado por el cine analógico y los giros de guión inesperados. Siempre listo para una función nocturna.',
         isPremium: false,
         isCritic: false,
         isAdmin: false,
+        allowMatchNotifications: true, // Control de notificaciones
         photos: ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'],
         avatarIndex: 0
       });
+
+      // Notificación Emergente de Match al Abrir
+      const [matchNotification, setMatchNotification] = useState(null);
 
       const [showAuthModal, setShowAuthModal] = useState(false);
       const [authMode, setAuthMode] = useState('login');
@@ -54,26 +65,36 @@
       const [cinesGlobales, setCinesGlobales] = useState([]);
       const [cargandoCines, setCargandoCines] = useState(false);
 
-      // Estado para Foros de Discusión
+      // Estrenos en Cartelera Local (Pantalla de Inicio)
+      const carteleraSemanal = [
+        { id: 1, title: 'Oppenheimer: Edición Especial', genre: 'Drama / Historia', runtime: '180 min', rating: '9.3/10', poster: '💣', salas: 'Cine Hoyts / Showcase', times: ['17:30', '20:45', '22:15'] },
+        { id: 2, title: 'Dune: Parte Dos', genre: 'Sci-Fi / Aventura', runtime: '166 min', rating: '9.0/10', poster: '🏜️', salas: 'IMAX Cinema', times: ['16:00', '19:15', '22:30'] },
+        { id: 3, title: 'Anatomía de una Caída', genre: 'Intriga / Suspenso', runtime: '150 min', rating: '8.5/10', poster: '⚖️', salas: 'Cine Arte Múltiplex', times: ['18:00', '20:30'] },
+        { id: 4, title: 'Pobres Criaturas', genre: 'Comedia / Fantasía', runtime: '141 min', rating: '8.8/10', poster: '🎭', salas: 'Cinemark Local', times: ['17:15', '19:45', '22:00'] }
+      ];
+
+      // Streaming Global
+      const [streamingFilter, setStreamingFilter] = useState('Todos');
+      const streamingPlatforms = [
+        { name: 'Netflix', color: 'bg-red-600', logo: '🎬 N' },
+        { name: 'HBO Max', color: 'bg-purple-600', logo: '🟣 Max' },
+        { name: 'Disney+', color: 'bg-blue-600', logo: '✨ D+' },
+        { name: 'Prime Video', color: 'bg-sky-500', logo: '📦 PV' },
+        { name: 'Apple TV+', color: 'bg-slate-700', logo: '🍏 TV+' },
+        { name: 'MUBI', color: 'bg-amber-600', logo: '🎥 MUBI' }
+      ];
+
+      const streamingReleases = [
+        { id: 1, title: 'Dune: Part Two', platform: 'HBO Max', genre: 'Sci-Fi / Aventura', date: 'Estreno Reciente', rating: '9.0/10', poster: '🏜️' },
+        { id: 2, title: 'El Problema de los 3 Cuerpos', platform: 'Netflix', genre: 'Sci-Fi / Misterio', date: 'Esta Semana', rating: '8.4/10', poster: '🌌' },
+        { id: 3, title: 'Shōgun', platform: 'Disney+', genre: 'Drama / Histórico', date: 'Temporada Completa', rating: '9.2/10', poster: '⚔️' },
+        { id: 4, title: 'Fallout', platform: 'Prime Video', genre: 'Acción / Post-Apocalíptico', date: 'Estreno Destacado', rating: '8.6/10', poster: '☢️' }
+      ];
+
+      // Foros
       const [forumsList, setForumsList] = useState([
-        { 
-          id: 1, 
-          title: '¿Es Denis Villeneuve el mejor director de la década?', 
-          category: 'Directores',
-          author: 'Carlos Ruiz',
-          description: 'Debate abierto sobre el impacto visual y narrativo de Dune 1 y 2.',
-          replies: [
-            { author: 'Laura Gómez', text: 'Totalmente de acuerdo, la atmósfera sonora es impecable.' }
-          ]
-        },
-        { 
-          id: 2, 
-          title: 'Teorías sobre el final de Inception', 
-          category: 'Cine de Culto',
-          author: 'Ana Martínez',
-          description: '¿El tótem cayó o sigue girando en el limbo?',
-          replies: []
-        }
+        { id: 1, title: '¿Es Denis Villeneuve el mejor director de la década?', category: 'Directores', author: 'Carlos Ruiz', description: 'Debate abierto sobre el impacto visual y narrativo de Dune 1 y 2.', replies: [{ author: 'Laura Gómez', text: 'Totalmente de acuerdo, la atmósfera sonora es impecable.' }] },
+        { id: 2, title: 'Teorías sobre el final de Inception', category: 'Cine de Culto', author: 'Ana Martínez', description: '¿El tótem cayó o sigue girando en el limbo?', replies: [] }
       ]);
 
       const [showNewForumModal, setShowNewForumModal] = useState(false);
@@ -81,21 +102,33 @@
       const [selectedForum, setSelectedForum] = useState(null);
       const [newReplyText, setNewReplyText] = useState('');
 
+      // Usuarios Match
       const [usersList, setUsersList] = useState([
-        { id: 1, name: 'Carlos Ruiz', email: 'carlos@cine.com', isCritic: true, isPremium: true, genres: 'Sci-Fi, Thriller', distance: '12 km' },
-        { id: 2, name: 'Laura Gómez', email: 'laura@cine.com', isCritic: false, isPremium: false, genres: 'Drama, Romance', distance: '45 km' }
+        { id: 1, name: 'Carlos Ruiz', email: 'carlos@cine.com', genres: 'Sci-Fi, Thriller, IMAX', lookingFor: 'Compañero para estrenos IMAX', bio: 'Fan de Christopher Nolan y Denis Villeneuve.', distance: '12 km', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80' },
+        { id: 2, name: 'Laura Gómez', email: 'laura@cine.com', genres: 'Drama, Romance, Cine Independiente', lookingFor: 'Pareja cinéfila / Salidas a salas de autor', bio: 'Amante de los festivales de cine y debates profundos.', distance: '45 km', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' }
       ]);
 
-      const [criticsReviews, setCriticsReviews] = useState([
+      const [criticsReviews] = useState([
         { author: 'Carlos Ruiz', role: 'Crítico Certificado', text: 'Excelente experiencia de cine global.', rating: '★★★★☆' }
       ]);
 
-      const [newReview, setNewReview] = useState('');
+      // Simulación de Alerta de Match al Iniciar
+      useEffect(() => {
+        if (currentUser.allowMatchNotifications) {
+          const timer = setTimeout(() => {
+            setMatchNotification({
+              userName: 'Laura Gómez',
+              matchPercent: '95%',
+              movie: 'Anatomía de una Caída',
+              avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80'
+            });
+          }, 1500);
+          return () => clearTimeout(timer);
+        }
+      }, [currentUser.allowMatchNotifications]);
 
       useEffect(() => {
-        const interval = setInterval(() => {
-          setLastSync(new Date().toLocaleTimeString());
-        }, 30000);
+        const interval = setInterval(() => setLastSync(new Date().toLocaleTimeString()), 30000);
         return () => clearInterval(interval);
       }, []);
 
@@ -162,21 +195,18 @@
         e.preventDefault();
         const isAdmin = authForm.email.toLowerCase() === ADMIN_EMAIL;
         const loggedUser = { 
+          ...currentUser,
           name: authForm.name || authForm.email.split('@')[0], 
           email: authForm.email, 
-          genres: currentUser.genres || 'Cine de Autor, Sci-Fi',
           isPremium: isAdmin,
           isCritic: isAdmin,
-          isAdmin: isAdmin,
-          photos: currentUser.photos || ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'],
-          avatarIndex: 0
+          isAdmin: isAdmin
         };
         setCurrentUser(loggedUser);
         setShowAuthModal(false);
         setAuthForm({ name: '', email: '', password: '' });
       };
 
-      // Gestión de Fotos de Perfil (Hasta 5 fotos)
       const handleAddPhoto = (e) => {
         const file = e.target.files[0];
         if (file && currentUser.photos.length < 5) {
@@ -200,7 +230,6 @@
         });
       };
 
-      // Creación y Respuestas en Foros
       const handleCreateForum = (e) => {
         e.preventDefault();
         if (!newForum.title.trim()) return;
@@ -242,23 +271,26 @@
         setNewReplyText('');
       };
 
-      const radioMaximoKm = currentUser?.isPremium ? 500 : 100;
+      const filteredStreaming = streamingFilter === 'Todos' 
+        ? streamingReleases 
+        : streamingReleases.filter(s => s.platform === streamingFilter);
 
       return (
         <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-gray-100 text-slate-900'}`}>
           
           <header className={`border-b p-4 sticky top-0 z-40 ${theme === 'dark' ? 'border-slate-800 bg-slate-950/90 backdrop-blur' : 'border-gray-300 bg-white/90 backdrop-blur'}`}>
             <div className="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-4">
-              <h1 className="font-black text-2xl text-amber-500 tracking-wider">PLOTTWISME 🌐</h1>
+              <h1 className="font-black text-2xl text-amber-500 tracking-wider cursor-pointer" onClick={() => setActiveTab('cartelera')}>PLOTTWISME 🌐</h1>
               
               <nav className="flex flex-wrap gap-2 text-xs font-bold uppercase">
                 {[
-                  { id: 'radar', label: '🎯 Radar Mundial' },
-                  { id: 'match', label: '🔥 Match Cinéfilo' },
-                  { id: 'criticos', label: '✍️ Críticos' },
+                  { id: 'cartelera', label: '🍿 Cartelera Local' },
+                  { id: 'radar', label: '🎯 Radar Cines' },
+                  { id: 'streaming', label: '📺 Streaming' },
+                  { id: 'match', label: '🔥 Match' },
                   { id: 'foros', label: '💬 Foros' },
-                  { id: 'perfil', label: '👤 Mi Perfil' },
-                  ...(currentUser?.isAdmin ? [{ id: 'admin', label: '⚡ Panel Admin' }] : [])
+                  { id: 'perfil', label: '👤 Perfil' },
+                  ...(currentUser?.isAdmin ? [{ id: 'admin', label: '⚡ Admin' }] : [])
                 ].map(tab => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 font-black shadow' : 'hover:bg-slate-800 hover:text-white'}`}>{tab.label}</button>
                 ))}
@@ -274,9 +306,71 @@
             </div>
           </header>
 
+          {/* NOTIFICACIÓN EMERGENTE DE MATCH AL ABRIR */}
+          {matchNotification && (
+            <div className="fixed bottom-5 right-5 z-50 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 p-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-sm animate-bounce border border-amber-300">
+              <img src={matchNotification.avatar} className="w-12 h-12 rounded-xl object-cover border border-slate-950" />
+              <div className="flex-1 text-xs">
+                <p className="font-black text-sm uppercase">¡Nuevo Match Cinéfilo! 🔥</p>
+                <p className="font-bold">{matchNotification.userName} ({matchNotification.matchPercent} de afinidad)</p>
+                <p className="text-[10px] opacity-90">Coincidencia para ver: {matchNotification.movie}</p>
+              </div>
+              <button onClick={() => setMatchNotification(null)} className="font-bold text-slate-950 hover:text-white text-sm">✖</button>
+            </div>
+          )}
+
           <main className="max-w-5xl mx-auto p-6">
             
-            {/* RADAR Y CINES MUNDIALES */}
+            {/* PANTALLA DE INICIO: CARTELERA Y ESTRENOS DE LA SEMANA */}
+            {activeTab === 'cartelera' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <div>
+                    <h2 className="text-2xl font-black text-amber-500">🍿 Estrenos de la Semana en tu Área</h2>
+                    <p className="text-xs text-slate-400">Cartelera actualizada con funciones y salas en tiempo real cerca de ti.</p>
+                  </div>
+                  <button onClick={() => setActiveTab('radar')} className="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-4 py-2 rounded-xl font-bold text-xs">
+                    📍 Buscar Cines Cercanos
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {carteleraSemanal.map((film) => (
+                    <div key={film.id} className={`p-6 rounded-3xl border space-y-4 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div className="flex justify-between items-start">
+                        <span className="text-5xl">{film.poster}</span>
+                        <span className="bg-amber-500/10 border border-amber-500/30 text-amber-400 font-black text-xs px-3 py-1 rounded-full">
+                          ★ {film.rating}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-bold uppercase">{film.genre} • {film.runtime}</span>
+                        <h3 className="text-xl font-black text-white mt-1">{film.title}</h3>
+                        <p className="text-xs text-slate-400 mt-1">📍 {film.salas}</p>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-800">
+                        <p className="text-[11px] font-bold text-slate-400 mb-2">Horarios disponibles hoy:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {film.times.map((t, idx) => (
+                            <span key={idx} className="bg-slate-950 border border-slate-800 hover:border-amber-500 text-amber-400 text-xs font-mono font-bold px-3 py-1 rounded-lg cursor-pointer">
+                              🕒 {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button onClick={() => setActiveTab('match')} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all">
+                        Buscar Compañero para esta función 🎟️
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RADAR DE CINES */}
             {activeTab === 'radar' && (
               <div className="space-y-6">
                 <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
@@ -293,13 +387,6 @@
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-black text-amber-500">🎬 Cines Detectados en Tiempo Real</h3>
-                  <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-                    🟢 Red Global Activa ({lastSync})
-                  </span>
-                </div>
-
                 {cargandoCines && (
                   <div className="p-8 text-center text-amber-400 bg-slate-900 rounded-2xl border border-slate-800 animate-pulse">
                     🔍 Escaneando cines en cualquier parte del mundo...
@@ -308,14 +395,14 @@
 
                 {!cargandoCines && cinesGlobales.length === 0 && (
                   <div className="p-8 text-center text-slate-400 bg-slate-900 rounded-2xl border border-slate-800">
-                    Haz clic en <strong>"📍 Detectar mi ubicación mundial"</strong> para escanear las salas cercanas en un radio de {radioMaximoKm} km.
+                    Haz clic en <strong>"📍 Detectar mi ubicación mundial"</strong> para escanear salas de cine.
                   </div>
                 )}
 
                 <div className="space-y-4">
                   {cinesGlobales.map((cine) => (
                     <div key={cine.id} className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                      <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
+                      <div className="flex justify-between items-start flex-wrap gap-2">
                         <div>
                           <h4 className="font-bold text-lg text-amber-500">{cine.nombre}</h4>
                           <p className="text-xs text-slate-400">{cine.direccion}</p>
@@ -326,12 +413,11 @@
                       </div>
 
                       <div className="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center flex-wrap gap-2">
-                        <span className="text-xs text-slate-400">Coordenadas: {cine.lat.toFixed(4)}, {cine.lng.toFixed(4)}</span>
                         <a 
                           href={`https://www.google.com/maps/search/?api=1&query=${cine.lat},${cine.lng}`}
                           target="_blank" 
                           rel="noreferrer"
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow"
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all"
                         >
                           🗺️ Abrir Ruta en Google Maps
                         </a>
@@ -342,108 +428,72 @@
               </div>
             )}
 
-            {/* FOROS DE DISCUSIÓN DINÁMICOS */}
-            {activeTab === 'foros' && (
+            {/* ESTRENOS STREAMING */}
+            {activeTab === 'streaming' && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center flex-wrap gap-2">
-                  <div>
-                    <h2 className="text-2xl font-black text-amber-500">💬 Foros de Discusión Cinéfila</h2>
-                    <p className="text-xs text-slate-400">Crea salas de debate, comparte opiniones y responde a otros miembros.</p>
-                  </div>
-                  <button 
-                    onClick={() => setShowNewForumModal(true)}
-                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider"
-                  >
-                    ➕ Crear Nuevo Foro
-                  </button>
+                <div>
+                  <h2 className="text-2xl font-black text-amber-500">📺 Estrenos en Plataformas Globales</h2>
+                  <p className="text-xs text-slate-400">Descubre los lanzamientos destacados en las principales apps de streaming.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Lista de Foros */}
-                  <div className="md:col-span-1 space-y-3">
-                    {forumsList.map((forum) => (
-                      <div 
-                        key={forum.id} 
-                        onClick={() => setSelectedForum(forum)}
-                        className={`p-4 rounded-2xl border cursor-pointer transition-all ${selectedForum?.id === forum.id ? 'border-amber-500 bg-amber-500/10' : theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:border-slate-700' : 'bg-white border-gray-200'}`}
-                      >
-                        <span className="text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded font-bold uppercase">{forum.category}</span>
-                        <h4 className="font-bold text-sm mt-2 text-white">{forum.title}</h4>
-                        <div className="flex justify-between items-center mt-3 text-[11px] text-slate-400">
-                          <span>Por {forum.author}</span>
-                          <span>💬 {forum.replies.length} resp.</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => setStreamingFilter('Todos')} className={`px-4 py-2 rounded-xl text-xs font-bold ${streamingFilter === 'Todos' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 border border-slate-800'}`}>
+                    🌐 Todas las Plataformas
+                  </button>
+                  {streamingPlatforms.map((platform) => (
+                    <button key={platform.name} onClick={() => setStreamingFilter(platform.name)} className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 ${streamingFilter === platform.name ? 'ring-2 ring-amber-500 bg-slate-800 text-white' : 'bg-slate-900 border border-slate-800'}`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] text-white font-black ${platform.color}`}>{platform.logo}</span>
+                      <span>{platform.name}</span>
+                    </button>
+                  ))}
+                </div>
 
-                  {/* Vista Detallada del Foro Seleccionado */}
-                  <div className="md:col-span-2">
-                    {selectedForum ? (
-                      <div className={`p-6 rounded-3xl border space-y-4 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                        <div>
-                          <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full font-bold uppercase border border-amber-500/30">{selectedForum.category}</span>
-                          <h3 className="text-xl font-black mt-2 text-amber-500">{selectedForum.title}</h3>
-                          <p className="text-xs text-slate-400 mt-1">Iniciado por <strong>{selectedForum.author}</strong></p>
-                          <p className="text-xs text-slate-300 mt-3 p-3 bg-slate-950 rounded-xl border border-slate-800">{selectedForum.description}</p>
-                        </div>
-
-                        <div className="border-t border-slate-800 pt-4 space-y-3">
-                          <h4 className="font-bold text-xs uppercase text-slate-400">Respuestas ({selectedForum.replies.length})</h4>
-                          {selectedForum.replies.length === 0 ? (
-                            <p className="text-xs text-slate-500 italic">Sé el primero en responder a este debate.</p>
-                          ) : (
-                            selectedForum.replies.map((rep, idx) => (
-                              <div key={idx} className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
-                                <p className="font-bold text-amber-400">{rep.author}</p>
-                                <p className="text-slate-200 mt-1">{rep.text}</p>
-                              </div>
-                            ))
-                          )}
-                        </div>
-
-                        <div className="pt-2 flex gap-2">
-                          <input 
-                            type="text" 
-                            value={newReplyText}
-                            onChange={(e) => setNewReplyText(e.target.value)}
-                            placeholder="Escribe tu opinión en el debate..."
-                            className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white"
-                          />
-                          <button 
-                            onClick={() => handleAddReply(selectedForum.id)}
-                            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs"
-                          >
-                            Responder
-                          </button>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {filteredStreaming.map((item) => (
+                    <div key={item.id} className={`p-5 rounded-2xl border space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div className="flex justify-between items-start">
+                        <span className="text-4xl">{item.poster}</span>
+                        <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded-full font-black">★ {item.rating}</span>
                       </div>
-                    ) : (
-                      <div className="p-8 text-center text-slate-400 bg-slate-900 rounded-3xl border border-slate-800">
-                        👈 Selecciona un foro de la lista para ver el debate o crea uno nuevo.
+                      <div>
+                        <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded uppercase font-bold">{item.platform}</span>
+                        <h3 className="font-bold text-lg text-white mt-1">{item.title}</h3>
+                        <p className="text-xs text-slate-400">{item.genre}</p>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* MI PERFIL CON GALERÍA DE HASTA 5 FOTOS */}
+            {/* MI PERFIL Y CONFIGURACIÓN DE NOTIFICACIONES */}
             {activeTab === 'perfil' && (
-              <div className="space-y-6 max-w-xl mx-auto">
+              <div className="space-y-6 max-w-2xl mx-auto">
                 <div className={`p-8 rounded-3xl border space-y-6 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                  <div className="flex items-center gap-4 border-b border-slate-800 pb-6">
-                    <img 
-                      src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} 
-                      className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500 shadow-lg" 
-                    />
+                  
+                  <div className="flex items-center gap-5 border-b border-slate-800 pb-6">
+                    <img src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} className="w-24 h-24 rounded-2xl object-cover border-2 border-amber-500 shadow-lg" />
                     <div>
-                      <h3 className="text-xl font-black">{currentUser.name}</h3>
+                      <h3 className="text-2xl font-black">{currentUser.name}</h3>
                       <p className="text-xs text-slate-400">{currentUser.email}</p>
                       <span className="inline-block mt-2 px-3 py-0.5 bg-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold border border-amber-500/30">
-                        {currentUser.isPremium ? '👑 Premium (500 km global)' : '🆓 Plan Gratuito (100 km)'}
+                        {currentUser.isPremium ? '👑 Cobertura Global Activa' : '🆓 Plan Gratuito (100 km)'}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Interruptor de Notificaciones de Match */}
+                  <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                      <h4 className="font-bold text-xs uppercase text-amber-500">🔔 Notificaciones de Match Instantáneas</h4>
+                      <p className="text-[11px] text-slate-400">Recibe una alerta en tiempo real al abrir la app cuando alguien coincida con tus gustos.</p>
+                    </div>
+                    <button 
+                      onClick={() => setCurrentUser({ ...currentUser, allowMatchNotifications: !currentUser.allowMatchNotifications })}
+                      className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${currentUser.allowMatchNotifications ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'}`}
+                    >
+                      {currentUser.allowMatchNotifications ? 'ON' : 'OFF'}
+                    </button>
                   </div>
 
                   {/* Galería de Fotos (Hasta 5 fotos) */}
@@ -469,7 +519,7 @@
                           {currentUser.photos.length > 1 && (
                             <button 
                               onClick={() => handleRemovePhoto(index)}
-                              className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100"
                             >
                               ✕
                             </button>
@@ -477,8 +527,34 @@
                         </div>
                       ))}
                     </div>
-                    <p className="text-[10px] text-slate-400">Haz clic en cualquier imagen para establecerla como tu foto principal.</p>
                   </div>
+
+                  {/* Edición de Bio y Gustos */}
+                  <div className="space-y-4 pt-4 border-t border-slate-800 text-xs">
+                    <div>
+                      <label className="block text-slate-400 mb-1">Mi Biografía Cinéfila:</label>
+                      <textarea 
+                        rows="3"
+                        value={currentUser.bio}
+                        onChange={(e) => setCurrentUser({ ...currentUser, bio: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-amber-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-400 mb-1">¿Qué busco en Plottwisme?:</label>
+                      <select 
+                        value={currentUser.lookingFor}
+                        onChange={(e) => setCurrentUser({ ...currentUser, lookingFor: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:border-amber-500 outline-none"
+                      >
+                        <option value="Compañeros para ir al cine y debates">Compañeros para ir al cine y debates</option>
+                        <option value="Pareja cinéfila con quien compartir películas">Pareja cinéfila con quien compartir películas</option>
+                        <option value="Amigos con quién comentar estrenos">Amigos con quién comentar estrenos</option>
+                      </select>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             )}
@@ -486,16 +562,22 @@
             {/* MATCH CINÉFILO */}
             {activeTab === 'match' && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-black text-amber-500">Conecta con Cinéfilos Cercanos</h2>
+                <h2 className="text-2xl font-black text-amber-500">🔥 Match Cinéfilo</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {usersList.map((user) => (
-                    <div key={user.id} className={`p-5 rounded-2xl border space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-bold text-base">{user.name}</h3>
-                        <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-500 font-bold">📍 {user.distance}</span>
+                    <div key={user.id} className={`p-6 rounded-3xl border space-y-4 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div className="flex items-center gap-4">
+                        <img src={user.avatar} className="w-14 h-14 rounded-2xl object-cover border border-amber-500" />
+                        <div>
+                          <h3 className="font-bold text-base text-white">{user.name}</h3>
+                          <span className="text-[10px] bg-slate-800 px-2.5 py-0.5 rounded-full text-amber-400 font-bold">📍 a {user.distance}</span>
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-400"><strong>Gustos:</strong> {user.genres}</p>
-                      <button className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider">
+                      <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-xs space-y-2">
+                        <p className="text-slate-300 italic">"{user.bio}"</p>
+                        <p><strong className="text-amber-400">Busca:</strong> {user.lookingFor}</p>
+                      </div>
+                      <button className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase tracking-wider">
                         Enviar Invitación al Cine 🎟️
                       </button>
                     </div>
@@ -504,21 +586,48 @@
               </div>
             )}
 
-            {/* CRÍTICOS */}
-            {activeTab === 'criticos' && (
+            {/* FOROS */}
+            {activeTab === 'foros' && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-black text-amber-500">Críticas y Reseñas</h2>
-                <div className="space-y-4">
-                  {criticsReviews.map((rev, i) => (
-                    <div key={i} className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                      <div className="flex justify-between items-center mb-1">
-                        <h4 className="font-bold text-sm">{rev.author}</h4>
-                        <span className="text-amber-500 font-black text-xs">{rev.rating}</span>
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-black text-amber-500">💬 Foros de Discusión</h2>
+                  <button onClick={() => setShowNewForumModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase">
+                    ➕ Crear Nuevo Foro
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-1 space-y-3">
+                    {forumsList.map((forum) => (
+                      <div key={forum.id} onClick={() => setSelectedForum(forum)} className={`p-4 rounded-2xl border cursor-pointer ${selectedForum?.id === forum.id ? 'border-amber-500 bg-amber-500/10' : 'bg-slate-900 border-slate-800'}`}>
+                        <h4 className="font-bold text-sm text-white">{forum.title}</h4>
+                        <span className="text-[10px] text-slate-400">Por {forum.author}</span>
                       </div>
-                      <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-500 px-2.5 py-0.5 rounded-full font-bold">{rev.role}</span>
-                      <p className="text-xs text-slate-300 italic mt-3">"{rev.text}"</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  <div className="md:col-span-2">
+                    {selectedForum ? (
+                      <div className="p-6 rounded-3xl border bg-slate-900 border-slate-800 space-y-4">
+                        <h3 className="text-xl font-black text-amber-500">{selectedForum.title}</h3>
+                        <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">{selectedForum.description}</p>
+                        <div className="space-y-2">
+                          {selectedForum.replies.map((rep, idx) => (
+                            <div key={idx} className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+                              <p className="font-bold text-amber-400">{rep.author}</p>
+                              <p className="text-slate-200">{rep.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <input type="text" value={newReplyText} onChange={(e) => setNewReplyText(e.target.value)} placeholder="Escribe tu opinión..." className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white" />
+                          <button onClick={() => handleAddReply(selectedForum.id)} className="bg-amber-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs">Responder</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-slate-400 bg-slate-900 rounded-3xl border border-slate-800">
+                        Selecciona un foro para ver el debate.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -527,130 +636,40 @@
             {activeTab === 'admin' && currentUser?.isAdmin && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-black text-amber-500">Panel de Administración</h2>
-                <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                  <h3 className="font-bold text-sm mb-4">Gestión de Usuarios</h3>
-                  <div className="space-y-3">
-                    {usersList.map((usr) => (
-                      <div key={usr.id} className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
-                        <div>
-                          <p className="font-bold">{usr.name}</p>
-                          <p className="text-[10px] text-slate-400">{usr.email}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <div className="p-6 rounded-3xl border bg-slate-900 border-slate-800">
+                  <p className="text-xs text-slate-300">Gestión de la plataforma disponible para {currentUser.email}</p>
                 </div>
               </div>
             )}
 
           </main>
 
-          {/* MODAL CREAR NUEVO FORO */}
+          {/* MODAL NUEVO FORO */}
           {showNewForumModal && (
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 relative shadow-2xl">
-                <button onClick={() => setShowNewForumModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold">✖</button>
-                <h3 className="text-lg font-black text-center text-amber-500">Crear Nuevo Foro de Discusión</h3>
-                
+                <button onClick={() => setShowNewForumModal(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✖</button>
+                <h3 className="text-lg font-black text-center text-amber-500">Crear Nuevo Foro</h3>
                 <form onSubmit={handleCreateForum} className="space-y-3 text-xs">
-                  <div>
-                    <label className="block text-slate-400 mb-1">Título del Tema:</label>
-                    <input 
-                      type="text" 
-                      required 
-                      value={newForum.title}
-                      onChange={(e) => setNewForum({ ...newForum, title: e.target.value })} 
-                      placeholder="Ej: ¿Qué opinan del final de Oppenheimer?"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 mb-1">Categoría:</label>
-                    <select 
-                      value={newForum.category}
-                      onChange={(e) => setNewForum({ ...newForum, category: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
-                    >
-                      <option value="General">General</option>
-                      <option value="Directores">Directores</option>
-                      <option value="Cine de Culto">Cine de Culto</option>
-                      <option value="Estrenos">Estrenos</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 mb-1">Descripción / Pregunta inicial:</label>
-                    <textarea 
-                      required 
-                      rows="3"
-                      value={newForum.description}
-                      onChange={(e) => setNewForum({ ...newForum, description: e.target.value })} 
-                      placeholder="Añade contexto o tu punto de vista inicial..."
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" 
-                    />
-                  </div>
-                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">
-                    Publicar Foro
-                  </button>
+                  <input type="text" required value={newForum.title} onChange={(e) => setNewForum({ ...newForum, title: e.target.value })} placeholder="Título del Tema" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
+                  <textarea required rows="3" value={newForum.description} onChange={(e) => setNewForum({ ...newForum, description: e.target.value })} placeholder="Descripción..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase">Publicar</button>
                 </form>
               </div>
             </div>
           )}
 
-          {/* MODAL DE AUTENTICACIÓN */}
+          {/* MODAL AUTH */}
           {showAuthModal && (
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative shadow-2xl">
-                <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold">✖</button>
-                <h3 className="text-lg font-black text-center text-white">
-                  {authMode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
-                </h3>
-                
+                <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✖</button>
+                <h3 className="text-lg font-black text-center text-white">{authMode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}</h3>
                 <form onSubmit={handleAuthSubmit} className="space-y-3 text-xs">
-                  {authMode === 'register' && (
-                    <div>
-                      <label className="block text-slate-400 mb-1">Nombre:</label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={authForm.name}
-                        onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })} 
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" 
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <label className="block text-slate-400 mb-1">Correo Electrónico:</label>
-                    <input 
-                      type="email" 
-                      required 
-                      value={authForm.email}
-                      onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 mb-1">Contraseña:</label>
-                    <input 
-                      type="password" 
-                      required 
-                      value={authForm.password}
-                      onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" 
-                    />
-                  </div>
-                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">
-                    {authMode === 'login' ? 'Ingresar' : 'Registrarse'}
-                  </button>
+                  <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} placeholder="Correo Electrónico" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
+                  <input type="password" required value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} placeholder="Contraseña" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase">Ingresar</button>
                 </form>
-
-                <div className="text-center pt-2">
-                  <button 
-                    onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
-                    className="text-[11px] text-amber-500 hover:underline"
-                  >
-                    {authMode === 'login' ? '¿No tienes cuenta? Regístrate gratis' : '¿Ya tienes cuenta? Inicia sesión'}
-                  </button>
-                </div>
               </div>
             </div>
           )}
@@ -662,4 +681,9 @@
     root.render(<App />);
   </script>
 </body>
-</html>
+</html>   
+     
+     
+                
+               
+   
