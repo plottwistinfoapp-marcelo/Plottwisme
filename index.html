@@ -29,6 +29,20 @@
       return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
     }
 
+    // Helper para detectar la cadena de cine y devolver su link oficial o búsqueda optimizada
+    function obtenerLinkCine(nombreCine, ciudad) {
+      const nombre = nombreCine.toLowerCase();
+      if (nombre.includes('cinemark') || nombre.includes('hoyts')) return 'https://www.cinemarkhoyts.com.ar';
+      if (nombre.includes('cinepolis') || nombre.includes('cinépolis')) return 'https://www.cinepolis.com.ar';
+      if (nombre.includes('showcase')) return 'https://www.todosloscines.com.ar';
+      if (nombre.includes('cinemacenter')) return 'https://www.cinemacenter.com.ar';
+      if (nombre.includes('atlas')) return 'https://www.cinesatlas.com.ar';
+      if (nombre.includes('multiplex')) return 'https://www.cinesmultiplex.com.ar';
+      
+      // Respaldo dinámico optimizado para salas independientes
+      return `https://www.google.com/search?q=cartelera+horarios+${encodeURIComponent(nombreCine)}+${encodeURIComponent(ciudad)}`;
+    }
+
     function App() {
       const [theme, setTheme] = useState('dark');
       const [activeTab, setActiveTab] = useState('cartelera'); 
@@ -37,8 +51,6 @@
       const [countryCode, setCountryCode] = useState('AR'); 
       const [cityName, setCityName] = useState('');
       const [searchCityInput, setSearchCityInput] = useState('');
-
-      const [adminSimulatedCity, setAdminSimulatedCity] = useState('');
 
       const [currentUser, setCurrentUser] = useState({
         name: 'Cinéfilo Invitado',
@@ -314,7 +326,6 @@
                     </p>
                   </div>
 
-                  {/* Selector / Buscador de Ciudad */}
                   <form onSubmit={actualizarUbicacionManual} className="flex gap-2">
                     <input 
                       type="text" 
@@ -332,19 +343,18 @@
                   </form>
                 </div>
 
-                {/* Banner dinámico de cartelera local */}
                 {cityName && (
                   <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex flex-wrap justify-between items-center gap-3">
                     <span className="text-xs text-slate-300">
-                      🎟️ ¿Buscando la programación local y funciones de hoy en <strong className="text-amber-400">{cityName}</strong>?
+                      🎟️ Consultar funciones y salas disponibles en <strong className="text-amber-400">{cityName}</strong>:
                     </span>
                     <a 
-                      href={`https://www.google.com/search?q=cartelera+de+cine+en+${encodeURIComponent(cityName)}`} 
+                      href={`https://www.google.com/search?q=cartelera+de+cine+horarios+en+${encodeURIComponent(cityName)}`} 
                       target="_blank" 
                       rel="noreferrer" 
                       className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase shadow"
                     >
-                      Ver Salas en {cityName} 🍿
+                      Ver Programación en {cityName} 🍿
                     </a>
                   </div>
                 )}
@@ -379,7 +389,7 @@
                         <div className="space-y-2">
                           {cityName && (
                             <a 
-                              href={`https://www.google.com/search?q=${encodeURIComponent(film.title)}+cine+${encodeURIComponent(cityName)}`} 
+                              href={`https://www.google.com/search?q=${encodeURIComponent(film.title)}+horarios+cine+${encodeURIComponent(cityName)}`} 
                               target="_blank" 
                               rel="noreferrer" 
                               className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-1.5 rounded-xl text-[11px] block text-center border border-slate-700"
@@ -398,14 +408,14 @@
               </div>
             )}
 
-            {/* RADAR CINES */}
+            {/* RADAR CINES CON REDIRECCIÓN INTELIGENTE */}
             {activeTab === 'radar' && (
               <div className="space-y-6">
                 <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
                   <div className="flex justify-between items-center flex-wrap gap-2">
                     <div>
                       <h2 className="font-bold text-lg">🌍 Radar de Cines Locales</h2>
-                      <p className="text-xs text-slate-400">Salas y complejos cerca de {cityName || 'tu ubicación'}.</p>
+                      <p className="text-xs text-slate-400">Salas y complejos detectados cerca de {cityName || 'tu ubicación'}.</p>
                     </div>
                     <button onClick={getGeoLocation} className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs">
                       📍 {locationStatus}
@@ -421,29 +431,32 @@
 
                 <div className="space-y-4">
                   {cinesGlobales.length === 0 && !cargandoCines && (
-                    <p className="text-xs text-slate-400 text-center py-6">Utiliza el buscador de la cartelera o activa el GPS para detectar cines cercanos.</p>
+                    <p className="text-xs text-slate-400 text-center py-6">Utiliza el buscador o activa el GPS para detectar los cines de tu zona.</p>
                   )}
-                  {cinesGlobales.map((cine) => (
-                    <div key={cine.id} className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                      <div className="flex justify-between items-start flex-wrap gap-2">
-                        <div>
-                          <h4 className="font-bold text-lg text-amber-500">{cine.nombre}</h4>
-                          <p className="text-xs text-slate-400">{cine.direccion}</p>
+                  {cinesGlobales.map((cine) => {
+                    const linkOficial = obtenerLinkCine(cine.nombre, cityName);
+                    return (
+                      <div key={cine.id} className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                        <div className="flex justify-between items-start flex-wrap gap-2">
+                          <div>
+                            <h4 className="font-bold text-lg text-amber-500">{cine.nombre}</h4>
+                            <p className="text-xs text-slate-400">{cine.direccion}</p>
+                          </div>
+                          <span className="bg-slate-800 text-amber-400 text-xs px-3 py-1 rounded-full font-mono font-bold border border-slate-700">
+                            📍 {cine.distanciaKm.toFixed(1)} km
+                          </span>
                         </div>
-                        <span className="bg-slate-800 text-amber-400 text-xs px-3 py-1 rounded-full font-mono font-bold border border-slate-700">
-                          📍 {cine.distanciaKm.toFixed(1)} km
-                        </span>
+                        <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap gap-2">
+                          <a href={`https://www.google.com/maps/search/?api=1&query=${cine.lat},${cine.lng}`} target="_blank" rel="noreferrer" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center gap-1.5">
+                            🗺️ Ver Mapa
+                          </a>
+                          <a href={linkOficial} target="_blank" rel="noreferrer" className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-4 py-2 rounded-xl inline-flex items-center gap-1.5 shadow">
+                            🎟️ Ir a la Web / Cartelera Oficial
+                          </a>
+                        </div>
                       </div>
-                      <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap gap-2">
-                        <a href={`https://www.google.com/maps/search/?api=1&query=${cine.lat},${cine.lng}`} target="_blank" rel="noreferrer" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center gap-1.5">
-                          🗺️ Abrir en Maps
-                        </a>
-                        <a href={`https://www.google.com/search?q=cartelera+${encodeURIComponent(cine.nombre)}+${encodeURIComponent(cityName)}`} target="_blank" rel="noreferrer" className="bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center gap-1.5 border border-slate-700">
-                          🍿 Ver Cartelera del Cine
-                        </a>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
