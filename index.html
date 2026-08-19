@@ -69,31 +69,73 @@
       const [cinesGlobales, setCinesGlobales] = useState([]);
       const [cargandoCines, setCargandoCines] = useState(false);
 
-      // Cartelera con enlaces de compra de entradas (Ticketing / Deep Link)
+      // Cartelera con enlaces de compra de entradas y enlaces directos a IMDb
       const carteleraSemanal = [
-        { id: 1, title: 'Oppenheimer: Edición Especial', genre: 'Drama / Historia', runtime: '180 min', rating: '9.3/10', poster: '💣', salas: 'Cine Hoyts / Showcase', times: ['17:30', '20:45', '22:15'], ticketUrl: 'https://www.cinemarkhoyts.com.ar' },
-        { id: 2, title: 'Dune: Parte Dos', genre: 'Sci-Fi / Aventura', runtime: '166 min', rating: '9.0/10', poster: '🏜️', salas: 'IMAX Cinema', times: ['16:00', '19:15', '22:30'], ticketUrl: 'https://www.imax.com' },
-        { id: 3, title: 'Anatomía de una Caída', genre: 'Intriga / Suspenso', runtime: '150 min', rating: '8.5/10', poster: '⚖️', salas: 'Cine Arte Múltiplex', times: ['18:00', '20:30'], ticketUrl: 'https://www.multiplex.com.ar' },
-        { id: 4, title: 'Pobres Criaturas', genre: 'Comedia / Fantasía', runtime: '141 min', rating: '8.8/10', poster: '🎭', salas: 'Cinemark Local', times: ['17:15', '19:45', '22:00'], ticketUrl: 'https://www.cinemarkhoyts.com.ar' }
+        { id: 1, title: 'Oppenheimer', genre: 'Drama / Historia', runtime: '180 min', rating: '8.9/10', poster: '💣', salas: 'Cine Hoyts / Showcase', times: ['17:30', '20:45', '22:15'], ticketUrl: 'https://www.cinemarkhoyts.com.ar', imdbUrl: 'https://www.imdb.com/title/tt15398776/' },
+        { id: 2, title: 'Dune: Parte Dos', genre: 'Sci-Fi / Aventura', runtime: '166 min', rating: '8.6/10', poster: '🏜️', salas: 'IMAX Cinema', times: ['16:00', '19:15', '22:30'], ticketUrl: 'https://www.imax.com', imdbUrl: 'https://www.imdb.com/title/tt1160419/' },
+        { id: 3, title: 'Anatomía de una Caída', genre: 'Intriga / Suspenso', runtime: '150 min', rating: '7.7/10', poster: '⚖️', salas: 'Cine Arte Múltiplex', times: ['18:00', '20:30'], ticketUrl: 'https://www.multiplex.com.ar', imdbUrl: 'https://www.imdb.com/title/tt17009710/' },
+        { id: 4, title: 'Pobres Criaturas', genre: 'Comedia / Fantasía', runtime: '141 min', rating: '7.9/10', poster: '🎭', salas: 'Cinemark Local', times: ['17:15', '19:45', '22:00'], ticketUrl: 'https://www.cinemarkhoyts.com.ar', imdbUrl: 'https://www.imdb.com/title/tt14230458/' }
       ];
 
-      // Streaming
+      // Streaming con integración API TMDB + Enlaces IMDb
       const [streamingFilter, setStreamingFilter] = useState('Todos');
+      const [streamingReleases, setStreamingReleases] = useState([]);
+      const [cargandoStreaming, setCargandoStreaming] = useState(false);
+
       const streamingPlatforms = [
-        { name: 'Netflix', color: 'bg-red-600', logo: '🎬 N' },
-        { name: 'HBO Max', color: 'bg-purple-600', logo: '🟣 Max' },
-        { name: 'Disney+', color: 'bg-blue-600', logo: '✨ D+' },
-        { name: 'Prime Video', color: 'bg-sky-500', logo: '📦 PV' },
-        { name: 'Apple TV+', color: 'bg-slate-700', logo: '🍏 TV+' },
-        { name: 'MUBI', color: 'bg-amber-600', logo: '🎥 MUBI' }
+        { name: 'Netflix', id: 8, color: 'bg-red-600', logo: '🎬 N' },
+        { name: 'HBO Max', id: 1899, color: 'bg-purple-600', logo: '🟣 Max' },
+        { name: 'Disney+', id: 337, color: 'bg-blue-600', logo: '✨ D+' },
+        { name: 'Prime Video', id: 119, color: 'bg-sky-500', logo: '📦 PV' },
+        { name: 'Apple TV+', id: 350, color: 'bg-slate-700', logo: '🍏 TV+' },
+        { name: 'MUBI', id: 11, color: 'bg-amber-600', logo: '🎥 MUBI' }
       ];
 
-      const streamingReleases = [
-        { id: 1, title: 'Dune: Part Two', platform: 'HBO Max', genre: 'Sci-Fi / Aventura', rating: '9.0/10', poster: '🏜️' },
-        { id: 2, title: 'El Problema de los 3 Cuerpos', platform: 'Netflix', genre: 'Sci-Fi / Misterio', rating: '8.4/10', poster: '🌌' },
-        { id: 3, title: 'Shōgun', platform: 'Disney+', genre: 'Drama / Histórico', rating: '9.2/10', poster: '⚔️' },
-        { id: 4, title: 'Fallout', platform: 'Prime Video', genre: 'Acción / Post-Apocalíptico', rating: '8.6/10', poster: '☢️' }
-      ];
+      const cargarEstrenosStreaming = async (providerId = null) => {
+        setCargandoStreaming(true);
+        const API_KEY = '15d1057db3e164415168e7896176377f'; // API demo pública TMDB
+        
+        const hoy = new Date();
+        const hace45Dias = new Date();
+        hace45Dias.setDate(hoy.getDate() - 45);
+        
+        const fechaFin = hoy.toISOString().split('T')[0];
+        const fechaInicio = hace45Dias.toISOString().split('T')[0];
+
+        let providerParam = providerId ? `&with_watch_providers=${providerId}` : '';
+        const url = `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=es-ES&sort_by=first_air_date.desc&first_air_date.gte=${fechaInicio}&first_air_date.lte=${fechaFin}&watch_region=AR${providerParam}`;
+
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+
+          if (data.results && data.results.length > 0) {
+            const formateados = data.results.slice(0, 9).map(item => ({
+              id: item.id,
+              title: item.name || item.title,
+              genre: `Puntuación: ⭐ ${item.vote_average.toFixed(1)}`,
+              overview: item.overview ? item.overview.substring(0, 90) + '...' : 'Sin descripción disponible.',
+              poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+              releaseDate: item.first_air_date,
+              imdbSearchUrl: `https://www.imdb.com/find?q=${encodeURIComponent(item.name || item.title)}`
+            }));
+            setStreamingReleases(formateados);
+          } else {
+            setStreamingReleases([]);
+          }
+        } catch (err) {
+          console.error("Error obteniendo estrenos de TMDB:", err);
+        } finally {
+          setCargandoStreaming(false);
+        }
+      };
+
+      useEffect(() => {
+        if (activeTab === 'streaming') {
+          const plataforma = streamingPlatforms.find(p => p.name === streamingFilter);
+          cargarEstrenosStreaming(plataforma ? plataforma.id : null);
+        }
+      }, [activeTab, streamingFilter]);
 
       // Foros
       const [forumsList, setForumsList] = useState([
@@ -245,10 +287,6 @@
         setMatchNotification(null);
       };
 
-      const filteredStreaming = streamingFilter === 'Todos' 
-        ? streamingReleases 
-        : streamingReleases.filter(s => s.platform === streamingFilter);
-
       return (
         <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-gray-100 text-slate-900'}`}>
           
@@ -303,7 +341,7 @@
 
           <main className="max-w-5xl mx-auto p-6">
             
-            {/* PANTALLA INICIAL DE CARTELERA LOCAL CON TICKETING */}
+            {/* PANTALLA INICIAL DE CARTELERA LOCAL CON TICKETING E IMDB */}
             {activeTab === 'cartelera' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center flex-wrap gap-2">
@@ -321,9 +359,19 @@
                     <div key={film.id} className={`p-6 rounded-3xl border space-y-4 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
                       <div className="flex justify-between items-start">
                         <span className="text-5xl">{film.poster}</span>
-                        <span className="bg-amber-500/10 border border-amber-500/30 text-amber-400 font-black text-xs px-3 py-1 rounded-full">
-                          ★ {film.rating}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <a 
+                            href={film.imdbUrl} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="bg-yellow-500 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded hover:bg-yellow-400 transition-colors"
+                          >
+                            IMDb
+                          </a>
+                          <span className="bg-amber-500/10 border border-amber-500/30 text-amber-400 font-black text-xs px-3 py-1 rounded-full">
+                            ★ {film.rating}
+                          </span>
+                        </div>
                       </div>
 
                       <div>
@@ -411,30 +459,70 @@
               </div>
             )}
 
-            {/* STREAMING */}
+            {/* STREAMING INTEGRADO CON TMDB E IMDB */}
             {activeTab === 'streaming' && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-black text-amber-500">📺 Estrenos en Plataformas</h2>
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <div>
+                    <h2 className="text-2xl font-black text-amber-500">📺 Estrenos Reales en Plataformas</h2>
+                    <p className="text-xs text-slate-400">Novedades lanzadas en los últimos 45 días (Datos en vivo de TMDB + IMDb).</p>
+                  </div>
+                </div>
+
                 <div className="flex flex-wrap gap-2">
-                  <button onClick={() => setStreamingFilter('Todos')} className={`px-4 py-2 rounded-xl text-xs font-bold ${streamingFilter === 'Todos' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 border border-slate-800'}`}>
+                  <button 
+                    onClick={() => setStreamingFilter('Todos')} 
+                    className={`px-4 py-2 rounded-xl text-xs font-bold ${streamingFilter === 'Todos' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 border border-slate-800'}`}
+                  >
                     🌐 Todas
                   </button>
                   {streamingPlatforms.map((platform) => (
-                    <button key={platform.name} onClick={() => setStreamingFilter(platform.name)} className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 ${streamingFilter === platform.name ? 'ring-2 ring-amber-500 bg-slate-800 text-white' : 'bg-slate-900 border border-slate-800'}`}>
+                    <button 
+                      key={platform.name} 
+                      onClick={() => setStreamingFilter(platform.name)} 
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 ${streamingFilter === platform.name ? 'ring-2 ring-amber-500 bg-slate-800 text-white' : 'bg-slate-900 border border-slate-800'}`}
+                    >
                       <span className={`px-2 py-0.5 rounded text-[10px] text-white font-black ${platform.color}`}>{platform.logo}</span>
                       <span>{platform.name}</span>
                     </button>
                   ))}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {filteredStreaming.map((item) => (
-                    <div key={item.id} className={`p-5 rounded-2xl border space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                      <span className="text-4xl">{item.poster}</span>
-                      <h3 className="font-bold text-lg text-white">{item.title}</h3>
-                      <p className="text-xs text-slate-400">{item.genre}</p>
-                    </div>
-                  ))}
-                </div>
+
+                {cargandoStreaming ? (
+                  <div className="p-12 text-center text-amber-400 bg-slate-900 rounded-3xl border border-slate-800 animate-pulse">
+                    🎬 Consultando estrenos en tiempo real...
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    {streamingReleases.map((item) => (
+                      <div key={item.id} className={`p-4 rounded-3xl border flex flex-col justify-between space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                        {item.poster ? (
+                          <img src={item.poster} alt={item.title} className="w-full h-56 object-cover rounded-2xl" />
+                        ) : (
+                          <div className="w-full h-56 bg-slate-800 rounded-2xl flex items-center justify-center text-4xl">🎬</div>
+                        )}
+                        <div className="space-y-1 flex-1">
+                          <span className="text-[10px] bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded border border-amber-500/20">
+                            Estreno: {item.releaseDate}
+                          </span>
+                          <h3 className="font-black text-base text-white pt-1">{item.title}</h3>
+                          <p className="text-xs text-slate-400">{item.overview}</p>
+                        </div>
+                        <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-xs font-bold">
+                          <span className="text-amber-400">{item.genre}</span>
+                          <a 
+                            href={item.imdbSearchUrl} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="bg-yellow-500 hover:bg-yellow-400 text-slate-950 px-2 py-1 rounded text-[10px] font-black transition-colors"
+                          >
+                            Ver en IMDb 🟡
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -658,7 +746,7 @@
               </div>
             )}
 
-            {/* PANEL ADMIN OCULTO (SOLO VISIBLE SI ISADMIN ES TRUE AL INICIAR SESIÓN) */}
+            {/* PANEL ADMIN OCULTO */}
             {currentUser?.isAdmin && (
               <div className="space-y-6 mt-12 border-t-2 border-amber-500/30 pt-8">
                 <div className="flex items-center gap-2">
@@ -713,4 +801,5 @@
   </script>
 </body>
 </html>
+
        
