@@ -1,7 +1,3 @@
-Las dos mejoras que propones le darán un salto enorme a la experiencia de usuario de Plottwisme:
- * Configuración y Alertas de Match: Un interruptor en el perfil para activar/desactivar notificaciones en tiempo real, junto con un banner o ventana emergente al abrir la app avisándote si tienes un nuevo match cinéfilo.
- * Pantalla de Inicio Activa (Home Cartelera): Reemplazar la pantalla de carga oscura o vacía por un feed dinámico de Estrenos en Cartelera Local que muestre inmediatamente los títulos proyectados en los cines de tu zona.
-Aquí tienes el código completo con ambas funciones listas para usar:
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -34,11 +30,10 @@ Aquí tienes el código completo con ambas funciones listas para usar:
 
     function App() {
       const [theme, setTheme] = useState('dark');
-      // Pestaña por defecto: Cartelera Local de Inicio
+      // Pestaña inicial: Cartelera Local para evitar el lienzo negro al abrir
       const [activeTab, setActiveTab] = useState('cartelera'); 
       const [locationStatus, setLocationStatus] = useState('Detectar mi ubicación mundial');
       const [userCoords, setUserCoords] = useState(null);
-      const [lastSync, setLastSync] = useState(new Date().toLocaleTimeString());
       
       // Estado de Perfil con Notificaciones de Match
       const [currentUser, setCurrentUser] = useState({
@@ -46,11 +41,11 @@ Aquí tienes el código completo con ambas funciones listas para usar:
         email: 'invitado@plottwisme.com',
         genres: 'Cine de Autor, Sci-Fi, Thriller',
         lookingFor: 'Compañeros para ir al cine y debates',
-        bio: 'Apasionado por el cine analógico y los giros de guión inesperados. Siempre listo para una función nocturna.',
+        bio: 'Apasionado por el cine analógico y los giros de guión inesperados.',
         isPremium: false,
         isCritic: false,
         isAdmin: false,
-        allowMatchNotifications: true, // Control de notificaciones
+        allowMatchNotifications: true, // Configuración de notificación
         photos: ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'],
         avatarIndex: 0
       });
@@ -59,13 +54,12 @@ Aquí tienes el código completo con ambas funciones listas para usar:
       const [matchNotification, setMatchNotification] = useState(null);
 
       const [showAuthModal, setShowAuthModal] = useState(false);
-      const [authMode, setAuthMode] = useState('login');
       const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
 
       const [cinesGlobales, setCinesGlobales] = useState([]);
       const [cargandoCines, setCargandoCines] = useState(false);
 
-      // Estrenos en Cartelera Local (Pantalla de Inicio)
+      // Cartelera en Vivo de la Semana
       const carteleraSemanal = [
         { id: 1, title: 'Oppenheimer: Edición Especial', genre: 'Drama / Historia', runtime: '180 min', rating: '9.3/10', poster: '💣', salas: 'Cine Hoyts / Showcase', times: ['17:30', '20:45', '22:15'] },
         { id: 2, title: 'Dune: Parte Dos', genre: 'Sci-Fi / Aventura', runtime: '166 min', rating: '9.0/10', poster: '🏜️', salas: 'IMAX Cinema', times: ['16:00', '19:15', '22:30'] },
@@ -73,7 +67,7 @@ Aquí tienes el código completo con ambas funciones listas para usar:
         { id: 4, title: 'Pobres Criaturas', genre: 'Comedia / Fantasía', runtime: '141 min', rating: '8.8/10', poster: '🎭', salas: 'Cinemark Local', times: ['17:15', '19:45', '22:00'] }
       ];
 
-      // Streaming Global
+      // Streaming
       const [streamingFilter, setStreamingFilter] = useState('Todos');
       const streamingPlatforms = [
         { name: 'Netflix', color: 'bg-red-600', logo: '🎬 N' },
@@ -85,16 +79,16 @@ Aquí tienes el código completo con ambas funciones listas para usar:
       ];
 
       const streamingReleases = [
-        { id: 1, title: 'Dune: Part Two', platform: 'HBO Max', genre: 'Sci-Fi / Aventura', date: 'Estreno Reciente', rating: '9.0/10', poster: '🏜️' },
-        { id: 2, title: 'El Problema de los 3 Cuerpos', platform: 'Netflix', genre: 'Sci-Fi / Misterio', date: 'Esta Semana', rating: '8.4/10', poster: '🌌' },
-        { id: 3, title: 'Shōgun', platform: 'Disney+', genre: 'Drama / Histórico', date: 'Temporada Completa', rating: '9.2/10', poster: '⚔️' },
-        { id: 4, title: 'Fallout', platform: 'Prime Video', genre: 'Acción / Post-Apocalíptico', date: 'Estreno Destacado', rating: '8.6/10', poster: '☢️' }
+        { id: 1, title: 'Dune: Part Two', platform: 'HBO Max', genre: 'Sci-Fi / Aventura', rating: '9.0/10', poster: '🏜️' },
+        { id: 2, title: 'El Problema de los 3 Cuerpos', platform: 'Netflix', genre: 'Sci-Fi / Misterio', rating: '8.4/10', poster: '🌌' },
+        { id: 3, title: 'Shōgun', platform: 'Disney+', genre: 'Drama / Histórico', rating: '9.2/10', poster: '⚔️' },
+        { id: 4, title: 'Fallout', platform: 'Prime Video', genre: 'Acción / Post-Apocalíptico', rating: '8.6/10', poster: '☢️' }
       ];
 
       // Foros
       const [forumsList, setForumsList] = useState([
-        { id: 1, title: '¿Es Denis Villeneuve el mejor director de la década?', category: 'Directores', author: 'Carlos Ruiz', description: 'Debate abierto sobre el impacto visual y narrativo de Dune 1 y 2.', replies: [{ author: 'Laura Gómez', text: 'Totalmente de acuerdo, la atmósfera sonora es impecable.' }] },
-        { id: 2, title: 'Teorías sobre el final de Inception', category: 'Cine de Culto', author: 'Ana Martínez', description: '¿El tótem cayó o sigue girando en el limbo?', replies: [] }
+        { id: 1, title: '¿Es Denis Villeneuve el mejor director de la década?', category: 'Directores', author: 'Carlos Ruiz', description: 'Debate abierto sobre el impacto visual de Dune.', replies: [{ author: 'Laura Gómez', text: 'La atmósfera sonora es impecable.' }] },
+        { id: 2, title: 'Teorías sobre el final de Inception', category: 'Cine de Culto', author: 'Ana Martínez', description: '¿El tótem cayó o sigue girando?', replies: [] }
       ]);
 
       const [showNewForumModal, setShowNewForumModal] = useState(false);
@@ -103,16 +97,12 @@ Aquí tienes el código completo con ambas funciones listas para usar:
       const [newReplyText, setNewReplyText] = useState('');
 
       // Usuarios Match
-      const [usersList, setUsersList] = useState([
-        { id: 1, name: 'Carlos Ruiz', email: 'carlos@cine.com', genres: 'Sci-Fi, Thriller, IMAX', lookingFor: 'Compañero para estrenos IMAX', bio: 'Fan de Christopher Nolan y Denis Villeneuve.', distance: '12 km', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80' },
-        { id: 2, name: 'Laura Gómez', email: 'laura@cine.com', genres: 'Drama, Romance, Cine Independiente', lookingFor: 'Pareja cinéfila / Salidas a salas de autor', bio: 'Amante de los festivales de cine y debates profundos.', distance: '45 km', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' }
+      const [usersList] = useState([
+        { id: 1, name: 'Carlos Ruiz', email: 'carlos@cine.com', genres: 'Sci-Fi, Thriller', lookingFor: 'Compañero para estrenos IMAX', bio: 'Fan de Christopher Nolan.', distance: '12 km', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80' },
+        { id: 2, name: 'Laura Gómez', email: 'laura@cine.com', genres: 'Drama, Romance', lookingFor: 'Pareja cinéfila', bio: 'Amante de los festivales de cine.', distance: '45 km', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' }
       ]);
 
-      const [criticsReviews] = useState([
-        { author: 'Carlos Ruiz', role: 'Crítico Certificado', text: 'Excelente experiencia de cine global.', rating: '★★★★☆' }
-      ]);
-
-      // Simulación de Alerta de Match al Iniciar
+      // Alerta de Match instantánea si está activa la configuración
       useEffect(() => {
         if (currentUser.allowMatchNotifications) {
           const timer = setTimeout(() => {
@@ -122,15 +112,10 @@ Aquí tienes el código completo con ambas funciones listas para usar:
               movie: 'Anatomía de una Caída',
               avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80'
             });
-          }, 1500);
+          }, 1200);
           return () => clearTimeout(timer);
         }
       }, [currentUser.allowMatchNotifications]);
-
-      useEffect(() => {
-        const interval = setInterval(() => setLastSync(new Date().toLocaleTimeString()), 30000);
-        return () => clearInterval(interval);
-      }, []);
 
       const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
@@ -148,7 +133,7 @@ Aquí tienes el código completo con ambas funciones listas para usar:
               buscarCinesMundiales(lat, lng);
             },
             () => {
-              setLocationStatus('GPS denegado o no disponible.');
+              setLocationStatus('GPS no disponible.');
               setCargandoCines(false);
             }
           );
@@ -168,24 +153,21 @@ Aquí tienes el código completo con ambas funciones listas para usar:
           const data = await response.json();
 
           if (data.elements && data.elements.length > 0) {
-            const resultados = data.elements.map(cine => {
-              const dist = calcularDistanciaKm(lat, lng, cine.lat, cine.lon);
-              return {
-                id: cine.id,
-                nombre: cine.tags.name || "Cine Local / Sala de Proyección",
-                direccion: cine.tags["addr:street"] ? `${cine.tags["addr:street"]} ${cine.tags["addr:housenumber"] || ''}` : "Ver ubicación en mapa",
-                lat: cine.lat,
-                lng: cine.lon,
-                distanciaKm: dist
-              };
-            }).sort((a, b) => a.distanciaKm - b.distanciaKm);
+            const resultados = data.elements.map(cine => ({
+              id: cine.id,
+              nombre: cine.tags.name || "Cine Local",
+              direccion: cine.tags["addr:street"] ? `${cine.tags["addr:street"]} ${cine.tags["addr:housenumber"] || ''}` : "Ver ubicación en mapa",
+              lat: cine.lat,
+              lng: cine.lon,
+              distanciaKm: calcularDistanciaKm(lat, lng, cine.lat, cine.lon)
+            })).sort((a, b) => a.distanciaKm - b.distanciaKm);
 
             setCinesGlobales(resultados);
           } else {
             setCinesGlobales([]);
           }
         } catch (error) {
-          console.error("Error al buscar cines:", error);
+          console.error("Error cines:", error);
         } finally {
           setCargandoCines(false);
         }
@@ -194,17 +176,15 @@ Aquí tienes el código completo con ambas funciones listas para usar:
       const handleAuthSubmit = (e) => {
         e.preventDefault();
         const isAdmin = authForm.email.toLowerCase() === ADMIN_EMAIL;
-        const loggedUser = { 
+        setCurrentUser({ 
           ...currentUser,
           name: authForm.name || authForm.email.split('@')[0], 
           email: authForm.email, 
           isPremium: isAdmin,
           isCritic: isAdmin,
           isAdmin: isAdmin
-        };
-        setCurrentUser(loggedUser);
+        });
         setShowAuthModal(false);
-        setAuthForm({ name: '', email: '', password: '' });
       };
 
       const handleAddPhoto = (e) => {
@@ -212,10 +192,7 @@ Aquí tienes el código completo con ambas funciones listas para usar:
         if (file && currentUser.photos.length < 5) {
           const reader = new FileReader();
           reader.onloadend = () => {
-            setCurrentUser({
-              ...currentUser,
-              photos: [...currentUser.photos, reader.result]
-            });
+            setCurrentUser({ ...currentUser, photos: [...currentUser.photos, reader.result] });
           };
           reader.readAsDataURL(file);
         }
@@ -233,41 +210,17 @@ Aquí tienes el código completo con ambas funciones listas para usar:
       const handleCreateForum = (e) => {
         e.preventDefault();
         if (!newForum.title.trim()) return;
-
-        const forumObj = {
-          id: Date.now(),
-          title: newForum.title,
-          category: newForum.category,
-          author: currentUser.name,
-          description: newForum.description,
-          replies: []
-        };
-
-        setForumsList([forumObj, ...forumsList]);
+        setForumsList([{ id: Date.now(), title: newForum.title, category: newForum.category, author: currentUser.name, description: newForum.description, replies: [] }, ...forumsList]);
         setNewForum({ title: '', category: 'General', description: '' });
         setShowNewForumModal(false);
       };
 
       const handleAddReply = (forumId) => {
         if (!newReplyText.trim()) return;
-
-        setForumsList(forumsList.map(f => {
-          if (f.id === forumId) {
-            return {
-              ...f,
-              replies: [...f.replies, { author: currentUser.name, text: newReplyText }]
-            };
-          }
-          return f;
-        }));
-
-        if (selectedForum && selectedForum.id === forumId) {
-          setSelectedForum({
-            ...selectedForum,
-            replies: [...selectedForum.replies, { author: currentUser.name, text: newReplyText }]
-          });
+        setForumsList(forumsList.map(f => f.id === forumId ? { ...f, replies: [...f.replies, { author: currentUser.name, text: newReplyText }] } : f));
+        if (selectedForum?.id === forumId) {
+          setSelectedForum({ ...selectedForum, replies: [...selectedForum.replies, { author: currentUser.name, text: newReplyText }] });
         }
-
         setNewReplyText('');
       };
 
@@ -306,31 +259,31 @@ Aquí tienes el código completo con ambas funciones listas para usar:
             </div>
           </header>
 
-          {/* NOTIFICACIÓN EMERGENTE DE MATCH AL ABRIR */}
+          {/* NOTIFICACIÓN EMERGENTE INSTANTÁNEA DE MATCH */}
           {matchNotification && (
-            <div className="fixed bottom-5 right-5 z-50 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 p-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-sm animate-bounce border border-amber-300">
+            <div className="fixed bottom-5 right-5 z-50 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 p-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-sm border border-amber-300">
               <img src={matchNotification.avatar} className="w-12 h-12 rounded-xl object-cover border border-slate-950" />
               <div className="flex-1 text-xs">
                 <p className="font-black text-sm uppercase">¡Nuevo Match Cinéfilo! 🔥</p>
                 <p className="font-bold">{matchNotification.userName} ({matchNotification.matchPercent} de afinidad)</p>
                 <p className="text-[10px] opacity-90">Coincidencia para ver: {matchNotification.movie}</p>
               </div>
-              <button onClick={() => setMatchNotification(null)} className="font-bold text-slate-950 hover:text-white text-sm">✖</button>
+              <button onClick={() => setMatchNotification(null)} className="font-bold text-slate-950 hover:text-white text-sm">✕</button>
             </div>
           )}
 
           <main className="max-w-5xl mx-auto p-6">
             
-            {/* PANTALLA DE INICIO: CARTELERA Y ESTRENOS DE LA SEMANA */}
+            {/* PANTALLA INICIAL DE CARTELERA LOCAL */}
             {activeTab === 'cartelera' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center flex-wrap gap-2">
                   <div>
                     <h2 className="text-2xl font-black text-amber-500">🍿 Estrenos de la Semana en tu Área</h2>
-                    <p className="text-xs text-slate-400">Cartelera actualizada con funciones y salas en tiempo real cerca de ti.</p>
+                    <p className="text-xs text-slate-400">Cartelera en cines y salas cercanas disponibles hoy.</p>
                   </div>
                   <button onClick={() => setActiveTab('radar')} className="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-4 py-2 rounded-xl font-bold text-xs">
-                    📍 Buscar Cines Cercanos
+                    📍 Radar de Cines Cercanos
                   </button>
                 </div>
 
@@ -351,10 +304,10 @@ Aquí tienes el código completo con ambas funciones listas para usar:
                       </div>
 
                       <div className="pt-2 border-t border-slate-800">
-                        <p className="text-[11px] font-bold text-slate-400 mb-2">Horarios disponibles hoy:</p>
+                        <p className="text-[11px] font-bold text-slate-400 mb-2">Horarios de hoy:</p>
                         <div className="flex flex-wrap gap-2">
                           {film.times.map((t, idx) => (
-                            <span key={idx} className="bg-slate-950 border border-slate-800 hover:border-amber-500 text-amber-400 text-xs font-mono font-bold px-3 py-1 rounded-lg cursor-pointer">
+                            <span key={idx} className="bg-slate-950 border border-slate-800 text-amber-400 text-xs font-mono font-bold px-3 py-1 rounded-lg">
                               🕒 {t}
                             </span>
                           ))}
@@ -370,18 +323,18 @@ Aquí tienes el código completo con ambas funciones listas para usar:
               </div>
             )}
 
-            {/* RADAR DE CINES */}
+            {/* RADAR CINES */}
             {activeTab === 'radar' && (
               <div className="space-y-6">
                 <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                  <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                  <div className="flex justify-between items-center flex-wrap gap-2">
                     <div>
                       <h2 className="font-bold text-lg">🌍 Radar de Cines Global</h2>
                       <p className="text-xs text-slate-400">
                         {currentUser?.isPremium ? 'Modo Premium Internacional: Radio de 500 km' : 'Modo Estándar: Radio de 100 km'}
                       </p>
                     </div>
-                    <button onClick={getGeoLocation} className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs transition-all">
+                    <button onClick={getGeoLocation} className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs">
                       📍 {locationStatus}
                     </button>
                   </div>
@@ -389,13 +342,7 @@ Aquí tienes el código completo con ambas funciones listas para usar:
 
                 {cargandoCines && (
                   <div className="p-8 text-center text-amber-400 bg-slate-900 rounded-2xl border border-slate-800 animate-pulse">
-                    🔍 Escaneando cines en cualquier parte del mundo...
-                  </div>
-                )}
-
-                {!cargandoCines && cinesGlobales.length === 0 && (
-                  <div className="p-8 text-center text-slate-400 bg-slate-900 rounded-2xl border border-slate-800">
-                    Haz clic en <strong>"📍 Detectar mi ubicación mundial"</strong> para escanear salas de cine.
+                    🔍 Escaneando salas de cine cercanas...
                   </div>
                 )}
 
@@ -411,15 +358,9 @@ Aquí tienes el código completo con ambas funciones listas para usar:
                           📍 {cine.distanciaKm.toFixed(1)} km
                         </span>
                       </div>
-
-                      <div className="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center flex-wrap gap-2">
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${cine.lat},${cine.lng}`}
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all"
-                        >
-                          🗺️ Abrir Ruta en Google Maps
+                      <div className="mt-4 pt-3 border-t border-slate-800">
+                        <a href={`https://www.google.com/maps/search/?api=1&query=${cine.lat},${cine.lng}`} target="_blank" rel="noreferrer" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center gap-1.5">
+                          🗺️ Abrir en Google Maps
                         </a>
                       </div>
                     </div>
@@ -428,17 +369,13 @@ Aquí tienes el código completo con ambas funciones listas para usar:
               </div>
             )}
 
-            {/* ESTRENOS STREAMING */}
+            {/* STREAMING */}
             {activeTab === 'streaming' && (
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-black text-amber-500">📺 Estrenos en Plataformas Globales</h2>
-                  <p className="text-xs text-slate-400">Descubre los lanzamientos destacados en las principales apps de streaming.</p>
-                </div>
-
+                <h2 className="text-2xl font-black text-amber-500">📺 Estrenos en Plataformas</h2>
                 <div className="flex flex-wrap gap-2">
                   <button onClick={() => setStreamingFilter('Todos')} className={`px-4 py-2 rounded-xl text-xs font-bold ${streamingFilter === 'Todos' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 border border-slate-800'}`}>
-                    🌐 Todas las Plataformas
+                    🌐 Todas
                   </button>
                   {streamingPlatforms.map((platform) => (
                     <button key={platform.name} onClick={() => setStreamingFilter(platform.name)} className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 ${streamingFilter === platform.name ? 'ring-2 ring-amber-500 bg-slate-800 text-white' : 'bg-slate-900 border border-slate-800'}`}>
@@ -447,61 +384,51 @@ Aquí tienes el código completo con ambas funciones listas para usar:
                     </button>
                   ))}
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {filteredStreaming.map((item) => (
                     <div key={item.id} className={`p-5 rounded-2xl border space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                      <div className="flex justify-between items-start">
-                        <span className="text-4xl">{item.poster}</span>
-                        <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded-full font-black">★ {item.rating}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded uppercase font-bold">{item.platform}</span>
-                        <h3 className="font-bold text-lg text-white mt-1">{item.title}</h3>
-                        <p className="text-xs text-slate-400">{item.genre}</p>
-                      </div>
+                      <span className="text-4xl">{item.poster}</span>
+                      <h3 className="font-bold text-lg text-white">{item.title}</h3>
+                      <p className="text-xs text-slate-400">{item.genre}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* MI PERFIL Y CONFIGURACIÓN DE NOTIFICACIONES */}
+            {/* PERFIL Y CONFIGURACIÓN NOTIFICACIONES */}
             {activeTab === 'perfil' && (
               <div className="space-y-6 max-w-2xl mx-auto">
                 <div className={`p-8 rounded-3xl border space-y-6 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
                   
                   <div className="flex items-center gap-5 border-b border-slate-800 pb-6">
-                    <img src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} className="w-24 h-24 rounded-2xl object-cover border-2 border-amber-500 shadow-lg" />
+                    <img src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} className="w-24 h-24 rounded-2xl object-cover border-2 border-amber-500" />
                     <div>
                       <h3 className="text-2xl font-black">{currentUser.name}</h3>
                       <p className="text-xs text-slate-400">{currentUser.email}</p>
-                      <span className="inline-block mt-2 px-3 py-0.5 bg-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold border border-amber-500/30">
-                        {currentUser.isPremium ? '👑 Cobertura Global Activa' : '🆓 Plan Gratuito (100 km)'}
-                      </span>
                     </div>
                   </div>
 
-                  {/* Interruptor de Notificaciones de Match */}
+                  {/* Interruptor Notificaciones de Match */}
                   <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex justify-between items-center">
                     <div>
                       <h4 className="font-bold text-xs uppercase text-amber-500">🔔 Notificaciones de Match Instantáneas</h4>
-                      <p className="text-[11px] text-slate-400">Recibe una alerta en tiempo real al abrir la app cuando alguien coincida con tus gustos.</p>
+                      <p className="text-[11px] text-slate-400">Recibe una alerta en tiempo real cuando encuentres afinidad cinéfila.</p>
                     </div>
                     <button 
                       onClick={() => setCurrentUser({ ...currentUser, allowMatchNotifications: !currentUser.allowMatchNotifications })}
                       className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${currentUser.allowMatchNotifications ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'}`}
                     >
-                      {currentUser.allowMatchNotifications ? 'ON' : 'OFF'}
+                      {currentUser.allowMatchNotifications ? 'ACTIVADO' : 'DESACTIVADO'}
                     </button>
                   </div>
 
-                  {/* Galería de Fotos (Hasta 5 fotos) */}
+                  {/* Fotos de perfil (hasta 5) */}
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <h4 className="font-bold text-xs uppercase text-slate-300">Mis Fotos de Perfil ({currentUser.photos.length}/5)</h4>
                       {currentUser.photos.length < 5 && (
-                        <label className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1 rounded-lg text-xs cursor-pointer">
+                        <label className="bg-amber-500 text-slate-950 font-bold px-3 py-1 rounded-lg text-xs cursor-pointer">
                           ➕ Subir Foto
                           <input type="file" accept="image/*" onChange={handleAddPhoto} className="hidden" />
                         </label>
@@ -514,44 +441,20 @@ Aquí tienes el código completo con ambas funciones listas para usar:
                           <img 
                             src={img} 
                             onClick={() => setCurrentUser({ ...currentUser, avatarIndex: index })}
-                            className={`w-full h-16 rounded-xl object-cover cursor-pointer border-2 transition-all ${currentUser.avatarIndex === index ? 'border-amber-500 scale-105' : 'border-slate-800 opacity-70 hover:opacity-100'}`} 
+                            className={`w-full h-16 rounded-xl object-cover cursor-pointer border-2 ${currentUser.avatarIndex === index ? 'border-amber-500 scale-105' : 'border-slate-800 opacity-70'}`} 
                           />
                           {currentUser.photos.length > 1 && (
-                            <button 
-                              onClick={() => handleRemovePhoto(index)}
-                              className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100"
-                            >
-                              ✕
-                            </button>
+                            <button onClick={() => handleRemovePhoto(index)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">✕</button>
                           )}
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Edición de Bio y Gustos */}
                   <div className="space-y-4 pt-4 border-t border-slate-800 text-xs">
                     <div>
-                      <label className="block text-slate-400 mb-1">Mi Biografía Cinéfila:</label>
-                      <textarea 
-                        rows="3"
-                        value={currentUser.bio}
-                        onChange={(e) => setCurrentUser({ ...currentUser, bio: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-amber-500 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-slate-400 mb-1">¿Qué busco en Plottwisme?:</label>
-                      <select 
-                        value={currentUser.lookingFor}
-                        onChange={(e) => setCurrentUser({ ...currentUser, lookingFor: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:border-amber-500 outline-none"
-                      >
-                        <option value="Compañeros para ir al cine y debates">Compañeros para ir al cine y debates</option>
-                        <option value="Pareja cinéfila con quien compartir películas">Pareja cinéfila con quien compartir películas</option>
-                        <option value="Amigos con quién comentar estrenos">Amigos con quién comentar estrenos</option>
-                      </select>
+                      <label className="block text-slate-400 mb-1">Mi Biografía:</label>
+                      <textarea rows="3" value={currentUser.bio} onChange={(e) => setCurrentUser({ ...currentUser, bio: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-amber-500" />
                     </div>
                   </div>
 
@@ -559,7 +462,7 @@ Aquí tienes el código completo con ambas funciones listas para usar:
               </div>
             )}
 
-            {/* MATCH CINÉFILO */}
+            {/* MATCH */}
             {activeTab === 'match' && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-black text-amber-500">🔥 Match Cinéfilo</h2>
@@ -573,25 +476,20 @@ Aquí tienes el código completo con ambas funciones listas para usar:
                           <span className="text-[10px] bg-slate-800 px-2.5 py-0.5 rounded-full text-amber-400 font-bold">📍 a {user.distance}</span>
                         </div>
                       </div>
-                      <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-xs space-y-2">
-                        <p className="text-slate-300 italic">"{user.bio}"</p>
-                        <p><strong className="text-amber-400">Busca:</strong> {user.lookingFor}</p>
-                      </div>
-                      <button className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase tracking-wider">
-                        Enviar Invitación al Cine 🎟️
-                      </button>
+                      <p className="text-xs text-slate-300 italic">"{user.bio}"</p>
+                      <button className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase">Enviar Invitación al Cine 🎟️</button>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* FOROS */}
+            {/* FOROS DE DEBATE */}
             {activeTab === 'foros' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-black text-amber-500">💬 Foros de Discusión</h2>
-                  <button onClick={() => setShowNewForumModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase">
+                  <button onClick={() => setShowNewForumModal(true)} className="bg-amber-500 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase">
                     ➕ Crear Nuevo Foro
                   </button>
                 </div>
@@ -636,8 +534,8 @@ Aquí tienes el código completo con ambas funciones listas para usar:
             {activeTab === 'admin' && currentUser?.isAdmin && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-black text-amber-500">Panel de Administración</h2>
-                <div className="p-6 rounded-3xl border bg-slate-900 border-slate-800">
-                  <p className="text-xs text-slate-300">Gestión de la plataforma disponible para {currentUser.email}</p>
+                <div className="p-6 rounded-3xl border bg-slate-900 border-slate-800 text-xs text-slate-300">
+                  Panel reservado para el administrador ({currentUser.email}).
                 </div>
               </div>
             )}
@@ -647,8 +545,8 @@ Aquí tienes el código completo con ambas funciones listas para usar:
           {/* MODAL NUEVO FORO */}
           {showNewForumModal && (
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 relative shadow-2xl">
-                <button onClick={() => setShowNewForumModal(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✖</button>
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 relative">
+                <button onClick={() => setShowNewForumModal(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
                 <h3 className="text-lg font-black text-center text-amber-500">Crear Nuevo Foro</h3>
                 <form onSubmit={handleCreateForum} className="space-y-3 text-xs">
                   <input type="text" required value={newForum.title} onChange={(e) => setNewForum({ ...newForum, title: e.target.value })} placeholder="Título del Tema" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
@@ -662,9 +560,9 @@ Aquí tienes el código completo con ambas funciones listas para usar:
           {/* MODAL AUTH */}
           {showAuthModal && (
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative shadow-2xl">
-                <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✖</button>
-                <h3 className="text-lg font-black text-center text-white">{authMode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}</h3>
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative">
+                <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
+                <h3 className="text-lg font-black text-center text-white">Iniciar Sesión / Registro</h3>
                 <form onSubmit={handleAuthSubmit} className="space-y-3 text-xs">
                   <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} placeholder="Correo Electrónico" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
                   <input type="password" required value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} placeholder="Contraseña" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
@@ -677,13 +575,11 @@ Aquí tienes el código completo con ambas funciones listas para usar:
         </div>
       );
     }
+
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
 </body>
-</html>   
-     
-     
-                
+</html>
                
    
