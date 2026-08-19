@@ -17,7 +17,6 @@
 
     const ADMIN_EMAIL = 'plottwist.infoapp@gmail.com';
 
-    // Fórmula Haversine para cálculo de distancia global en km
     function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
       const R = 6371; 
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -34,18 +33,53 @@
       const [activeTab, setActiveTab] = useState('radar');
       const [locationStatus, setLocationStatus] = useState('Detectar mi ubicación mundial');
       const [userCoords, setUserCoords] = useState(null);
-      const [searchCity, setSearchCity] = useState('');
       const [lastSync, setLastSync] = useState(new Date().toLocaleTimeString());
       
-      const [currentUser, setCurrentUser] = useState(null);
-      const [userGenres, setUserGenres] = useState('Cine de Autor, Sci-Fi, Drama');
+      // Estado del Usuario con soporte para hasta 5 fotos
+      const [currentUser, setCurrentUser] = useState({
+        name: 'Cinéfilo Invitado',
+        email: 'invitado@plottwisme.com',
+        genres: 'Cine de Autor, Sci-Fi, Drama',
+        isPremium: false,
+        isCritic: false,
+        isAdmin: false,
+        photos: ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'],
+        avatarIndex: 0
+      });
+
       const [showAuthModal, setShowAuthModal] = useState(false);
-      const [authMode, setAuthMode] = useState('register');
+      const [authMode, setAuthMode] = useState('login');
       const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
 
-      // Cines detectados dinámicamente según la posición del usuario
       const [cinesGlobales, setCinesGlobales] = useState([]);
       const [cargandoCines, setCargandoCines] = useState(false);
+
+      // Estado para Foros de Discusión
+      const [forumsList, setForumsList] = useState([
+        { 
+          id: 1, 
+          title: '¿Es Denis Villeneuve el mejor director de la década?', 
+          category: 'Directores',
+          author: 'Carlos Ruiz',
+          description: 'Debate abierto sobre el impacto visual y narrativo de Dune 1 y 2.',
+          replies: [
+            { author: 'Laura Gómez', text: 'Totalmente de acuerdo, la atmósfera sonora es impecable.' }
+          ]
+        },
+        { 
+          id: 2, 
+          title: 'Teorías sobre el final de Inception', 
+          category: 'Cine de Culto',
+          author: 'Ana Martínez',
+          description: '¿El tótem cayó o sigue girando en el limbo?',
+          replies: []
+        }
+      ]);
+
+      const [showNewForumModal, setShowNewForumModal] = useState(false);
+      const [newForum, setNewForum] = useState({ title: '', category: 'General', description: '' });
+      const [selectedForum, setSelectedForum] = useState(null);
+      const [newReplyText, setNewReplyText] = useState('');
 
       const [usersList, setUsersList] = useState([
         { id: 1, name: 'Carlos Ruiz', email: 'carlos@cine.com', isCritic: true, isPremium: true, genres: 'Sci-Fi, Thriller', distance: '12 km' },
@@ -56,6 +90,8 @@
         { author: 'Carlos Ruiz', role: 'Crítico Certificado', text: 'Excelente experiencia de cine global.', rating: '★★★★☆' }
       ]);
 
+      const [newReview, setNewReview] = useState('');
+
       useEffect(() => {
         const interval = setInterval(() => {
           setLastSync(new Date().toLocaleTimeString());
@@ -65,7 +101,6 @@
 
       const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
-      // Geolocalización internacional por GPS
       const getGeoLocation = () => {
         setLocationStatus('Obteniendo GPS...');
         setCargandoCines(true);
@@ -76,27 +111,25 @@
               const lng = pos.coords.longitude;
               setUserCoords({ lat, lng });
               const radio = currentUser?.isPremium ? 500 : 100;
-              setLocationStatus(`Ubicación GPS activa (Radio: ${radio} km)`);
+              setLocationStatus(`GPS Activo (Radio: ${radio} km)`);
               buscarCinesMundiales(lat, lng);
             },
             () => {
-              setLocationStatus('GPS no disponible. Ingresa una ciudad manualmente.');
+              setLocationStatus('GPS denegado o no disponible.');
               setCargandoCines(false);
             }
           );
         } else {
-          setLocationStatus('Navegador sin soporte de geolocalización.');
+          setLocationStatus('Sin soporte GPS.');
           setCargandoCines(false);
         }
       };
 
-      // Búsqueda remota de cines vía OpenStreetMap / Overpass API (Mundial y Gratuito)
       const buscarCinesMundiales = async (lat, lng) => {
         setCargandoCines(true);
         const radioMetros = (currentUser?.isPremium ? 500 : 100) * 1000;
         
         try {
-          // Consulta Overpass API para cines en cualquier parte del planeta
           const query = `[out:json];node["amenity"="cinema"](around:${radioMetros},${lat},${lng});out 15;`;
           const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
           const data = await response.json();
@@ -106,14 +139,11 @@
               const dist = calcularDistanciaKm(lat, lng, cine.lat, cine.lon);
               return {
                 id: cine.id,
-                nombre: cine.tags.name || "Cine / Sala de Proyección",
-                direccion: cine.tags["addr:street"] ? `${cine.tags["addr:street"]} ${cine.tags["addr:housenumber"] || ''}` : "Dirección disponible en Google Maps",
+                nombre: cine.tags.name || "Cine Local / Sala de Proyección",
+                direccion: cine.tags["addr:street"] ? `${cine.tags["addr:street"]} ${cine.tags["addr:housenumber"] || ''}` : "Ver ubicación en mapa",
                 lat: cine.lat,
                 lng: cine.lon,
-                distanciaKm: dist,
-                cartelera: [
-                  { titulo: "Consulte cartelera local / sitio oficial", horarios: "Varias funciones" }
-                ]
+                distanciaKm: dist
               };
             }).sort((a, b) => a.distanciaKm - b.distanciaKm);
 
@@ -122,7 +152,7 @@
             setCinesGlobales([]);
           }
         } catch (error) {
-          console.error("Error al buscar cines mundiales:", error);
+          console.error("Error al buscar cines:", error);
         } finally {
           setCargandoCines(false);
         }
@@ -131,16 +161,85 @@
       const handleAuthSubmit = (e) => {
         e.preventDefault();
         const isAdmin = authForm.email.toLowerCase() === ADMIN_EMAIL;
-        const newUser = { 
+        const loggedUser = { 
           name: authForm.name || authForm.email.split('@')[0], 
           email: authForm.email, 
-          genres: userGenres,
+          genres: currentUser.genres || 'Cine de Autor, Sci-Fi',
           isPremium: isAdmin,
           isCritic: isAdmin,
-          isAdmin: isAdmin
+          isAdmin: isAdmin,
+          photos: currentUser.photos || ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'],
+          avatarIndex: 0
         };
-        setCurrentUser(newUser);
+        setCurrentUser(loggedUser);
         setShowAuthModal(false);
+        setAuthForm({ name: '', email: '', password: '' });
+      };
+
+      // Gestión de Fotos de Perfil (Hasta 5 fotos)
+      const handleAddPhoto = (e) => {
+        const file = e.target.files[0];
+        if (file && currentUser.photos.length < 5) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setCurrentUser({
+              ...currentUser,
+              photos: [...currentUser.photos, reader.result]
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const handleRemovePhoto = (index) => {
+        const newPhotos = currentUser.photos.filter((_, i) => i !== index);
+        setCurrentUser({
+          ...currentUser,
+          photos: newPhotos.length > 0 ? newPhotos : ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'],
+          avatarIndex: 0
+        });
+      };
+
+      // Creación y Respuestas en Foros
+      const handleCreateForum = (e) => {
+        e.preventDefault();
+        if (!newForum.title.trim()) return;
+
+        const forumObj = {
+          id: Date.now(),
+          title: newForum.title,
+          category: newForum.category,
+          author: currentUser.name,
+          description: newForum.description,
+          replies: []
+        };
+
+        setForumsList([forumObj, ...forumsList]);
+        setNewForum({ title: '', category: 'General', description: '' });
+        setShowNewForumModal(false);
+      };
+
+      const handleAddReply = (forumId) => {
+        if (!newReplyText.trim()) return;
+
+        setForumsList(forumsList.map(f => {
+          if (f.id === forumId) {
+            return {
+              ...f,
+              replies: [...f.replies, { author: currentUser.name, text: newReplyText }]
+            };
+          }
+          return f;
+        }));
+
+        if (selectedForum && selectedForum.id === forumId) {
+          setSelectedForum({
+            ...selectedForum,
+            replies: [...selectedForum.replies, { author: currentUser.name, text: newReplyText }]
+          });
+        }
+
+        setNewReplyText('');
       };
 
       const radioMaximoKm = currentUser?.isPremium ? 500 : 100;
@@ -154,9 +253,10 @@
               
               <nav className="flex flex-wrap gap-2 text-xs font-bold uppercase">
                 {[
-                  { id: 'radar', label: '🎯 Radar y Cines Mundiales' },
+                  { id: 'radar', label: '🎯 Radar Mundial' },
                   { id: 'match', label: '🔥 Match Cinéfilo' },
                   { id: 'criticos', label: '✍️ Críticos' },
+                  { id: 'foros', label: '💬 Foros' },
                   { id: 'perfil', label: '👤 Mi Perfil' },
                   ...(currentUser?.isAdmin ? [{ id: 'admin', label: '⚡ Panel Admin' }] : [])
                 ].map(tab => (
@@ -166,14 +266,10 @@
 
               <div className="flex items-center gap-3">
                 <button onClick={toggleTheme} className="p-2 bg-slate-800 text-white rounded-xl text-sm">🌓</button>
-                {currentUser ? (
-                  <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                    <span className="text-white">{currentUser.name}</span>
-                  </div>
-                ) : (
-                  <button onClick={() => { setAuthMode('login'); setShowAuthModal(true); }} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider shadow">Iniciar Sesión</button>
-                )}
+                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs shadow">
+                  <img src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} className="w-5 h-5 rounded-full object-cover border border-slate-950" />
+                  <span>{currentUser.email === 'invitado@plottwisme.com' ? 'Iniciar Sesión' : currentUser.name}</span>
+                </button>
               </div>
             </div>
           </header>
@@ -200,19 +296,19 @@
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-black text-amber-500">🎬 Cines Detectados en Tiempo Real</h3>
                   <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-                    🟢 Red Global Activa
+                    🟢 Red Global Activa ({lastSync})
                   </span>
                 </div>
 
                 {cargandoCines && (
                   <div className="p-8 text-center text-amber-400 bg-slate-900 rounded-2xl border border-slate-800 animate-pulse">
-                    🔍 Buscando cines en la red global cerca de tu posición...
+                    🔍 Escaneando cines en cualquier parte del mundo...
                   </div>
                 )}
 
                 {!cargandoCines && cinesGlobales.length === 0 && (
                   <div className="p-8 text-center text-slate-400 bg-slate-900 rounded-2xl border border-slate-800">
-                    Haz clic en <strong>"📍 Detectar mi ubicación mundial"</strong> para escanear las salas de cine en tu zona dentro de un radio de {radioMaximoKm} km.
+                    Haz clic en <strong>"📍 Detectar mi ubicación mundial"</strong> para escanear las salas cercanas en un radio de {radioMaximoKm} km.
                   </div>
                 )}
 
@@ -246,18 +342,319 @@
               </div>
             )}
 
-            {/* DEMÁS SECCIONES DE LA APP... */}
+            {/* FOROS DE DISCUSIÓN DINÁMICOS */}
+            {activeTab === 'foros' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <div>
+                    <h2 className="text-2xl font-black text-amber-500">💬 Foros de Discusión Cinéfila</h2>
+                    <p className="text-xs text-slate-400">Crea salas de debate, comparte opiniones y responde a otros miembros.</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowNewForumModal(true)}
+                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider"
+                  >
+                    ➕ Crear Nuevo Foro
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Lista de Foros */}
+                  <div className="md:col-span-1 space-y-3">
+                    {forumsList.map((forum) => (
+                      <div 
+                        key={forum.id} 
+                        onClick={() => setSelectedForum(forum)}
+                        className={`p-4 rounded-2xl border cursor-pointer transition-all ${selectedForum?.id === forum.id ? 'border-amber-500 bg-amber-500/10' : theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:border-slate-700' : 'bg-white border-gray-200'}`}
+                      >
+                        <span className="text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded font-bold uppercase">{forum.category}</span>
+                        <h4 className="font-bold text-sm mt-2 text-white">{forum.title}</h4>
+                        <div className="flex justify-between items-center mt-3 text-[11px] text-slate-400">
+                          <span>Por {forum.author}</span>
+                          <span>💬 {forum.replies.length} resp.</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Vista Detallada del Foro Seleccionado */}
+                  <div className="md:col-span-2">
+                    {selectedForum ? (
+                      <div className={`p-6 rounded-3xl border space-y-4 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                        <div>
+                          <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full font-bold uppercase border border-amber-500/30">{selectedForum.category}</span>
+                          <h3 className="text-xl font-black mt-2 text-amber-500">{selectedForum.title}</h3>
+                          <p className="text-xs text-slate-400 mt-1">Iniciado por <strong>{selectedForum.author}</strong></p>
+                          <p className="text-xs text-slate-300 mt-3 p-3 bg-slate-950 rounded-xl border border-slate-800">{selectedForum.description}</p>
+                        </div>
+
+                        <div className="border-t border-slate-800 pt-4 space-y-3">
+                          <h4 className="font-bold text-xs uppercase text-slate-400">Respuestas ({selectedForum.replies.length})</h4>
+                          {selectedForum.replies.length === 0 ? (
+                            <p className="text-xs text-slate-500 italic">Sé el primero en responder a este debate.</p>
+                          ) : (
+                            selectedForum.replies.map((rep, idx) => (
+                              <div key={idx} className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+                                <p className="font-bold text-amber-400">{rep.author}</p>
+                                <p className="text-slate-200 mt-1">{rep.text}</p>
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        <div className="pt-2 flex gap-2">
+                          <input 
+                            type="text" 
+                            value={newReplyText}
+                            onChange={(e) => setNewReplyText(e.target.value)}
+                            placeholder="Escribe tu opinión en el debate..."
+                            className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white"
+                          />
+                          <button 
+                            onClick={() => handleAddReply(selectedForum.id)}
+                            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs"
+                          >
+                            Responder
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-slate-400 bg-slate-900 rounded-3xl border border-slate-800">
+                        👈 Selecciona un foro de la lista para ver el debate o crea uno nuevo.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MI PERFIL CON GALERÍA DE HASTA 5 FOTOS */}
             {activeTab === 'perfil' && (
-              <div className="p-8 rounded-3xl border bg-slate-900 border-slate-800 max-w-xl mx-auto">
-                <h3 className="text-lg font-bold mb-2">Perfil de Usuario Global</h3>
-                <p className="text-xs text-slate-400 mb-4">Configuración de cobertura y rango de geolocalización.</p>
-                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-xs">
-                  <p><strong>Plan Actual:</strong> {currentUser?.isPremium ? '👑 Premium (500 km global)' : '🆓 Estándar (100 km)'}</p>
+              <div className="space-y-6 max-w-xl mx-auto">
+                <div className={`p-8 rounded-3xl border space-y-6 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                  <div className="flex items-center gap-4 border-b border-slate-800 pb-6">
+                    <img 
+                      src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} 
+                      className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500 shadow-lg" 
+                    />
+                    <div>
+                      <h3 className="text-xl font-black">{currentUser.name}</h3>
+                      <p className="text-xs text-slate-400">{currentUser.email}</p>
+                      <span className="inline-block mt-2 px-3 py-0.5 bg-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold border border-amber-500/30">
+                        {currentUser.isPremium ? '👑 Premium (500 km global)' : '🆓 Plan Gratuito (100 km)'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Galería de Fotos (Hasta 5 fotos) */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-bold text-xs uppercase text-slate-300">Mis Fotos de Perfil ({currentUser.photos.length}/5)</h4>
+                      {currentUser.photos.length < 5 && (
+                        <label className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1 rounded-lg text-xs cursor-pointer">
+                          ➕ Subir Foto
+                          <input type="file" accept="image/*" onChange={handleAddPhoto} className="hidden" />
+                        </label>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-2">
+                      {currentUser.photos.map((img, index) => (
+                        <div key={index} className="relative group">
+                          <img 
+                            src={img} 
+                            onClick={() => setCurrentUser({ ...currentUser, avatarIndex: index })}
+                            className={`w-full h-16 rounded-xl object-cover cursor-pointer border-2 transition-all ${currentUser.avatarIndex === index ? 'border-amber-500 scale-105' : 'border-slate-800 opacity-70 hover:opacity-100'}`} 
+                          />
+                          {currentUser.photos.length > 1 && (
+                            <button 
+                              onClick={() => handleRemovePhoto(index)}
+                              className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-slate-400">Haz clic en cualquier imagen para establecerla como tu foto principal.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MATCH CINÉFILO */}
+            {activeTab === 'match' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">Conecta con Cinéfilos Cercanos</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {usersList.map((user) => (
+                    <div key={user.id} className={`p-5 rounded-2xl border space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-bold text-base">{user.name}</h3>
+                        <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-500 font-bold">📍 {user.distance}</span>
+                      </div>
+                      <p className="text-xs text-slate-400"><strong>Gustos:</strong> {user.genres}</p>
+                      <button className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider">
+                        Enviar Invitación al Cine 🎟️
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CRÍTICOS */}
+            {activeTab === 'criticos' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">Críticas y Reseñas</h2>
+                <div className="space-y-4">
+                  {criticsReviews.map((rev, i) => (
+                    <div key={i} className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div className="flex justify-between items-center mb-1">
+                        <h4 className="font-bold text-sm">{rev.author}</h4>
+                        <span className="text-amber-500 font-black text-xs">{rev.rating}</span>
+                      </div>
+                      <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-500 px-2.5 py-0.5 rounded-full font-bold">{rev.role}</span>
+                      <p className="text-xs text-slate-300 italic mt-3">"{rev.text}"</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* PANEL ADMIN */}
+            {activeTab === 'admin' && currentUser?.isAdmin && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">Panel de Administración</h2>
+                <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                  <h3 className="font-bold text-sm mb-4">Gestión de Usuarios</h3>
+                  <div className="space-y-3">
+                    {usersList.map((usr) => (
+                      <div key={usr.id} className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+                        <div>
+                          <p className="font-bold">{usr.name}</p>
+                          <p className="text-[10px] text-slate-400">{usr.email}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
           </main>
+
+          {/* MODAL CREAR NUEVO FORO */}
+          {showNewForumModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 relative shadow-2xl">
+                <button onClick={() => setShowNewForumModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold">✖</button>
+                <h3 className="text-lg font-black text-center text-amber-500">Crear Nuevo Foro de Discusión</h3>
+                
+                <form onSubmit={handleCreateForum} className="space-y-3 text-xs">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Título del Tema:</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={newForum.title}
+                      onChange={(e) => setNewForum({ ...newForum, title: e.target.value })} 
+                      placeholder="Ej: ¿Qué opinan del final de Oppenheimer?"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Categoría:</label>
+                    <select 
+                      value={newForum.category}
+                      onChange={(e) => setNewForum({ ...newForum, category: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
+                    >
+                      <option value="General">General</option>
+                      <option value="Directores">Directores</option>
+                      <option value="Cine de Culto">Cine de Culto</option>
+                      <option value="Estrenos">Estrenos</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Descripción / Pregunta inicial:</label>
+                    <textarea 
+                      required 
+                      rows="3"
+                      value={newForum.description}
+                      onChange={(e) => setNewForum({ ...newForum, description: e.target.value })} 
+                      placeholder="Añade contexto o tu punto de vista inicial..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" 
+                    />
+                  </div>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">
+                    Publicar Foro
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL DE AUTENTICACIÓN */}
+          {showAuthModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative shadow-2xl">
+                <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold">✖</button>
+                <h3 className="text-lg font-black text-center text-white">
+                  {authMode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                </h3>
+                
+                <form onSubmit={handleAuthSubmit} className="space-y-3 text-xs">
+                  {authMode === 'register' && (
+                    <div>
+                      <label className="block text-slate-400 mb-1">Nombre:</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={authForm.name}
+                        onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })} 
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" 
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-slate-400 mb-1">Correo Electrónico:</label>
+                    <input 
+                      type="email" 
+                      required 
+                      value={authForm.email}
+                      onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Contraseña:</label>
+                    <input 
+                      type="password" 
+                      required 
+                      value={authForm.password}
+                      onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" 
+                    />
+                  </div>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">
+                    {authMode === 'login' ? 'Ingresar' : 'Registrarse'}
+                  </button>
+                </form>
+
+                <div className="text-center pt-2">
+                  <button 
+                    onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                    className="text-[11px] text-amber-500 hover:underline"
+                  >
+                    {authMode === 'login' ? '¿No tienes cuenta? Regístrate gratis' : '¿Ya tienes cuenta? Inicia sesión'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       );
     }
