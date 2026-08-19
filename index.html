@@ -1,327 +1,379 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plottwisme - Cartelera de Cines</title>
-  <style>
-    :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-main: #f8fafc;
-      --accent: #38bdf8;
-      --accent-premium: #f59e0b;
-      --border: #334155;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      margin: 0;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 15px;
-      margin-bottom: 20px;
-    }
-
-    .user-badge {
-      background: var(--card-bg);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: bold;
-      border: 1px solid var(--border);
-    }
-
-    .badge-premium {
-      color: var(--accent-premium);
-      border-color: var(--accent-premium);
-    }
-
-    .badge-standard {
-      color: var(--accent);
-    }
-
-    .controls {
-      background: var(--card-bg);
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      display: flex;
-      gap: 15px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    button {
-      background-color: var(--accent);
-      color: #0f172a;
-      border: none;
-      padding: 10px 18px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    .cinema-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      border: 1px solid var(--border);
-    }
-
-    .cinema-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 15px;
-    }
-
-    .cinema-title {
-      margin: 0;
-      font-size: 1.3rem;
-      color: var(--accent);
-    }
-
-    .distance-tag {
-      background: #334155;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-    }
-
-    .movies-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .movie-card {
-      background: #0f172a;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-
-    .movie-title {
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    .showtimes {
-      font-size: 0.85rem;
-      color: #94a3b8;
-    }
-
-    .map-btn {
-      display: inline-block;
-      margin-top: 10px;
-      background: #10b981;
-      color: white;
-      text-decoration: none;
-      padding: 6px 12px;
-      border-radius: 5px;
-      font-size: 0.85rem;
-      font-weight: bold;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plottwisme - Red Social Cinéfila</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div id="root"></div>
 
-  <div class="container">
-    <header>
-      <h1>🎬 Cartelera de Cines Cercanos</h1>
-      <div id="userBadge" class="user-badge badge-standard">
-        Plan: Estándar (Radio: 100 km)
-      </div>
-    </header>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-    <div class="controls">
-      <button onclick="obtenerUbicacionYBuscar()">📍 Detectar Mi Ubicación</button>
-      <button onclick="cambiarPlan()">⚡ Cambiar Plan (Prueba)</button>
-    </div>
+    const ADMIN_EMAIL = 'plottwist.infoapp@gmail.com';
 
-    <div id="statusMessage" style="margin-bottom: 15px; color: #94a3b8;">
-      Presiona "Detectar Mi Ubicación" para cargar las carteleras de tu zona.
-    </div>
-
-    <div id="cinemasContainer"></div>
-  </div>
-
-  <script>
-    // Configuración general
-    let GOOGLE_MAPS_API_KEY = ""; // Pegar tu API Key de Google Maps aquí cuando la tengas
-    let esPremium = false;
-    let userLat = null;
-    let userLng = null;
-
-    // Cines base (Región Misiones) para fallback y cálculo de distancia directa
-    const cinesLocales = [
-      {
-        nombre: "Cine Teatro Oberá",
-        direccion: "San Martín 1069, Oberá, Misiones",
-        lat: -27.4862,
-        lng: -55.1228,
-        cartelera: [
-          { titulo: "Avatar 3: Fire and Ash", horarios: "18:00 - 21:30" },
-          { titulo: "IntensaMente 2", horarios: "16:00" }
-        ]
-      },
-      {
-        nombre: "Las Tipas Cinemas Posadas",
-        direccion: "Av. Quaranta 3598, Posadas, Misiones",
-        lat: -27.4045,
-        lng: -55.9387,
-        cartelera: [
-          { titulo: "Deadpool & Wolverine", horarios: "17:30 - 20:00 - 22:30" },
-          { titulo: "Mi Villano Favorito 4", horarios: "15:00 - 17:00" }
-        ]
-      },
-      {
-        nombre: "IMAX del Conocimiento",
-        direccion: "Av. Ulises López, Posadas, Misiones",
-        lat: -27.3821,
-        lng: -55.9615,
-        cartelera: [
-          { titulo: "Oppenheimer (Re-estreno IMAX)", horarios: "20:00" }
-        ]
-      },
-      {
-        nombre: "Sunstar Cinemas - Posadas",
-        direccion: "Plaza Shopping, Posadas, Misiones",
-        lat: -27.3668,
-        lng: -55.8918,
-        cartelera: [
-          { titulo: "Alien: Romulus", horarios: "19:00 - 21:45" }
-        ]
-      }
-    ];
-
-    // Cambiar entre plan Estándar (100km) y Premium (500km)
-    function cambiarPlan() {
-      esPremium = !esPremium;
-      const badge = document.getElementById("userBadge");
+    function App() {
+      const [theme, setTheme] = useState('dark');
+      const [activeTab, setActiveTab] = useState('radar');
+      const [location, setLocation] = useState('Detectar mi ubicación');
+      const [lastSync, setLastSync] = useState(new Date().toLocaleTimeString());
       
-      if (esPremium) {
-        badge.className = "user-badge badge-premium";
-        badge.innerText = "Plan: Premium (Radio: 500 km)";
-      } else {
-        badge.className = "user-badge badge-standard";
-        badge.innerText = "Plan: Estándar (Radio: 100 km)";
-      }
+      const [currentUser, setCurrentUser] = useState(null);
+      const [userGenres, setUserGenres] = useState('Cine de Autor, Sci-Fi, Drama');
+      const [showAuthModal, setShowAuthModal] = useState(false);
+      const [authMode, setAuthMode] = useState('register');
+      const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
 
-      if (userLat !== null && userLng !== null) {
-        procesarBusquedaCines(userLat, userLng);
-      }
-    }
+      // Simulación de Base de Datos
+      const [usersList, setUsersList] = useState([
+        { id: 1, name: 'Carlos Ruiz', email: 'carlos@cine.com', isCritic: true, isPremium: true, genres: 'Sci-Fi, Thriller', distance: '12 km' },
+        { id: 2, name: 'Laura Gómez', email: 'laura@cine.com', isCritic: false, isPremium: false, genres: 'Drama, Romance', distance: '45 km' },
+        { id: 3, name: 'Mateo Silva', email: 'mateo@cine.com', isCritic: false, isPremium: false, genres: 'Acción, Terror', distance: '88 km' }
+      ]);
 
-    // Solicitar geolocalización al navegador
-    function obtenerUbicacionYBuscar() {
-      const status = document.getElementById("statusMessage");
-      status.innerText = "Obteniendo ubicación...";
+      const [criticsReviews, setCriticsReviews] = useState([
+        { author: 'Carlos Ruiz', role: 'Crítico Certificado', text: 'Dune 2 es un triunfo visual sin precedentes.', rating: '★★★★☆' }
+      ]);
 
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            userLat = position.coords.latitude;
-            userLng = position.coords.longitude;
-            status.innerText = `Ubicación detectada: Lat ${userLat.toFixed(3)}, Lng ${userLng.toFixed(3)}`;
-            procesarBusquedaCines(userLat, userLng);
-          },
-          (error) => {
-            status.innerText = "No se pudo obtener la ubicación GPS. Usando posición por defecto (Oberá).";
-            userLat = -27.4862;
-            userLng = -55.1228;
-            procesarBusquedaCines(userLat, userLng);
+      const [newReview, setNewReview] = useState('');
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setLastSync(new Date().toLocaleTimeString());
+        }, 30000);
+        return () => clearInterval(interval);
+      }, []);
+
+      const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+
+      const getGeoLocation = () => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            () => {
+              const radio = currentUser?.isPremium ? 500 : 100;
+              setLocation(`Buscando en un radio de ${radio} km`);
+            },
+            () => setLocation('Ubicación no disponible')
+          );
+        }
+      };
+
+      const handleAuthSubmit = (e) => {
+        e.preventDefault();
+        const isAdmin = authForm.email.toLowerCase() === ADMIN_EMAIL;
+        const newUser = { 
+          name: authForm.name || authForm.email.split('@')[0], 
+          email: authForm.email, 
+          genres: userGenres,
+          isPremium: isAdmin,
+          isCritic: isAdmin,
+          isAdmin: isAdmin
+        };
+        setCurrentUser(newUser);
+        setShowAuthModal(false);
+      };
+
+      // Asignación de rol exclusiva del Administrador
+      const toggleCriticRole = (userId) => {
+        setUsersList(usersList.map(u => {
+          if (u.id === userId) {
+            const nextStatus = !u.isCritic;
+            return { ...u, isCritic: nextStatus, isPremium: nextStatus };
           }
-        );
-      } else {
-        status.innerText = "Navegador sin soporte de GPS. Usando posición por defecto.";
-        userLat = -27.4862;
-        userLng = -55.1228;
-        procesarBusquedaCines(userLat, userLng);
-      }
-    }
+          return u;
+        }));
+      };
 
-    // Fórmula Haversine para calcular distancia en km
-    function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
-      const R = 6371; 
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
+      const handleAddReview = (e) => {
+        e.preventDefault();
+        if (!newReview.trim()) return;
+        setCriticsReviews([
+          { author: currentUser.name, role: 'Crítico Certificado', text: newReview, rating: '★★★★★' },
+          ...criticsReviews
+        ]);
+        setNewReview('');
+      };
 
-    // Filtrar cines según el radio permitido
-    function procesarBusquedaCines(lat, lng) {
-      const radioMaximoKm = esPremium ? 500 : 100;
-      const container = document.getElementById("cinemasContainer");
-      container.innerHTML = "";
+      const movies = [
+        { title: 'Dune: Parte 2', genre: 'Ciencia Ficción', rating: '8.6', showtimes: ['17:00', '20:15', '23:00'] },
+        { title: 'Oppenheimer', genre: 'Drama / Historia', rating: '8.9', showtimes: ['18:30', '22:00'] },
+        { title: 'The Substance', genre: 'Terror / Thriller', rating: '7.8', showtimes: ['19:00', '21:45'] }
+      ];
 
-      const cinesEnRango = cinesLocales.map(cine => {
-        const dist = calcularDistanciaKm(lat, lng, cine.lat, cine.lng);
-        return { ...cine, distanciaKm: dist };
-      }).filter(cine => cine.distanciaKm <= radioMaximoKm);
+      return (
+        <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-gray-100 text-slate-900'}`}>
+          
+          <header className={`border-b p-4 sticky top-0 z-40 ${theme === 'dark' ? 'border-slate-800 bg-slate-950/90 backdrop-blur' : 'border-gray-300 bg-white/90 backdrop-blur'}`}>
+            <div className="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-4">
+              <h1 className="font-black text-2xl text-amber-500 tracking-wider">PLOTTWISME</h1>
+              
+              <nav className="flex flex-wrap gap-2 text-xs font-bold uppercase">
+                {[
+                  { id: 'radar', label: '🎯 Radar y Cartelera' },
+                  { id: 'match', label: '🔥 Match Cinéfilo' },
+                  { id: 'criticos', label: '✍️ Críticos' },
+                  { id: 'recomienda', label: '💡 Recomendaciones' },
+                  { id: 'foros', label: '💬 Foros' },
+                  { id: 'perfil', label: '👤 Mi Perfil' },
+                  ...(currentUser?.isAdmin ? [{ id: 'admin', label: '⚡ Panel Admin' }] : [])
+                ].map(tab => (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 font-black shadow' : 'hover:bg-slate-800 hover:text-white'}`}>{tab.label}</button>
+                ))}
+              </nav>
 
-      // Ordenar de más cercano a más lejano
-      cinesEnRango.sort((a, b) => a.distanciaKm - b.distanciaKm);
-
-      if (cinesEnRango.length === 0) {
-        container.innerHTML = `<p>No se encontraron cines dentro del radio de ${radioMaximoKm} km.</p>`;
-        return;
-      }
-
-      cinesEnRango.forEach(cine => {
-        const mapUrl = `https://www.google.com/maps/search/?api=1&query=${cine.lat},${cine.lng}`;
-        
-        let moviesHtml = "";
-        cine.cartelera.forEach(pelicula => {
-          moviesHtml += `
-            <div class="movie-card">
-              <div class="movie-title">${pelicula.titulo}</div>
-              <div class="showtimes">Horarios: ${pelicula.horarios}</div>
+              <div className="flex items-center gap-3">
+                <button onClick={toggleTheme} className="p-2 bg-slate-800 text-white rounded-xl text-sm">🌓</button>
+                {currentUser ? (
+                  <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span className="text-white">{currentUser.name}</span>
+                  </div>
+                ) : (
+                  <button onClick={() => { setAuthMode('login'); setShowAuthModal(true); }} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider shadow">Iniciar Sesión</button>
+                )}
+              </div>
             </div>
-          `;
-        });
+          </header>
 
-        const card = document.createElement("div");
-        card.className = "cinema-card";
-        card.innerHTML = `
-          <div class="cinema-header">
-            <div>
-              <h2 class="cinema-title">${cine.nombre}</h2>
-              <div style="font-size:0.9rem; color:#94a3b8;">${cine.direccion}</div>
+          <main className="max-w-5xl mx-auto p-6">
+            
+            {/* RADAR Y CARTELERA */}
+            {activeTab === 'radar' && (
+              <div className="space-y-6">
+                <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                  <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                    <div>
+                      <h2 className="font-bold text-lg">📍 Geolocalización y Alcance</h2>
+                      <p className="text-xs text-slate-400">{currentUser?.isPremium ? 'Modo Premium: Radio de 500km activo' : 'Modo Gratuito: Radio de 100km activo'}</p>
+                    </div>
+                    <button onClick={getGeoLocation} className="bg-amber-500 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs">{location}</button>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-black text-amber-500">🎬 Cartelera en Tu Zona</h3>
+                  <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full animate-pulse">
+                    🟢 Sincronizado: {lastSync}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {movies.map((movie, index) => (
+                    <div key={index} className={`p-5 rounded-2xl border flex gap-4 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div className="w-24 h-36 bg-slate-800 rounded-xl flex items-center justify-center text-xs text-slate-500 font-bold shrink-0">PÓSTER</div>
+                      <div className="flex flex-col justify-between w-full">
+                        <div>
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-bold text-base">{movie.title}</h4>
+                            <span className="text-amber-500 font-black text-xs">★ {movie.rating}</span>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1">{movie.genre}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-slate-400 mb-1.5">Horarios:</p>
+                          <div className="flex gap-2 flex-wrap">
+                            {movie.showtimes.map((time, idx) => (
+                              <span key={idx} className="bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-bold px-2.5 py-1 rounded-lg">{time}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* MATCH CINÉFILO */}
+            {activeTab === 'match' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-black text-amber-500">Conecta con Cinéfilos Cercanos</h2>
+                  <span className="text-xs text-slate-400">Radio: {currentUser?.isPremium ? '500 km' : '100 km'}</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {usersList.map((user) => (
+                    <div key={user.id} className={`p-5 rounded-2xl border flex flex-col justify-between space-y-4 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div>
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-bold text-base">{user.name}</h3>
+                          <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-500 font-bold">📍 {user.distance}</span>
+                        </div>
+                        <p className="text-xs text-slate-400"><strong>Gustos:</strong> {user.genres}</p>
+                      </div>
+                      <button className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider transition-all">
+                        Enviar Invitación al Cine 🎟️
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CRÍTICOS */}
+            {activeTab === 'criticos' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">Críticas Certificadas</h2>
+
+                {currentUser?.isCritic && (
+                  <form onSubmit={handleAddReview} className={`p-4 rounded-2xl border space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                    <h3 className="text-xs font-bold text-amber-500 uppercase">Escribir Reseña Certificada</h3>
+                    <textarea 
+                      value={newReview} 
+                      onChange={(e) => setNewReview(e.target.value)}
+                      placeholder="Escribe tu reseña crítica..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white"
+                    />
+                    <button type="submit" className="bg-amber-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-black">Publicar Crítica</button>
+                  </form>
+                )}
+
+                <div className="space-y-4">
+                  {criticsReviews.map((rev, i) => (
+                    <div key={i} className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div className="flex justify-between items-center mb-1">
+                        <h4 className="font-bold text-sm">{rev.author}</h4>
+                        <span className="text-amber-500 font-black text-xs">{rev.rating}</span>
+                      </div>
+                      <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-500 px-2.5 py-0.5 rounded-full font-bold">{rev.role}</span>
+                      <p className="text-xs text-slate-300 italic mt-3">"{rev.text}"</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RECOMENDACIONES */}
+            {activeTab === 'recomienda' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">Recomendaciones Basadas en Tus Gustos</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {['Oppenheimer', 'Blade Runner 2049', 'The Substance', 'Parasite'].map((title, i) => (
+                    <div key={i} className={`p-4 rounded-2xl border text-center ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <h4 className="font-bold text-xs">{title}</h4>
+                      <p className="text-[10px] text-amber-500 mt-2 font-bold">98% Coincidencia</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* FOROS */}
+            {activeTab === 'foros' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">Foros de Discusión Cinéfila</h2>
+                <div className="space-y-3">
+                  {[
+                    { title: '¿Es Denis Villeneuve el mejor director de la década?', replies: 42 },
+                    { title: 'Teorías sobre el final de Inception', replies: 128 }
+                  ].map((forum, index) => (
+                    <div key={index} className={`p-4 rounded-2xl border flex justify-between items-center ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <h4 className="font-bold text-sm">{forum.title}</h4>
+                      <span className="text-xs text-slate-400">{forum.replies} resp.</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* PANEL ADMINISTRADOR (Visibilidad restringida a la cuenta oficial) */}
+            {activeTab === 'admin' && currentUser?.isAdmin && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">Panel de Administración Exclusivo</h2>
+                <p className="text-xs text-slate-400">Gestión central para otorgar estatus de Crítico Certificado y Suscripción Premium (500 km de radar).</p>
+
+                <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                  <h3 className="font-bold text-sm mb-4">Usuarios en el Sistema</h3>
+                  <div className="space-y-3">
+                    {usersList.map((usr) => (
+                      <div key={usr.id} className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+                        <div>
+                          <p className="font-bold">{usr.name}</p>
+                          <p className="text-[10px] text-slate-400">{usr.email}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${usr.isCritic ? 'bg-amber-500/20 text-amber-500' : 'bg-slate-800 text-slate-500'}`}>
+                            {usr.isCritic ? 'CRÍTICO + PREMIUM' : 'USUARIO GRATUITO'}
+                          </span>
+                          <button 
+                            onClick={() => toggleCriticRole(usr.id)} 
+                            className="bg-amber-500 text-slate-950 font-bold px-3 py-1 rounded-lg text-[10px]"
+                          >
+                            {usr.isCritic ? 'Quitar Certificación' : 'Hacer Crítico Premium'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PERFIL */}
+            {activeTab === 'perfil' && (
+              <div className="space-y-6 max-w-xl mx-auto">
+                <div className={`p-8 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                  {!currentUser ? (
+                    <div className="text-center space-y-4">
+                      <h3 className="text-xl font-black text-white">Únete a Plottwisme</h3>
+                      <button onClick={() => { setAuthMode('login'); setShowAuthModal(true); }} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase text-xs tracking-wider">Iniciar Sesión / Crear Cuenta</button>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+                        <div>
+                          <h3 className="text-lg font-bold">{currentUser.name}</h3>
+                          <p className="text-xs text-slate-400">{currentUser.email}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          {currentUser.isCritic && <span className="px-3 py-1 bg-amber-500/20 text-amber-500 rounded-full text-[10px] font-bold">✍️ CRÍTICO</span>}
+                          <span className="px-3 py-1 bg-amber-500/20 text-amber-500 rounded-full text-[10px] font-bold">{currentUser.isPremium ? '👑 PREMIUM' : 'GRATIS'}</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-300 mb-1">Tus Gustos Cinematográficos:</label>
+                        <input 
+                          type="text" 
+                          value={userGenres} 
+                          onChange={(e) => setUserGenres(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-amber-400 font-bold"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* MODAL DE AUTENTICACIÓN */}
+          {showAuthModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative shadow-2xl">
+                <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold">✖</button>
+                <h3 className="text-lg font-black text-center text-white">Acceso a Plottwisme</h3>
+                <form onSubmit={handleAuthSubmit} className="space-y-3 text-xs">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Correo Electrónico:</label>
+                    <input type="email" required onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
+                  </div>
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">Ingresar</button>
+                </form>
+              </div>
             </div>
-            <span class="distance-tag">📍 ${cine.distanciaKm.toFixed(1)} km</span>
-          </div>
-          <div class="movies-list">${moviesHtml}</div>
-          <a class="map-btn" href="${mapUrl}" target="_blank">🗺️ Ver ruta en Google Maps</a>
-        `;
-        container.appendChild(card);
-      });
+          )}
+        </div>
+      );
     }
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
   </script>
 </body>
 </html>
