@@ -30,27 +30,37 @@
 
     function App() {
       const [theme, setTheme] = useState('dark');
-      // Pestaña inicial: Cartelera Local para evitar el lienzo negro al abrir
       const [activeTab, setActiveTab] = useState('cartelera'); 
       const [locationStatus, setLocationStatus] = useState('Detectar mi ubicación mundial');
       const [userCoords, setUserCoords] = useState(null);
       
-      // Estado de Perfil con Notificaciones de Match
+      // Estado de Perfil ampliado con Modos de Uso y Modo Viaje
       const [currentUser, setCurrentUser] = useState({
         name: 'Cinéfilo Invitado',
         email: 'invitado@plottwisme.com',
         genres: 'Cine de Autor, Sci-Fi, Thriller',
         lookingFor: 'Compañeros para ir al cine y debates',
+        usageMode: 'community', // 'community' | 'friends' | 'dating'
+        privatePreferences: {
+          hideExactLocation: false,
+          hideDatingIntent: true,
+          hideAge: false
+        },
+        travelMode: {
+          active: false,
+          destinationCity: '',
+          daysAhead: 3
+        },
         bio: 'Apasionado por el cine analógico y los giros de guión inesperados.',
         isPremium: false,
         isCritic: false,
         isAdmin: false,
-        allowMatchNotifications: true, // Configuración de notificación
+        allowMatchNotifications: true,
         photos: ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'],
         avatarIndex: 0
       });
 
-      // Notificación Emergente de Match al Abrir
+      // Notificación Emergente con perfil de destino para interactividad
       const [matchNotification, setMatchNotification] = useState(null);
 
       const [showAuthModal, setShowAuthModal] = useState(false);
@@ -59,12 +69,12 @@
       const [cinesGlobales, setCinesGlobales] = useState([]);
       const [cargandoCines, setCargandoCines] = useState(false);
 
-      // Cartelera en Vivo de la Semana
+      // Cartelera con enlaces de compra de entradas (Ticketing / Deep Link)
       const carteleraSemanal = [
-        { id: 1, title: 'Oppenheimer: Edición Especial', genre: 'Drama / Historia', runtime: '180 min', rating: '9.3/10', poster: '💣', salas: 'Cine Hoyts / Showcase', times: ['17:30', '20:45', '22:15'] },
-        { id: 2, title: 'Dune: Parte Dos', genre: 'Sci-Fi / Aventura', runtime: '166 min', rating: '9.0/10', poster: '🏜️', salas: 'IMAX Cinema', times: ['16:00', '19:15', '22:30'] },
-        { id: 3, title: 'Anatomía de una Caída', genre: 'Intriga / Suspenso', runtime: '150 min', rating: '8.5/10', poster: '⚖️', salas: 'Cine Arte Múltiplex', times: ['18:00', '20:30'] },
-        { id: 4, title: 'Pobres Criaturas', genre: 'Comedia / Fantasía', runtime: '141 min', rating: '8.8/10', poster: '🎭', salas: 'Cinemark Local', times: ['17:15', '19:45', '22:00'] }
+        { id: 1, title: 'Oppenheimer: Edición Especial', genre: 'Drama / Historia', runtime: '180 min', rating: '9.3/10', poster: '💣', salas: 'Cine Hoyts / Showcase', times: ['17:30', '20:45', '22:15'], ticketUrl: 'https://www.cinemarkhoyts.com.ar' },
+        { id: 2, title: 'Dune: Parte Dos', genre: 'Sci-Fi / Aventura', runtime: '166 min', rating: '9.0/10', poster: '🏜️', salas: 'IMAX Cinema', times: ['16:00', '19:15', '22:30'], ticketUrl: 'https://www.imax.com' },
+        { id: 3, title: 'Anatomía de una Caída', genre: 'Intriga / Suspenso', runtime: '150 min', rating: '8.5/10', poster: '⚖️', salas: 'Cine Arte Múltiplex', times: ['18:00', '20:30'], ticketUrl: 'https://www.multiplex.com.ar' },
+        { id: 4, title: 'Pobres Criaturas', genre: 'Comedia / Fantasía', runtime: '141 min', rating: '8.8/10', poster: '🎭', salas: 'Cinemark Local', times: ['17:15', '19:45', '22:00'], ticketUrl: 'https://www.cinemarkhoyts.com.ar' }
       ];
 
       // Streaming
@@ -102,11 +112,12 @@
         { id: 2, name: 'Laura Gómez', email: 'laura@cine.com', genres: 'Drama, Romance', lookingFor: 'Pareja cinéfila', bio: 'Amante de los festivales de cine.', distance: '45 km', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' }
       ]);
 
-      // Alerta de Match instantánea si está activa la configuración
+      // Alerta de Match Interactiva
       useEffect(() => {
         if (currentUser.allowMatchNotifications) {
           const timer = setTimeout(() => {
             setMatchNotification({
+              userId: 2,
               userName: 'Laura Gómez',
               matchPercent: '95%',
               movie: 'Anatomía de una Caída',
@@ -120,6 +131,11 @@
       const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
       const getGeoLocation = () => {
+        if (currentUser.travelMode.active && currentUser.travelMode.destinationCity) {
+          setLocationStatus(`Modo Viaje Activo: ${currentUser.travelMode.destinationCity}`);
+          return;
+        }
+
         setLocationStatus('Obteniendo GPS...');
         setCargandoCines(true);
         if (navigator.geolocation) {
@@ -175,13 +191,13 @@
 
       const handleAuthSubmit = (e) => {
         e.preventDefault();
-        const isAdmin = authForm.email.toLowerCase() === ADMIN_EMAIL;
+        const isAdmin = authForm.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
         setCurrentUser({ 
           ...currentUser,
           name: authForm.name || authForm.email.split('@')[0], 
           email: authForm.email, 
-          isPremium: isAdmin,
-          isCritic: isAdmin,
+          isPremium: isAdmin ? true : currentUser.isPremium,
+          isCritic: isAdmin ? true : currentUser.isCritic,
           isAdmin: isAdmin
         });
         setShowAuthModal(false);
@@ -224,6 +240,11 @@
         setNewReplyText('');
       };
 
+      const handleNotificationClick = () => {
+        setActiveTab('match');
+        setMatchNotification(null);
+      };
+
       const filteredStreaming = streamingFilter === 'Todos' 
         ? streamingReleases 
         : streamingReleases.filter(s => s.platform === streamingFilter);
@@ -242,8 +263,7 @@
                   { id: 'streaming', label: '📺 Streaming' },
                   { id: 'match', label: '🔥 Match' },
                   { id: 'foros', label: '💬 Foros' },
-                  { id: 'perfil', label: '👤 Perfil' },
-                  ...(currentUser?.isAdmin ? [{ id: 'admin', label: '⚡ Admin' }] : [])
+                  { id: 'perfil', label: '👤 Perfil' }
                 ].map(tab => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 font-black shadow' : 'hover:bg-slate-800 hover:text-white'}`}>{tab.label}</button>
                 ))}
@@ -259,22 +279,31 @@
             </div>
           </header>
 
-          {/* NOTIFICACIÓN EMERGENTE INSTANTÁNEA DE MATCH */}
+          {/* NOTIFICACIÓN EMERGENTE INTERACTIVA DE MATCH */}
           {matchNotification && (
-            <div className="fixed bottom-5 right-5 z-50 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 p-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-sm border border-amber-300">
+            <div 
+              onClick={handleNotificationClick}
+              className="fixed bottom-5 right-5 z-50 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 p-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-sm border border-amber-300 cursor-pointer hover:scale-105 transition-all"
+            >
               <img src={matchNotification.avatar} className="w-12 h-12 rounded-xl object-cover border border-slate-950" />
               <div className="flex-1 text-xs">
                 <p className="font-black text-sm uppercase">¡Nuevo Match Cinéfilo! 🔥</p>
                 <p className="font-bold">{matchNotification.userName} ({matchNotification.matchPercent} de afinidad)</p>
                 <p className="text-[10px] opacity-90">Coincidencia para ver: {matchNotification.movie}</p>
+                <p className="text-[9px] font-black underline mt-1">Haz clic para ver el perfil completo →</p>
               </div>
-              <button onClick={() => setMatchNotification(null)} className="font-bold text-slate-950 hover:text-white text-sm">✕</button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setMatchNotification(null); }} 
+                className="font-bold text-slate-950 hover:text-white text-sm"
+              >
+                ✕
+              </button>
             </div>
           )}
 
           <main className="max-w-5xl mx-auto p-6">
             
-            {/* PANTALLA INICIAL DE CARTELERA LOCAL */}
+            {/* PANTALLA INICIAL DE CARTELERA LOCAL CON TICKETING */}
             {activeTab === 'cartelera' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center flex-wrap gap-2">
@@ -314,9 +343,19 @@
                         </div>
                       </div>
 
-                      <button onClick={() => setActiveTab('match')} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all">
-                        Buscar Compañero para esta función 🎟️
-                      </button>
+                      <div className="grid grid-cols-2 gap-2 pt-2">
+                        <a 
+                          href={film.ticketUrl} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl text-xs uppercase text-center flex items-center justify-center gap-1"
+                        >
+                          🎟️ Comprar Tickets
+                        </a>
+                        <button onClick={() => setActiveTab('match')} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase tracking-wider">
+                          Buscar Compañero 🤝
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -333,6 +372,9 @@
                       <p className="text-xs text-slate-400">
                         {currentUser?.isPremium ? 'Modo Premium Internacional: Radio de 500 km' : 'Modo Estándar: Radio de 100 km'}
                       </p>
+                      {currentUser.travelMode.active && (
+                        <p className="text-xs text-amber-400 font-bold mt-1">✈️ Modo Viaje Activo: {currentUser.travelMode.destinationCity} (Próximos {currentUser.travelMode.daysAhead} días)</p>
+                      )}
                     </div>
                     <button onClick={getGeoLocation} className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs">
                       📍 {locationStatus}
@@ -396,7 +438,7 @@
               </div>
             )}
 
-            {/* PERFIL Y CONFIGURACIÓN NOTIFICACIONES */}
+            {/* PERFIL (MODALIDADES DE USO, MODO VIAJE Y SECCIÓN PRIVADA) */}
             {activeTab === 'perfil' && (
               <div className="space-y-6 max-w-2xl mx-auto">
                 <div className={`p-8 rounded-3xl border space-y-6 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
@@ -406,6 +448,92 @@
                     <div>
                       <h3 className="text-2xl font-black">{currentUser.name}</h3>
                       <p className="text-xs text-slate-400">{currentUser.email}</p>
+                      {currentUser.isAdmin && (
+                        <span className="inline-block mt-1 bg-amber-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded">
+                          ⚡ ADMINISTRADOR MASTER
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* MODALIDAD DE USO Y OBJETIVO */}
+                  <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
+                    <h4 className="font-black text-xs uppercase text-amber-500">🎯 Modalidad de Uso</h4>
+                    <p className="text-xs text-slate-400">Define cómo quieres interactuar con la comunidad:</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: 'community', label: '🍿 Solo Cine' },
+                        { id: 'friends', label: '🤝 Buscar Amigos' },
+                        { id: 'dating', label: '❤️ Buscar Citas' }
+                      ].map(mode => (
+                        <button
+                          key={mode.id}
+                          onClick={() => setCurrentUser({ ...currentUser, usageMode: mode.id })}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all ${currentUser.usageMode === mode.id ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 text-slate-400 border border-slate-800'}`}
+                        >
+                          {mode.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* MODO VIAJE PREMIUM */}
+                  <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-black text-xs uppercase text-amber-500">✈️ Modo Viaje Premium (Plan a 5 Días)</h4>
+                        <p className="text-xs text-slate-400">Conecta con la comunidad cinéfila de tu próximo destino.</p>
+                      </div>
+                      {!currentUser.isPremium && (
+                        <span className="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/30">PRO</span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="Ej. Madrid, Tokio, Buenos Aires..." 
+                        value={currentUser.travelMode.destinationCity}
+                        onChange={(e) => setCurrentUser({ ...currentUser, travelMode: { ...currentUser.travelMode, destinationCity: e.target.value } })}
+                        className="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white"
+                      />
+                      <button 
+                        onClick={() => setCurrentUser({ ...currentUser, travelMode: { ...currentUser.travelMode, active: !currentUser.travelMode.active } })}
+                        className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all ${currentUser.travelMode.active ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`}
+                      >
+                        {currentUser.travelMode.active ? 'ACTIVADO' : 'ACTIVAR'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* SECCIÓN PRIVADA Y PRIVACIDAD */}
+                  <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
+                    <h4 className="font-black text-xs uppercase text-amber-500">🔒 Sección Privada y Ajustes de Privacidad</h4>
+                    <div className="space-y-2 text-xs">
+                      <label className="flex items-center justify-between text-slate-300 cursor-pointer">
+                        <span>Ocultar ubicación exacta a desconocidos</span>
+                        <input 
+                          type="checkbox" 
+                          checked={currentUser.privatePreferences.hideExactLocation}
+                          onChange={(e) => setCurrentUser({
+                            ...currentUser,
+                            privatePreferences: { ...currentUser.privatePreferences, hideExactLocation: e.target.checked }
+                          })}
+                          className="accent-amber-500"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between text-slate-300 cursor-pointer">
+                        <span>Mantener en privado intenciones de citas</span>
+                        <input 
+                          type="checkbox" 
+                          checked={currentUser.privatePreferences.hideDatingIntent}
+                          onChange={(e) => setCurrentUser({
+                            ...currentUser,
+                            privatePreferences: { ...currentUser.privatePreferences, hideDatingIntent: e.target.checked }
+                          })}
+                          className="accent-amber-500"
+                        />
+                      </label>
                     </div>
                   </div>
 
@@ -530,12 +658,16 @@
               </div>
             )}
 
-            {/* PANEL ADMIN */}
-            {activeTab === 'admin' && currentUser?.isAdmin && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-black text-amber-500">Panel de Administración</h2>
-                <div className="p-6 rounded-3xl border bg-slate-900 border-slate-800 text-xs text-slate-300">
-                  Panel reservado para el administrador ({currentUser.email}).
+            {/* PANEL ADMIN OCULTO (SOLO VISIBLE SI ISADMIN ES TRUE AL INICIAR SESIÓN) */}
+            {currentUser?.isAdmin && (
+              <div className="space-y-6 mt-12 border-t-2 border-amber-500/30 pt-8">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">⚡</span>
+                  <h2 className="text-2xl font-black text-amber-500">Panel de Administración Exclusivo</h2>
+                </div>
+                <div className="p-6 rounded-3xl border bg-slate-900 border-amber-500/30 text-xs text-slate-300 space-y-2">
+                  <p className="font-bold text-white">Sesión detectada automáticamente para: {currentUser.email}</p>
+                  <p className="text-slate-400">Este panel únicamente es visible para ti. Desde aquí podrás gestionar usuarios, revisar reportes y verificar métricas de Plottwisme.</p>
                 </div>
               </div>
             )}
@@ -581,5 +713,4 @@
   </script>
 </body>
 </html>
-               
-   
+       
