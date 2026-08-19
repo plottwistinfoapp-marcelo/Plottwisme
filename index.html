@@ -29,7 +29,6 @@
       return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
     }
 
-    // Helper para detectar la cadena de cine y devolver su link oficial o búsqueda optimizada
     function obtenerLinkCine(nombreCine, ciudad) {
       const nombre = nombreCine.toLowerCase();
       if (nombre.includes('cinemark') || nombre.includes('hoyts')) return 'https://www.cinemarkhoyts.com.ar';
@@ -39,8 +38,20 @@
       if (nombre.includes('atlas')) return 'https://www.cinesatlas.com.ar';
       if (nombre.includes('multiplex')) return 'https://www.cinesmultiplex.com.ar';
       
-      // Respaldo dinámico optimizado para salas independientes
-      return `https://www.google.com/search?q=cartelera+horarios+${encodeURIComponent(nombreCine)}+${encodeURIComponent(ciudad)}`;
+      return `https://www.google.com/search?q=cartelera+de+cine+horarios+cerca+de+${encodeURIComponent(nombreCine)}+${encodeURIComponent(ciudad)}`;
+    }
+
+    // Helper para generar link de búsqueda directa en streaming
+    function obtenerLinkStreaming(titulo, plataforma) {
+      const p = plataforma ? plataforma.toLowerCase() : '';
+      if (p.includes('netflix')) return `https://www.netflix.com/search?q=${encodeURIComponent(titulo)}`;
+      if (p.includes('disney')) return `https://www.disneyplus.com/search?q=${encodeURIComponent(titulo)}`;
+      if (p.includes('hbo') || p.includes('max')) return `https://www.max.com/search?q=${encodeURIComponent(titulo)}`;
+      if (p.includes('prime')) return `https://www.primevideo.com/search?phrase=${encodeURIComponent(titulo)}`;
+      if (p.includes('apple')) return `https://tv.apple.com/search?term=${encodeURIComponent(titulo)}`;
+      if (p.includes('mubi')) return `https://mubi.com/search?q=${encodeURIComponent(titulo)}`;
+      
+      return `https://www.google.com/search?q=donde+ver+${encodeURIComponent(titulo)}+online+streaming`;
     }
 
     function App() {
@@ -81,6 +92,10 @@
       const [streamingFilter, setStreamingFilter] = useState('Todos');
       const [streamingReleases, setStreamingReleases] = useState([]);
       const [cargandoStreaming, setCargandoStreaming] = useState(false);
+
+      // Estado para Watch Parties / Debates creados
+      const [watchParties, setWatchParties] = useState([]);
+      const [selectedMovieForParty, setSelectedMovieForParty] = useState(null);
 
       const streamingPlatforms = [
         { name: 'Netflix', id: 8, color: 'bg-red-600', logo: '🎬 N' },
@@ -270,6 +285,19 @@
         }
       };
 
+      const handleCrearWatchParty = (pelicula) => {
+        const nuevaParty = {
+          id: Date.now(),
+          titulo: pelicula.title,
+          host: currentUser.name,
+          plataforma: streamingFilter === 'Todos' ? 'Plataformas Digitales' : streamingFilter,
+          participantes: 1,
+          hora: 'Hoy 22:00 hs'
+        };
+        setWatchParties([nuevaParty, ...watchParties]);
+        alert(`¡Watch Party creada para "${pelicula.title}"! Ahora otros usuarios podrán unirse al debate virtual.`);
+      };
+
       const handleAuthSubmit = (e) => {
         e.preventDefault();
         const isAdmin = authForm.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
@@ -295,7 +323,7 @@
                 {[
                   { id: 'cartelera', label: '🍿 Cartelera en Cines' },
                   { id: 'radar', label: '🎯 Radar Cines' },
-                  { id: 'streaming', label: '📺 Streaming' },
+                  { id: 'streaming', label: '📺 Streaming / Debates' },
                   { id: 'match', label: '🔥 Match' },
                   { id: 'perfil', label: '👤 Perfil / Admin' }
                 ].map(tab => (
@@ -349,7 +377,7 @@
                       🎟️ Consultar funciones y salas disponibles en <strong className="text-amber-400">{cityName}</strong>:
                     </span>
                     <a 
-                      href={`https://www.google.com/search?q=cartelera+de+cine+horarios+en+${encodeURIComponent(cityName)}`} 
+                      href={`https://www.google.com/search?q=cartelera+de+cine+horarios+cerca+de+${encodeURIComponent(cityName)}`} 
                       target="_blank" 
                       rel="noreferrer" 
                       className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase shadow"
@@ -389,7 +417,7 @@
                         <div className="space-y-2">
                           {cityName && (
                             <a 
-                              href={`https://www.google.com/search?q=${encodeURIComponent(film.title)}+horarios+cine+${encodeURIComponent(cityName)}`} 
+                              href={`https://www.google.com/search?q=cartelera+de+cine+horarios+cerca+de+${encodeURIComponent(film.title)}+${encodeURIComponent(cityName)}`} 
                               target="_blank" 
                               rel="noreferrer" 
                               className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-1.5 rounded-xl text-[11px] block text-center border border-slate-700"
@@ -408,7 +436,7 @@
               </div>
             )}
 
-            {/* RADAR CINES CON REDIRECCIÓN INTELIGENTE */}
+            {/* RADAR CINES */}
             {activeTab === 'radar' && (
               <div className="space-y-6">
                 <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
@@ -451,7 +479,7 @@
                             🗺️ Ver Mapa
                           </a>
                           <a href={linkOficial} target="_blank" rel="noreferrer" className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-4 py-2 rounded-xl inline-flex items-center gap-1.5 shadow">
-                            🎟️ Ir a la Web / Cartelera Oficial
+                            🎟️ Ir a Cartelera / Web Oficial
                           </a>
                         </div>
                       </div>
@@ -461,10 +489,15 @@
               </div>
             )}
 
-            {/* STREAMING */}
+            {/* STREAMING CON FUNCIONALIDADES INTERACTIVAS (OPCIÓN 1 + OPCIÓN 2) */}
             {activeTab === 'streaming' && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-black text-amber-500">📺 Estrenos Reales en Streaming ({countryCode})</h2>
+                <div>
+                  <h2 className="text-2xl font-black text-amber-500">📺 Cine en Casa & Watch Parties</h2>
+                  <p className="text-xs text-slate-400">Accede directamente al catálogo oficial o coordina salas de debate virtual con otros cinéfilos.</p>
+                </div>
+
+                {/* Filtros de Plataforma */}
                 <div className="flex flex-wrap gap-2">
                   <button onClick={() => setStreamingFilter('Todos')} className={`px-4 py-2 rounded-xl text-xs font-bold ${streamingFilter === 'Todos' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 border border-slate-800'}`}>🌐 Todas</button>
                   {streamingPlatforms.map((platform) => (
@@ -475,24 +508,67 @@
                   ))}
                 </div>
 
+                {/* Watch Parties Activas */}
+                {watchParties.length > 0 && (
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
+                    <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">🎧 Watch Parties Programadas por la Comunidad</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {watchParties.map(party => (
+                        <div key={party.id} className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                          <div>
+                            <span className="font-bold text-white block">{party.titulo}</span>
+                            <span className="text-[10px] text-slate-400">Organiza: {party.host} • {party.hora}</span>
+                          </div>
+                          <button onClick={() => alert(`Unido al chat de "${party.titulo}"`)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1 rounded-lg text-[10px] uppercase">
+                            Unirme 💬
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {cargandoStreaming ? (
-                  <div className="p-12 text-center text-amber-400 bg-slate-900 rounded-3xl border border-slate-800 animate-pulse">🎬 Cargando estrenos...</div>
+                  <div className="p-12 text-center text-amber-400 bg-slate-900 rounded-3xl border border-slate-800 animate-pulse">🎬 Cargando títulos...</div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    {streamingReleases.map((item) => (
-                      <div key={item.id} className={`p-4 rounded-3xl border flex flex-col justify-between space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                        {item.poster ? <img src={item.poster} alt={item.title} className="w-full h-56 object-cover rounded-2xl" /> : <div className="w-full h-56 bg-slate-800 rounded-2xl flex items-center justify-center text-4xl">🎬</div>}
-                        <div className="space-y-1 flex-1">
-                          <span className="text-[10px] bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded border border-amber-500/20">Lanzamiento: {item.releaseDate}</span>
-                          <h3 className="font-black text-base text-white pt-1">{item.title}</h3>
-                          <p className="text-xs text-slate-400">{item.overview}</p>
+                    {streamingReleases.map((item) => {
+                      const linkReproduccion = obtenerLinkStreaming(item.title, streamingFilter);
+                      return (
+                        <div key={item.id} className={`p-4 rounded-3xl border flex flex-col justify-between space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                          {item.poster ? <img src={item.poster} alt={item.title} className="w-full h-56 object-cover rounded-2xl" /> : <div className="w-full h-56 bg-slate-800 rounded-2xl flex items-center justify-center text-4xl">🎬</div>}
+                          
+                          <div className="space-y-1 flex-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded border border-amber-500/20">★ {item.rating}</span>
+                              <a href={item.imdbSearchUrl} target="_blank" rel="noreferrer" className="bg-yellow-500 hover:bg-yellow-400 text-slate-950 px-2 py-0.5 rounded text-[10px] font-black">IMDb 🟡</a>
+                            </div>
+                            <h3 className="font-black text-base text-white pt-1">{item.title}</h3>
+                            <p className="text-xs text-slate-400">{item.overview}</p>
+                          </div>
+
+                          <div className="space-y-2 pt-2 border-t border-slate-800">
+                            {/* Opción 1: Redirección directa al catálogo / reproductor */}
+                            <a 
+                              href={linkReproduccion} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs block text-center uppercase shadow"
+                            >
+                              ▶️ Dónde Ver / Reproducir
+                            </a>
+
+                            {/* Opción 2: Evento Social / Watch Party */}
+                            <button 
+                              onClick={() => handleCrearWatchParty(item)} 
+                              className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-1.5 rounded-xl text-xs border border-slate-700"
+                            >
+                              🎧 Organizar Watch Party
+                            </button>
+                          </div>
                         </div>
-                        <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-xs font-bold">
-                          <span className="text-amber-400">★ {item.rating}</span>
-                          <a href={item.imdbSearchUrl} target="_blank" rel="noreferrer" className="bg-yellow-500 hover:bg-yellow-400 text-slate-950 px-2 py-1 rounded text-[10px] font-black">IMDb 🟡</a>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
