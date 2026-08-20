@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,6 +20,24 @@
       const [activeTab, setActiveTab] = useState('cartelera');
       const [cityName, setCityName] = useState('Posadas');
       const [cartelera, setCartelera] = useState([]);
+
+      // Perfil de usuario con configuración de Privacidad y Sexualidad
+      const [currentUser, setCurrentUser] = useState({
+        name: 'Cinéfilo Invitado',
+        email: 'usuario@plottwisme.com',
+        orientation: 'Heterosexual',
+        lookingFor: 'Compañeros de cine', // Opciones: Cine, Amistad, Citas
+        usageMode: 'community',
+        plan: 'regular', // Opciones: 'regular', 'premium'
+        privatePreferences: {
+          hideLocation: false,
+          hideSexualOrientation: false,
+          hideAge: false
+        }
+      });
+
+      // Estado para Foros
+      const [forumCategory, setForumCategory] = useState('peliculas');
 
       useEffect(() => {
         const fetchMovies = async () => {
@@ -42,53 +60,263 @@
 
       return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-          {/* BARRA DE NAVEGACIÓN LIMPIA */}
+          
+          {/* BARRA DE NAVEGACIÓN COMPLETA */}
           <header className="max-w-6xl mx-auto flex flex-wrap justify-between items-center mb-8 border-b border-slate-800 pb-4">
-            <h1 className="font-black text-2xl text-amber-500 tracking-wider">PLOTTWISME 🌐</h1>
-            <nav className="flex gap-2 text-xs font-bold uppercase mt-4 md:mt-0">
-              {['Cartelera', 'Radar Cines', 'Watch Parties', 'Match', 'Perfil'].map(tab => (
+            <h1 className="font-black text-2xl text-amber-500 tracking-wider cursor-pointer" onClick={() => setActiveTab('cartelera')}>
+              PLOTTWISME 🌐
+            </h1>
+            <nav className="flex flex-wrap gap-2 text-xs font-bold uppercase mt-4 md:mt-0">
+              {[
+                { id: 'cartelera', label: '🍿 Cartelera' },
+                { id: 'radar', label: '🎯 Radar' },
+                { id: 'criticos', label: '✍️ Críticos' },
+                { id: 'foros', label: '💬 Foros' },
+                { id: 'match', label: '🔥 Match' },
+                { id: 'perfil', label: '👤 Perfil' }
+              ].map(tab => (
                 <button 
-                  key={tab} 
-                  onClick={() => setActiveTab(tab.toLowerCase())}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.toLowerCase() ? 'bg-amber-500 text-slate-950' : 'hover:bg-slate-800'}`}
+                  key={tab.id} 
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 font-black' : 'hover:bg-slate-800 text-slate-300'}`}
                 >
-                  {tab}
+                  {tab.label}
                 </button>
               ))}
             </nav>
           </header>
 
           <main className="max-w-6xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black text-amber-500">Cartelera</h2>
-              <input 
-                type="text" value={cityName} onChange={(e) => setCityName(e.target.value)} 
-                className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1 text-xs text-amber-400" 
-              />
-            </div>
 
-            {/* GRILLA DE PELÍCULAS RESTAURADA */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-              {cartelera.map(film => (
-                <div key={film.id} className="p-4 bg-slate-900 border border-slate-800 rounded-3xl flex flex-col gap-3 hover:border-slate-700 transition-all">
-                  <img src={film.poster} className="w-full h-72 object-cover rounded-2xl" />
-                  <h3 className="font-bold text-sm text-white">{film.title}</h3>
-                  
-                  {/* Botones principales limpios */}
-                  <a href="#" className="w-full bg-amber-500 text-slate-950 font-black py-2 rounded-xl text-xs text-center uppercase">
-                    Ver Salas y Horarios 🎟️
-                  </a>
-                  
-                  <div className="bg-slate-950 p-2 rounded-xl border border-slate-800 text-center text-[10px] font-bold text-slate-400">
-                    WATCH PARTY EN PLATAFORMAS
+            {/* SECCIÓN CARTELERA */}
+            {activeTab === 'cartelera' && (
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-2xl font-black text-amber-500">Cartelera en Cines</h2>
+                    <p className="text-xs text-slate-400">Cartelera adaptada a tu zona de influencia.</p>
                   </div>
-                  
-                  <button className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-2 rounded-xl text-xs uppercase border border-slate-700">
-                    Buscar Compañero 🤝
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400 font-bold">Zona:</span>
+                    <input 
+                      type="text" value={cityName} onChange={(e) => setCityName(e.target.value)} 
+                      className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1 text-xs text-amber-400 font-bold outline-none focus:border-amber-500" 
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                  {cartelera.map(film => (
+                    <div key={film.id} className="p-4 bg-slate-900 border border-slate-800 rounded-3xl flex flex-col gap-3 hover:border-slate-700 transition-all">
+                      <img src={film.poster} className="w-full h-72 object-cover rounded-2xl" alt={film.title} />
+                      
+                      <div className="flex flex-col gap-2 flex-grow justify-between">
+                        <div>
+                          <h3 className="font-bold text-sm text-white leading-tight">{film.title}</h3>
+                          <span className="text-[10px] text-amber-400 font-bold">⭐ {film.rating}</span>
+                        </div>
+                        
+                        {/* REDIRECCIÓN A SALAS Y HORARIOS EN GOOGLE */}
+                        <a 
+                          href={`https://www.google.com/search?q=cartelera+horarios+pelicula+${encodeURIComponent(film.title)}+en+${encodeURIComponent(cityName)}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs text-center uppercase transition-all shadow"
+                        >
+                          Ver Salas y Horarios 🎟️
+                        </a>
+                        
+                        <button onClick={() => setActiveTab('match')} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl text-xs uppercase border border-slate-700">
+                          Buscar Compañero 🤝
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SECCIÓN CRÍTICOS */}
+            {activeTab === 'criticos' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">✍️ Críticas Especializadas</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-5 bg-slate-900 border border-slate-800 rounded-3xl space-y-2">
+                    <span className="text-xs text-amber-400 font-bold">⭐ 4.9/5 - Reseña Destacada</span>
+                    <h3 className="font-bold text-white">Análisis de los estrenos de la semana</h3>
+                    <p className="text-xs text-slate-400">Las producciones cinematográficas de este mes destacan por su innovación visual y narrativas complejas.</p>
+                  </div>
+                  <div className="p-5 bg-slate-900 border border-slate-800 rounded-3xl space-y-2">
+                    <span className="text-xs text-amber-400 font-bold">⭐ 4.5/5 - Crítica de Autor</span>
+                    <h3 className="font-bold text-white">El resurgir del cine independiente</h3>
+                    <p className="text-xs text-slate-400">Un repaso por las obras maestras presentadas en los últimos festivales internacionales.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SECCIÓN FOROS */}
+            {activeTab === 'foros' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black text-amber-500">💬 Foros de Debate</h2>
+                <div className="flex gap-2 border-b border-slate-800 pb-3">
+                  {[
+                    { id: 'peliculas', label: '🎬 Películas' },
+                    { id: 'series', label: '📺 Series' },
+                    { id: 'plataformas', label: '🍿 Plataformas' }
+                  ].map(cat => (
+                    <button 
+                      key={cat.id} 
+                      onClick={() => setForumCategory(cat.id)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold ${forumCategory === cat.id ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400 border border-slate-800'}`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-3">
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex justify-between items-center">
+                    <div>
+                      <h4 className="font-bold text-sm text-white">¿Cuál es el mejor Plot Twist de la historia del cine?</h4>
+                      <p className="text-xs text-slate-400">Iniciado por @Cinephile99 • 42 comentarios</p>
+                    </div>
+                    <button className="bg-slate-800 text-amber-400 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700">Unirse</button>
+                  </div>
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex justify-between items-center">
+                    <div>
+                      <h4 className="font-bold text-sm text-white">Debate: ¿Netflix, Max o Disney+? ¿Cuál conviene este mes?</h4>
+                      <p className="text-xs text-slate-400">Iniciado por @StreamMaster • 18 comentarios</p>
+                    </div>
+                    <button className="bg-slate-800 text-amber-400 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700">Unirse</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SECCIÓN MATCH + OPCIONES PRIVADAS & SEXUALIDAD */}
+            {activeTab === 'match' && (
+              <div className="space-y-6 max-w-2xl mx-auto">
+                <h2 className="text-2xl font-black text-amber-500">🔥 Match Cinéfilo & Privacidad</h2>
+                
+                <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl space-y-4">
+                  <h3 className="font-bold text-sm text-amber-400 uppercase tracking-wider">Configuración de Perfil Match</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label className="block text-slate-400 mb-1 font-bold">Orientación Sexual / Sexualidad:</label>
+                      <select 
+                        value={currentUser.orientation} 
+                        onChange={(e) => setCurrentUser({ ...currentUser, orientation: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
+                      >
+                        <option value="Heterosexual">Heterosexual</option>
+                        <option value="Homosexual">Homosexual</option>
+                        <option value="Bisexual">Bisexual</option>
+                        <option value="Pansexual">Pansexual</option>
+                        <option value="Asexual">Asexual</option>
+                        <option value="Otro">Otro / Prefiero no decir</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-400 mb-1 font-bold">¿Qué estás buscando?:</label>
+                      <select 
+                        value={currentUser.lookingFor} 
+                        onChange={(e) => setCurrentUser({ ...currentUser, lookingFor: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
+                      >
+                        <option value="Compañeros de cine">Solo ir al cine 🍿</option>
+                        <option value="Amistad cinéfila">Amistad y debates 🤝</option>
+                        <option value="Citas">Citas / Pareja ❤️</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* OPCIONES DE PRIVACIDAD */}
+                  <div className="pt-3 border-t border-slate-800 space-y-2">
+                    <h4 className="font-bold text-xs text-slate-300">Opciones Privadas:</h4>
+                    <label className="flex items-center gap-2 text-xs text-slate-400">
+                      <input 
+                        type="checkbox" 
+                        checked={currentUser.privatePreferences.hideSexualOrientation} 
+                        onChange={(e) => setCurrentUser({
+                          ...currentUser, 
+                          privatePreferences: { ...currentUser.privatePreferences, hideSexualOrientation: e.target.checked }
+                        })}
+                        className="rounded accent-amber-500"
+                      />
+                      Ocultar mi orientación sexual en el perfil público
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-slate-400">
+                      <input 
+                        type="checkbox" 
+                        checked={currentUser.privatePreferences.hideLocation} 
+                        onChange={(e) => setCurrentUser({
+                          ...currentUser, 
+                          privatePreferences: { ...currentUser.privatePreferences, hideLocation: e.target.checked }
+                        })}
+                        className="rounded accent-amber-500"
+                      />
+                      Ocultar mi ubicación exacta
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SECCIÓN PERFIL & SUSCRIPCIÓN (PLAN REGULAR / PREMIUM) */}
+            {activeTab === 'perfil' && (
+              <div className="space-y-6 max-w-2xl mx-auto">
+                <h2 className="text-2xl font-black text-amber-500">👤 Mi Cuenta y Suscripción</h2>
+
+                <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl space-y-6">
+                  <div>
+                    <h3 className="font-bold text-lg text-white">{currentUser.name}</h3>
+                    <p className="text-xs text-slate-400">{currentUser.email}</p>
+                  </div>
+
+                  {/* SELECTOR DE PLANES DE SUSCRIPCIÓN */}
+                  <div className="space-y-3 pt-4 border-t border-slate-800">
+                    <h4 className="font-bold text-xs uppercase text-amber-500 tracking-wider">Elige tu Plan de Suscripción:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      {/* PLAN REGULAR */}
+                      <div 
+                        onClick={() => setCurrentUser({ ...currentUser, plan: 'regular' })}
+                        className={`p-4 rounded-2xl border cursor-pointer transition-all ${currentUser.plan === 'regular' ? 'border-amber-500 bg-amber-500/10' : 'border-slate-800 bg-slate-950'}`}
+                      >
+                        <span className="text-xs font-bold text-slate-400 uppercase">Plan Regular</span>
+                        <h5 className="font-black text-lg text-white mt-1">Gratis</h5>
+                        <p className="text-[11px] text-slate-400 mt-2">Acceso a Cartelera, Búsqueda de Salas y Match Básico.</p>
+                      </div>
+
+                      {/* PLAN PREMIUM */}
+                      <div 
+                        onClick={() => setCurrentUser({ ...currentUser, plan: 'premium' })}
+                        className={`p-4 rounded-2xl border cursor-pointer transition-all ${currentUser.plan === 'premium' ? 'border-amber-500 bg-amber-500/10' : 'border-slate-800 bg-slate-950'}`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-amber-500 uppercase">Plan Premium</span>
+                          <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded">VIP</span>
+                        </div>
+                        <h5 className="font-black text-lg text-white mt-1">$4.99 / mes</h5>
+                        <p className="text-[11px] text-slate-400 mt-2">Match Ilimitado, Insignia de Crítico, Filtros Avanzados y sin anuncios.</p>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'radar' && (
+              <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl">
+                <h2 className="text-xl font-bold text-amber-500">🎯 Radar de Cines cerca de {cityName}</h2>
+                <p className="text-xs text-slate-400 mt-2">Escaneando salas de cine cercanas en tu área de influencia...</p>
+              </div>
+            )}
+
           </main>
         </div>
       );
