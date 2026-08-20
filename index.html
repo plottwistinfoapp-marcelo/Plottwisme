@@ -18,105 +18,77 @@
 
     function App() {
       const [activeTab, setActiveTab] = useState('cartelera');
-      const [cityName, setCityName] = useState('Oberá');
+      const [cityName, setCityName] = useState('Posadas');
       const [cartelera, setCartelera] = useState([]);
 
-      // Definición de plataformas con su ID para filtrar
-      const allPlatforms = [
-        { id: 'netflix', name: 'Netflix', color: 'bg-red-600' },
-        { id: 'hbo', name: 'Max (HBO)', color: 'bg-purple-700' },
-        { id: 'disney', name: 'Disney+', color: 'bg-blue-600' },
-        { id: 'prime', name: 'Prime', color: 'bg-cyan-600' }
-      ];
-
-      // Simulamos la carga de datos (En una app real, aquí filtrarías según datos de TMDB)
       useEffect(() => {
         const fetchMovies = async () => {
-          const res = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&language=es-ES&page=1`);
-          const data = await res.json();
-          
-          // Simulación de "Disponibilidad" para el ejemplo
-          const processed = data.results.map((movie, index) => ({
-            ...movie,
-            // Lógica aleatoria para simular disponibilidad de plataformas
-            availablePlatforms: index % 2 === 0 ? ['netflix', 'hbo'] : ['disney', 'prime'],
-            poster: `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-          }));
-          setCartelera(processed.slice(0, 4));
+          try {
+            const res = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&language=es-ES&page=1&region=AR`);
+            const data = await res.json();
+            if (data.results) {
+              setCartelera(data.results.slice(0, 8).map(m => ({
+                id: m.id,
+                title: m.title,
+                rating: m.vote_average ? m.vote_average.toFixed(1) : 'N/A',
+                overview: m.overview ? m.overview.substring(0, 90) + '...' : 'Sin descripción.',
+                poster: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null
+              })));
+            }
+          } catch (e) { console.error(e); }
         };
         fetchMovies();
       }, []);
 
       return (
-        <div className="min-h-screen bg-slate-950 text-slate-100">
-          
-          {/* HEADER CON NUEVA BARRA DE CRÍTICOS */}
-          <header className="border-b border-slate-800 p-4 sticky top-0 z-40 bg-slate-950/90 backdrop-blur">
-            <div className="max-w-6xl mx-auto flex justify-between items-center">
-              <h1 className="font-black text-2xl text-amber-500 tracking-wider">PLOTTWISME</h1>
-              
-              <nav className="flex gap-1 text-xs font-bold uppercase">
-                {[
-                  { id: 'cartelera', label: '🍿 Cartelera' },
-                  { id: 'radar', label: '🎯 Radar' },
-                  { id: 'watchparty', label: '🎉 Watch Parties' },
-                  { id: 'criticos', label: '✍️ Críticos' }, // NUEVO
-                  { id: 'match', label: '🔥 Match' },
-                  { id: 'perfil', label: '👤 Perfil' }
-                ].map(tab => (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} 
-                    className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.id ? 'bg-amber-500 text-slate-950' : 'hover:bg-slate-800'}`}>
-                    {tab.label}
-                  </button>
-                ))}
-              </nav>
-            </div>
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+          {/* BARRA DE NAVEGACIÓN LIMPIA */}
+          <header className="max-w-6xl mx-auto flex flex-wrap justify-between items-center mb-8 border-b border-slate-800 pb-4">
+            <h1 className="font-black text-2xl text-amber-500 tracking-wider">PLOTTWISME 🌐</h1>
+            <nav className="flex gap-2 text-xs font-bold uppercase mt-4 md:mt-0">
+              {['Cartelera', 'Radar Cines', 'Watch Parties', 'Match', 'Perfil'].map(tab => (
+                <button 
+                  key={tab} 
+                  onClick={() => setActiveTab(tab.toLowerCase())}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.toLowerCase() ? 'bg-amber-500 text-slate-950' : 'hover:bg-slate-800'}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </nav>
           </header>
 
-          <main className="max-w-6xl mx-auto p-6">
-            
-            {activeTab === 'cartelera' && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {cartelera.map(film => (
-                  <div key={film.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-4 flex flex-col gap-3">
-                    <img src={film.poster} className="w-full h-64 object-cover rounded-2xl" alt={film.title} />
-                    <h3 className="font-bold text-sm leading-tight">{film.title}</h3>
-                    
-                    {/* Botón Salas Local */}
-                    <button className="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold border border-slate-700">
-                      Ver Salas y Horarios Local 🎟️
-                    </button>
+          <main className="max-w-6xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-black text-amber-500">Cartelera</h2>
+              <input 
+                type="text" value={cityName} onChange={(e) => setCityName(e.target.value)} 
+                className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1 text-xs text-amber-400" 
+              />
+            </div>
 
-                    {/* LÓGICA DE PLATAFORMAS CONTEXTUALES */}
-                    <div className="space-y-1.5">
-                      <span className="text-[9px] uppercase text-slate-500 font-bold tracking-widest">Disponible en:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {film.availablePlatforms.map(pId => {
-                          const platform = allPlatforms.find(a => a.id === pId);
-                          return (
-                            <button key={pId} className={`${platform.color} px-2 py-1 rounded-md text-[10px] font-bold text-white`}>
-                              {platform.name}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <button className="w-full bg-amber-500 text-slate-950 font-black py-2 rounded-xl text-xs uppercase mt-auto">
-                      Buscar Compañero 🤝
-                    </button>
+            {/* GRILLA DE PELÍCULAS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              {cartelera.map(film => (
+                <div key={film.id} className="p-4 bg-slate-900 border border-slate-800 rounded-3xl flex flex-col gap-3 hover:border-slate-700 transition-all">
+                  <img src={film.poster} className="w-full h-72 object-cover rounded-2xl" />
+                  <h3 className="font-bold text-sm text-white">{film.title}</h3>
+                  
+                  {/* Botones principales */}
+                  <a href="#" className="w-full bg-amber-500 text-slate-950 font-black py-2 rounded-xl text-xs text-center uppercase">
+                    Ver Salas y Horarios 🎟️
+                  </a>
+                  
+                  <div className="bg-slate-950 p-2 rounded-xl border border-slate-800 text-center text-[10px] font-bold text-slate-400">
+                    WATCH PARTY EN PLATAFORMAS
                   </div>
-                ))}
-              </div>
-            )}
-
-            {/* SECCIÓN CRÍTICOS */}
-            {activeTab === 'criticos' && (
-              <div className="text-center py-20">
-                <h2 className="text-3xl font-black text-amber-500">✍️ Sección de Críticos</h2>
-                <p className="text-slate-400 mt-2">Próximamente: Las mejores reseñas de la comunidad.</p>
-              </div>
-            )}
+                  
+                  <button className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-2 rounded-xl text-xs uppercase border border-slate-700">
+                    Buscar Compañero 🤝
+                  </button>
+                </div>
+              ))}
+            </div>
           </main>
         </div>
       );
