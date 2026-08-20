@@ -21,20 +21,37 @@
       const [cityName, setCityName] = useState('Posadas');
       const [cartelera, setCartelera] = useState([]);
 
-      // Perfil de usuario con configuración de Privacidad y Sexualidad
+      // Estado de Autenticación / Modal
+      const [showAuthModal, setShowAuthModal] = useState(false);
+      const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
+
+      // Perfil de usuario principal
       const [currentUser, setCurrentUser] = useState({
+        id: 'usr-001',
         name: 'Cinéfilo Invitado',
-        email: 'usuario@plottwisme.com',
+        email: 'invitado@plottwisme.com',
         orientation: 'Heterosexual',
-        lookingFor: 'Compañeros de cine', // Opciones: Cine, Amistad, Citas
+        lookingFor: 'Compañeros de cine',
         usageMode: 'community',
-        plan: 'regular', // Opciones: 'regular', 'premium'
+        plan: 'regular',
+        isAdmin: true, // Habilitado para administrar usuarios
         privatePreferences: {
           hideLocation: false,
           hideSexualOrientation: false,
           hideAge: false
-        }
+        },
+        photos: ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80']
       });
+
+      // Lista simulada de usuarios de la comunidad para administración
+      const [communityUsers, setCommunityUsers] = useState([
+        { id: 'usr-101', name: 'Laura Gómez', email: 'laura@cinema.com', plan: 'regular' },
+        { id: 'usr-102', name: 'Marcos Ruiz', email: 'mruiz@movies.org', plan: 'premium' },
+        { id: 'usr-103', name: 'Sofía Martinez', email: 'sofi@film.com', plan: 'regular' },
+        { id: 'usr-104', name: 'Diego Torres', email: 'dtorres@gmail.com', plan: 'regular' }
+      ]);
+
+      const [adminSearch, setAdminSearch] = useState('');
 
       // Estado para Foros
       const [forumCategory, setForumCategory] = useState('peliculas');
@@ -58,15 +75,37 @@
         fetchMovies();
       }, []);
 
+      const handleAuthSubmit = (e) => {
+        e.preventDefault();
+        setCurrentUser({ 
+          ...currentUser,
+          name: authForm.name || authForm.email.split('@')[0], 
+          email: authForm.email 
+        });
+        setShowAuthModal(false);
+        setActiveTab('perfil');
+      };
+
+      // Función de Administrador: Otorgar o revocar Premium a usuarios
+      const toggleUserPremium = (userId) => {
+        setCommunityUsers(communityUsers.map(user => {
+          if (user.id === userId) {
+            return { ...user, plan: user.plan === 'premium' ? 'regular' : 'premium' };
+          }
+          return user;
+        }));
+      };
+
       return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
           
           {/* BARRA DE NAVEGACIÓN COMPLETA */}
-          <header className="max-w-6xl mx-auto flex flex-wrap justify-between items-center mb-8 border-b border-slate-800 pb-4">
+          <header className="max-w-6xl mx-auto flex flex-wrap justify-between items-center mb-8 border-b border-slate-800 pb-4 gap-4">
             <h1 className="font-black text-2xl text-amber-500 tracking-wider cursor-pointer" onClick={() => setActiveTab('cartelera')}>
               PLOTTWISME 🌐
             </h1>
-            <nav className="flex flex-wrap gap-2 text-xs font-bold uppercase mt-4 md:mt-0">
+            
+            <nav className="flex flex-wrap gap-2 text-xs font-bold uppercase">
               {[
                 { id: 'cartelera', label: '🍿 Cartelera' },
                 { id: 'radar', label: '🎯 Radar' },
@@ -84,6 +123,15 @@
                 </button>
               ))}
             </nav>
+
+            {/* BOTÓN CREAR / MOSTRAR PERFIL */}
+            <button 
+              onClick={() => setShowAuthModal(true)} 
+              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs shadow"
+            >
+              <img src={currentUser.photos[0]} className="w-5 h-5 rounded-full object-cover border border-slate-950" alt="avatar" />
+              <span>{currentUser.email === 'invitado@plottwisme.com' ? 'Crear Perfil / Login' : currentUser.name}</span>
+            </button>
           </header>
 
           <main className="max-w-6xl mx-auto">
@@ -116,7 +164,6 @@
                           <span className="text-[10px] text-amber-400 font-bold">⭐ {film.rating}</span>
                         </div>
                         
-                        {/* REDIRECCIÓN A SALAS Y HORARIOS EN GOOGLE */}
                         <a 
                           href={`https://www.google.com/search?q=cartelera+horarios+pelicula+${encodeURIComponent(film.title)}+en+${encodeURIComponent(cityName)}`} 
                           target="_blank" 
@@ -233,7 +280,6 @@
                     </div>
                   </div>
 
-                  {/* OPCIONES DE PRIVACIDAD */}
                   <div className="pt-3 border-t border-slate-800 space-y-2">
                     <h4 className="font-bold text-xs text-slate-300">Opciones Privadas:</h4>
                     <label className="flex items-center gap-2 text-xs text-slate-400">
@@ -265,59 +311,180 @@
               </div>
             )}
 
-            {/* SECCIÓN PERFIL & SUSCRIPCIÓN (PLAN REGULAR / PREMIUM) */}
+            {/* SECCIÓN PERFIL & SUSCRIPCIÓN (PLANES 50km / 500km) + PANEL DE ADMIN */}
             {activeTab === 'perfil' && (
-              <div className="space-y-6 max-w-2xl mx-auto">
-                <h2 className="text-2xl font-black text-amber-500">👤 Mi Cuenta y Suscripción</h2>
+              <div className="space-y-6 max-w-3xl mx-auto">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-black text-amber-500">👤 Mi Cuenta y Suscripción</h2>
+                  <button 
+                    onClick={() => setShowAuthModal(true)} 
+                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs"
+                  >
+                    ✏️ Editar Perfil
+                  </button>
+                </div>
 
                 <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl space-y-6">
-                  <div>
-                    <h3 className="font-bold text-lg text-white">{currentUser.name}</h3>
-                    <p className="text-xs text-slate-400">{currentUser.email}</p>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-lg text-white">{currentUser.name}</h3>
+                      <p className="text-xs text-slate-400">{currentUser.email}</p>
+                    </div>
+                    {currentUser.isAdmin && (
+                      <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-black px-2.5 py-1 rounded-full uppercase">
+                        👑 Administrador
+                      </span>
+                    )}
                   </div>
 
-                  {/* SELECTOR DE PLANES DE SUSCRIPCIÓN */}
+                  {/* SELECTOR DE PLANES CON RANGOS DE KM */}
                   <div className="space-y-3 pt-4 border-t border-slate-800">
                     <h4 className="font-bold text-xs uppercase text-amber-500 tracking-wider">Elige tu Plan de Suscripción:</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       
-                      {/* PLAN REGULAR */}
+                      {/* PLAN REGULAR - 50 KM */}
                       <div 
                         onClick={() => setCurrentUser({ ...currentUser, plan: 'regular' })}
                         className={`p-4 rounded-2xl border cursor-pointer transition-all ${currentUser.plan === 'regular' ? 'border-amber-500 bg-amber-500/10' : 'border-slate-800 bg-slate-950'}`}
                       >
-                        <span className="text-xs font-bold text-slate-400 uppercase">Plan Regular</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-slate-400 uppercase">Plan Básico</span>
+                          <span className="text-[10px] font-bold bg-slate-800 text-amber-400 px-2 py-0.5 rounded">Hasta 50 km 📍</span>
+                        </div>
                         <h5 className="font-black text-lg text-white mt-1">Gratis</h5>
-                        <p className="text-[11px] text-slate-400 mt-2">Acceso a Cartelera, Búsqueda de Salas y Match Básico.</p>
+                        <p className="text-[11px] text-slate-400 mt-2">Acceso a Cartelera, Búsqueda de Salas y Match en un rango cercano (hasta 50 km).</p>
                       </div>
 
-                      {/* PLAN PREMIUM */}
+                      {/* PLAN PREMIUM - 500 KM */}
                       <div 
                         onClick={() => setCurrentUser({ ...currentUser, plan: 'premium' })}
                         className={`p-4 rounded-2xl border cursor-pointer transition-all ${currentUser.plan === 'premium' ? 'border-amber-500 bg-amber-500/10' : 'border-slate-800 bg-slate-950'}`}
                       >
                         <div className="flex justify-between items-center">
                           <span className="text-xs font-bold text-amber-500 uppercase">Plan Premium</span>
-                          <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded">VIP</span>
+                          <span className="text-[10px] font-black bg-amber-500 text-slate-950 px-2 py-0.5 rounded">Hasta 500 km 🌍</span>
                         </div>
                         <h5 className="font-black text-lg text-white mt-1">$4.99 / mes</h5>
-                        <p className="text-[11px] text-slate-400 mt-2">Match Ilimitado, Insignia de Crítico, Filtros Avanzados y sin anuncios.</p>
+                        <p className="text-[11px] text-slate-400 mt-2">Rango expandido (hasta 500 km), Match Ilimitado, Insignia de Crítico, Filtros Avanzados y sin anuncios.</p>
                       </div>
 
                     </div>
                   </div>
                 </div>
+
+                {/* CONSOLA DE ADMINISTRADOR: OTORGAR PREMIUM */}
+                {currentUser.isAdmin && (
+                  <div className="p-6 bg-slate-900 border border-amber-500/30 rounded-3xl space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-bold text-base text-amber-400">👑 Gestión de Suscripciones (Modo Admin)</h3>
+                        <p className="text-xs text-slate-400">Otorga o revoca el Plan Premium directamente a usuarios de la plataforma.</p>
+                      </div>
+                    </div>
+
+                    <input 
+                      type="text"
+                      placeholder="Buscar usuario por nombre o correo..."
+                      value={adminSearch}
+                      onChange={(e) => setAdminSearch(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white outline-none focus:border-amber-500"
+                    />
+
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {communityUsers
+                        .filter(u => u.name.toLowerCase().includes(adminSearch.toLowerCase()) || u.email.toLowerCase().includes(adminSearch.toLowerCase()))
+                        .map(user => (
+                          <div key={user.id} className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center">
+                            <div>
+                              <p className="text-xs font-bold text-white">{user.name}</p>
+                              <p className="text-[10px] text-slate-400">{user.email}</p>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${user.plan === 'premium' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-slate-800 text-slate-400'}`}>
+                                {user.plan === 'premium' ? 'PREMIUM (500 km)' : 'BÁSICO (50 km)'}
+                              </span>
+                              
+                              <button 
+                                onClick={() => toggleUserPremium(user.id)}
+                                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${user.plan === 'premium' ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-amber-500 hover:bg-amber-400 text-slate-950'}`}
+                              >
+                                {user.plan === 'premium' ? 'Quitar Premium' : 'Regalar Premium 🎁'}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
 
             {activeTab === 'radar' && (
               <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl">
                 <h2 className="text-xl font-bold text-amber-500">🎯 Radar de Cines cerca de {cityName}</h2>
-                <p className="text-xs text-slate-400 mt-2">Escaneando salas de cine cercanas en tu área de influencia...</p>
+                <p className="text-xs text-slate-400 mt-2">
+                  Alcance activo: <strong className="text-amber-400">{currentUser.plan === 'premium' ? '500 km (Premium)' : '50 km (Básico)'}</strong>
+                </p>
               </div>
             )}
 
           </main>
+
+          {/* MODAL CREAR / EDITAR PERFIL */}
+          {showAuthModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative">
+                <button 
+                  onClick={() => setShowAuthModal(false)} 
+                  className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold"
+                >
+                  ✕
+                </button>
+                <h3 className="text-lg font-black text-center text-white">Crear / Editar Perfil</h3>
+                <form onSubmit={handleAuthSubmit} className="space-y-3 text-xs">
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-bold">Nombre o Apodo:</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={authForm.name} 
+                      onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })} 
+                      placeholder="Ej. Carlos Cinéfilo" 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white outline-none focus:border-amber-500" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-bold">Correo Electrónico:</label>
+                    <input 
+                      type="email" 
+                      required 
+                      value={authForm.email} 
+                      onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} 
+                      placeholder="tu@email.com" 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white outline-none focus:border-amber-500" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-bold">Contraseña:</label>
+                    <input 
+                      type="password" 
+                      required 
+                      value={authForm.password} 
+                      onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} 
+                      placeholder="••••••••" 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white outline-none focus:border-amber-500" 
+                    />
+                  </div>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase transition-all shadow mt-2">
+                    Guardar Perfil
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
         </div>
       );
     }
@@ -326,4 +493,4 @@
     root.render(<App />);
   </script>
 </body>
-</html>
+</html>   
