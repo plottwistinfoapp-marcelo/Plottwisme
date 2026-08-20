@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plottwisme - Red Social Cinéfila Mundial</title>
+  <title>Plottwisme - Red Social Cinéfila</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,223 +14,109 @@
 
   <script type="text/babel">
     const { useState, useEffect } = React;
-
-    const ADMIN_EMAIL = 'plottwist.infoapp@gmail.com';
     const TMDB_API_KEY = 'b14cd670ad1a16c2145f78d11d5b0e40';
 
     function App() {
-      const [theme, setTheme] = useState('dark');
-      const [activeTab, setActiveTab] = useState('cartelera'); 
-      const [locationStatus, setLocationStatus] = useState('Detectar mi ubicación');
-      const [cityName, setCityName] = useState('Posadas');
+      const [activeTab, setActiveTab] = useState('cartelera');
+      const [cityName, setCityName] = useState('Oberá');
+      const [cartelera, setCartelera] = useState([]);
 
-      const [showAuthModal, setShowAuthModal] = useState(false);
-      const [authForm, setAuthForm] = useState({ email: '', password: '' });
-
-      // Plataformas de Streaming Disponibles
-      const streamingPlatforms = [
-        { id: 'netflix', name: 'Netflix', color: 'bg-red-600', url: 'https://www.netflix.com' },
-        { id: 'hbo', name: 'Max (HBO)', color: 'bg-purple-700', url: 'https://www.max.com' },
-        { id: 'disney', name: 'Disney+', color: 'bg-blue-600', url: 'https://www.disneyplus.com' },
-        { id: 'prime', name: 'Prime Video', color: 'bg-cyan-600', url: 'https://www.primevideo.com' },
-        { id: 'apple', name: 'Apple TV+', color: 'bg-slate-700', url: 'https://tv.apple.com' }
+      // Definición de plataformas con su ID para filtrar
+      const allPlatforms = [
+        { id: 'netflix', name: 'Netflix', color: 'bg-red-600' },
+        { id: 'hbo', name: 'Max (HBO)', color: 'bg-purple-700' },
+        { id: 'disney', name: 'Disney+', color: 'bg-blue-600' },
+        { id: 'prime', name: 'Prime', color: 'bg-cyan-600' }
       ];
 
-      // Usuario Activo
-      const [currentUser, setCurrentUser] = useState({
-        name: 'Marcelo Catan',
-        email: 'marcelo@plottwisme.com',
-        bio: 'Apasionado por el cine analógico, sci-fi y los giros de guión inesperados.',
-        genres: 'Cine de Autor, Sci-Fi, Thriller, Clásicos',
-        usageMode: 'dating',
-        genderIdentity: 'Hombre',
-        interestedIn: 'Mujeres',
-        datingBio: 'Busco compartir funciones nocturnas, conversaciones profundas y analizar la película tomando un café.',
-        isPremium: true,
-        isVerifiedCritic: false,
-        isAdmin: false,
-        photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'
-      });
-
-      const [isEditingProfile, setIsEditingProfile] = useState(false);
-      const [profileForm, setProfileForm] = useState({ ...currentUser });
-
-      // Cartelera y Watch Parties
-      const [cartelera, setCartelera] = useState([]);
-      const [watchParties, setWatchParties] = useState([]);
-      const [chatOpen, setChatOpen] = useState(false);
-      const [selectedMovieForParty, setSelectedMovieForParty] = useState(null);
-
-      const cargarCarteleraEnCines = async () => {
-        try {
-          const url = `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&language=es-ES&page=1&region=AR`;
-          const res = await fetch(url);
-          const data = await res.json();
-          if (data.results && data.results.length > 0) {
-            setCartelera(data.results.slice(0, 8).map(item => ({
-              id: item.id,
-              title: item.title,
-              rating: item.vote_average ? item.vote_average.toFixed(1) : 'N/A',
-              overview: item.overview ? item.overview.substring(0, 100) + '...' : 'Sin descripción disponible.',
-              poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null
-            })));
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      };
-
+      // Simulamos la carga de datos (En una app real, aquí filtrarías según datos de TMDB)
       useEffect(() => {
-        cargarCarteleraEnCines();
-      }, []);
-
-      const crearWatchPartyDirecto = (movieTitle, platformName) => {
-        const nuevaParty = {
-          id: Date.now(),
-          title: movieTitle,
-          host: currentUser.name,
-          platform: platformName,
-          time: 'En vivo / Por iniciar',
-          participants: 1
+        const fetchMovies = async () => {
+          const res = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&language=es-ES&page=1`);
+          const data = await res.json();
+          
+          // Simulación de "Disponibilidad" para el ejemplo
+          const processed = data.results.map((movie, index) => ({
+            ...movie,
+            // Lógica aleatoria para simular disponibilidad de plataformas
+            availablePlatforms: index % 2 === 0 ? ['netflix', 'hbo'] : ['disney', 'prime'],
+            poster: `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+          }));
+          setCartelera(processed.slice(0, 4));
         };
-        setWatchParties([nuevaParty, ...watchParties]);
-        alert(`¡Watch Party para "${movieTitle}" creada en ${platformName}! Uniendo a la sala...`);
-        setChatOpen(true);
-      };
+        fetchMovies();
+      }, []);
 
       return (
         <div className="min-h-screen bg-slate-950 text-slate-100">
           
-          {/* HEADER */}
+          {/* HEADER CON NUEVA BARRA DE CRÍTICOS */}
           <header className="border-b border-slate-800 p-4 sticky top-0 z-40 bg-slate-950/90 backdrop-blur">
-            <div className="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-4">
-              <h1 className="font-black text-2xl text-amber-500 tracking-wider cursor-pointer" onClick={() => setActiveTab('cartelera')}>PLOTTWISME 🌐</h1>
+            <div className="max-w-6xl mx-auto flex justify-between items-center">
+              <h1 className="font-black text-2xl text-amber-500 tracking-wider">PLOTTWISME</h1>
               
-              <nav className="flex flex-wrap gap-2 text-xs font-bold uppercase">
+              <nav className="flex gap-1 text-xs font-bold uppercase">
                 {[
                   { id: 'cartelera', label: '🍿 Cartelera' },
-                  { id: 'radar', label: '🎯 Radar Cines' },
+                  { id: 'radar', label: '🎯 Radar' },
                   { id: 'watchparty', label: '🎉 Watch Parties' },
+                  { id: 'criticos', label: '✍️ Críticos' }, // NUEVO
                   { id: 'match', label: '🔥 Match' },
                   { id: 'perfil', label: '👤 Perfil' }
                 ].map(tab => (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 font-black shadow' : 'hover:bg-slate-800 hover:text-white'}`}>{tab.label}</button>
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} 
+                    className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.id ? 'bg-amber-500 text-slate-950' : 'hover:bg-slate-800'}`}>
+                    {tab.label}
+                  </button>
                 ))}
               </nav>
-
-              <div className="flex items-center gap-3">
-                <button onClick={() => setChatOpen(!chatOpen)} className="bg-slate-800 text-amber-400 font-bold px-3 py-1.5 rounded-xl text-xs border border-slate-700">💬 Chat</button>
-                <button onClick={() => setShowAuthModal(true)} className="bg-amber-500 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs">{currentUser.name}</button>
-              </div>
             </div>
           </header>
 
           <main className="max-w-6xl mx-auto p-6">
-
-            {/* CARTELERA CON INTEGRACIÓN DE SALAS Y WATCH PARTY POR AFICHE */}
+            
             {activeTab === 'cartelera' && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center flex-wrap gap-4 border-b border-slate-800 pb-4">
-                  <div>
-                    <h2 className="text-2xl font-black text-amber-500">🍿 Cartelera en Cines y Streaming</h2>
-                    <p className="text-xs text-slate-400">Selecciona tu cine local o inicia una función virtual Watch Party en plataformas.</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 font-bold">Ciudad:</span>
-                    <input type="text" value={cityName} onChange={(e) => setCityName(e.target.value)} className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1 text-xs text-amber-400 font-bold" />
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {cartelera.map(film => (
+                  <div key={film.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-4 flex flex-col gap-3">
+                    <img src={film.poster} className="w-full h-64 object-cover rounded-2xl" alt={film.title} />
+                    <h3 className="font-bold text-sm leading-tight">{film.title}</h3>
+                    
+                    {/* Botón Salas Local */}
+                    <button className="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold border border-slate-700">
+                      Ver Salas y Horarios Local 🎟️
+                    </button>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                  {cartelera.map(film => (
-                    <div key={film.id} className="p-4 bg-slate-900 border border-slate-800 rounded-3xl space-y-4 flex flex-col justify-between">
-                      
-                      <div className="space-y-3">
-                        <div className="relative">
-                          {film.poster ? <img src={film.poster} className="w-full h-72 object-cover rounded-2xl" /> : <div className="w-full h-72 bg-slate-800 rounded-2xl"></div>}
-                          <span className="absolute top-2 right-2 bg-slate-950/80 text-amber-400 font-black text-[10px] px-2 py-1 rounded-lg border border-amber-500/30">
-                            ⭐ {film.rating}
-                          </span>
-                        </div>
-
-                        <div>
-                          <h3 className="font-bold text-sm text-white leading-tight">{film.title}</h3>
-                          <p className="text-[11px] text-slate-400 mt-1">{film.overview}</p>
-                        </div>
+                    {/* LÓGICA DE PLATAFORMAS CONTEXTUALES */}
+                    <div className="space-y-1.5">
+                      <span className="text-[9px] uppercase text-slate-500 font-bold tracking-widest">Disponible en:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {film.availablePlatforms.map(pId => {
+                          const platform = allPlatforms.find(a => a.id === pId);
+                          return (
+                            <button key={pId} className={`${platform.color} px-2 py-1 rounded-md text-[10px] font-bold text-white`}>
+                              {platform.name}
+                            </button>
+                          );
+                        })}
                       </div>
-
-                      <div className="space-y-2 border-t border-slate-800/80 pt-3">
-                        
-                        {/* 1. ENLACE A GOOGLE PARA BUSCAR SALAS LOCALES SEGÚN CIUDAD */}
-                        <a 
-                          href={`https://www.google.com/search?q=horarios+cartelera+pelicula+${encodeURIComponent(film.title)}+en+${encodeURIComponent(cityName)}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs text-center block uppercase shadow transition-all"
-                        >
-                          Ver Salas y Horarios Local 🎟️
-                        </a>
-
-                        {/* 2. MÓDULO WATCH PARTY Y SELECCIÓN DE PLATAFORMAS EN EL AFICHE */}
-                        <div className="bg-slate-950 p-2.5 rounded-2xl border border-slate-800 space-y-1.5">
-                          <span className="text-[10px] font-black text-amber-400 uppercase block tracking-wider text-center">
-                            🎉 Crear Watch Party en:
-                          </span>
-                          <div className="grid grid-cols-3 gap-1">
-                            {streamingPlatforms.map(p => (
-                              <button 
-                                key={p.id} 
-                                onClick={() => crearWatchPartyDirecto(film.title, p.name)}
-                                className={`${p.color} hover:opacity-90 text-white font-bold text-[9px] py-1 rounded-lg transition-all text-center truncate px-1`}
-                                title={`Ver en ${p.name}`}
-                              >
-                                {p.name}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* 3. CONECTAR CON OTROS USUARIOS */}
-                        <button onClick={() => setActiveTab('match')} className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-2 rounded-xl text-xs uppercase border border-slate-700">
-                          Buscar Compañero 🤝
-                        </button>
-
-                      </div>
-
                     </div>
-                  ))}
-                </div>
+
+                    <button className="w-full bg-amber-500 text-slate-950 font-black py-2 rounded-xl text-xs uppercase mt-auto">
+                      Buscar Compañero 🤝
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* SECCIÓN WATCH PARTY GENERAL */}
-            {activeTab === 'watchparty' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-black text-amber-500">🎉 Salas Virtuales Watch Party Activas</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {watchParties.length === 0 ? (
-                    <p className="text-xs text-slate-400">No hay salas creadas aún. Puedes crear una directamente en cualquier afiche de la cartelera.</p>
-                  ) : (
-                    watchParties.map(party => (
-                      <div key={party.id} className="p-5 bg-slate-900 border border-slate-800 rounded-3xl space-y-2">
-                        <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-bold">{party.platform}</span>
-                        <h3 className="font-bold text-base text-white">{party.title}</h3>
-                        <p className="text-xs text-slate-400">Organiza: {party.host} • {party.time}</p>
-                        <button onClick={() => setChatOpen(true)} className="w-full bg-amber-500 text-slate-950 font-black py-2 rounded-xl text-xs uppercase mt-2">
-                          Entrar al Chat de Debate 💬
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
+            {/* SECCIÓN CRÍTICOS */}
+            {activeTab === 'criticos' && (
+              <div className="text-center py-20">
+                <h2 className="text-3xl font-black text-amber-500">✍️ Sección de Críticos</h2>
+                <p className="text-slate-400 mt-2">Próximamente: Las mejores reseñas de la comunidad.</p>
               </div>
             )}
-
-            {/* RESTO DE SECCIONES Mantienen la Estructura */}
-            {activeTab === 'radar' && <div className="p-6 bg-slate-900 rounded-3xl"><h2 className="text-xl font-bold text-amber-500">🎯 Radar de Cines Cerca de {cityName}</h2></div>}
-            {activeTab === 'match' && <div className="p-6 bg-slate-900 rounded-3xl"><h2 className="text-xl font-bold text-amber-500">🔥 Match Cinéfilo</h2></div>}
-            {activeTab === 'perfil' && <div className="p-6 bg-slate-900 rounded-3xl"><h2 className="text-xl font-bold text-amber-500">👤 Perfil de {currentUser.name}</h2></div>}
-
           </main>
         </div>
       );
