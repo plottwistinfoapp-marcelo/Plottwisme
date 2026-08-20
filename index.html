@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plottwisme - Red Social Cinéfila Mundial</title>
+  <title>Plottwisme - Red Social Cinéfila</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,636 +14,82 @@
 
   <script type="text/babel">
     const { useState, useEffect } = React;
-
-    const ADMIN_EMAIL = 'plottwist.infoapp@gmail.com';
     const TMDB_API_KEY = 'b14cd670ad1a16c2145f78d11d5b0e40';
 
-    function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
-      const R = 6371; 
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-    }
-
-    function obtenerLinkCine(nombreCine, ciudad) {
-      const nombre = nombreCine.toLowerCase();
-      if (nombre.includes('cinemark') || nombre.includes('hoyts')) return 'https://www.cinemarkhoyts.com.ar';
-      if (nombre.includes('cinepolis') || nombre.includes('cinépolis')) return 'https://www.cinepolis.com.ar';
-      if (nombre.includes('showcase')) return 'https://www.todosloscines.com.ar';
-      if (nombre.includes('cinemacenter')) return 'https://www.cinemacenter.com.ar';
-      if (nombre.includes('atlas')) return 'https://www.cinesatlas.com.ar';
-      if (nombre.includes('multiplex')) return 'https://www.cinesmultiplex.com.ar';
-      
-      return `https://www.google.com/search?q=cartelera+de+cine+horarios+cerca+de+${encodeURIComponent(nombreCine)}+${encodeURIComponent(ciudad)}`;
-    }
-
-    // Helper para generar link de búsqueda directa en streaming
-    function obtenerLinkStreaming(titulo, plataforma) {
-      const p = plataforma ? plataforma.toLowerCase() : '';
-      if (p.includes('netflix')) return `https://www.netflix.com/search?q=${encodeURIComponent(titulo)}`;
-      if (p.includes('disney')) return `https://www.disneyplus.com/search?q=${encodeURIComponent(titulo)}`;
-      if (p.includes('hbo') || p.includes('max')) return `https://www.max.com/search?q=${encodeURIComponent(titulo)}`;
-      if (p.includes('prime')) return `https://www.primevideo.com/search?phrase=${encodeURIComponent(titulo)}`;
-      if (p.includes('apple')) return `https://tv.apple.com/search?term=${encodeURIComponent(titulo)}`;
-      if (p.includes('mubi')) return `https://mubi.com/search?q=${encodeURIComponent(titulo)}`;
-      
-      return `https://www.google.com/search?q=donde+ver+${encodeURIComponent(titulo)}+online+streaming`;
-    }
-
     function App() {
-      const [theme, setTheme] = useState('dark');
-      const [activeTab, setActiveTab] = useState('cartelera'); 
-      const [locationStatus, setLocationStatus] = useState('Detectar mi ubicación');
-      const [userCoords, setUserCoords] = useState(null);
-      const [countryCode, setCountryCode] = useState('AR'); 
-      const [cityName, setCityName] = useState('');
-      const [searchCityInput, setSearchCityInput] = useState('');
-
-      const [currentUser, setCurrentUser] = useState({
-        name: 'Cinéfilo Invitado',
-        email: 'invitado@plottwisme.com',
-        genres: 'Cine de Autor, Sci-Fi, Thriller',
-        lookingFor: 'Compañeros para ir al cine y debates',
-        usageMode: 'community',
-        privatePreferences: { hideExactLocation: false, hideDatingIntent: true, hideAge: false },
-        travelMode: { active: false, destinationCity: '', daysAhead: 3 },
-        bio: 'Apasionado por el cine analógico y los giros de guión inesperados.',
-        isPremium: false,
-        isCritic: false,
-        isAdmin: false,
-        allowMatchNotifications: true,
-        photos: ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'],
-        avatarIndex: 0
-      });
-
-      const [showAuthModal, setShowAuthModal] = useState(false);
-      const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
-
+      const [activeTab, setActiveTab] = useState('cartelera');
+      const [cityName, setCityName] = useState('Posadas');
       const [cartelera, setCartelera] = useState([]);
-      const [cargandoCartelera, setCargandoCartelera] = useState(false);
-
-      const [cinesGlobales, setCinesGlobales] = useState([]);
-      const [cargandoCines, setCargandoCines] = useState(false);
-
-      const [streamingFilter, setStreamingFilter] = useState('Todos');
-      const [streamingReleases, setStreamingReleases] = useState([]);
-      const [cargandoStreaming, setCargandoStreaming] = useState(false);
-
-      // Estado para Watch Parties / Debates creados
-      const [watchParties, setWatchParties] = useState([]);
-      const [selectedMovieForParty, setSelectedMovieForParty] = useState(null);
-
-      const streamingPlatforms = [
-        { name: 'Netflix', id: 8, color: 'bg-red-600', logo: '🎬 N' },
-        { name: 'HBO Max', id: 1899, color: 'bg-purple-600', logo: '🟣 Max' },
-        { name: 'Disney+', id: 337, color: 'bg-blue-600', logo: '✨ D+' },
-        { name: 'Prime Video', id: 119, color: 'bg-sky-500', logo: '📦 PV' },
-        { name: 'Apple TV+', id: 350, color: 'bg-slate-700', logo: '🍏 TV+' },
-        { name: 'MUBI', id: 11, color: 'bg-amber-600', logo: '🎥 MUBI' }
-      ];
-
-      const cargarCarteleraEnCines = async (region = 'AR') => {
-        setCargandoCartelera(true);
-        try {
-          let url = `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&language=es-ES&page=1&region=${region}`;
-          let res = await fetch(url);
-          let data = await res.json();
-
-          if (!data.results || data.results.length === 0) {
-            url = `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&language=es-ES&page=1`;
-            res = await fetch(url);
-            data = await res.json();
-          }
-
-          if (data.results && data.results.length > 0) {
-            const formateados = data.results.slice(0, 8).map(item => ({
-              id: item.id,
-              title: item.title,
-              rating: item.vote_average ? item.vote_average.toFixed(1) : 'N/A',
-              overview: item.overview ? item.overview.substring(0, 110) + '...' : 'Sin descripción disponible.',
-              poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
-              releaseDate: item.release_date,
-              imdbSearchUrl: `https://www.imdb.com/find?q=${encodeURIComponent(item.title)}`
-            }));
-            setCartelera(formateados);
-          } else {
-            setCartelera([]);
-          }
-        } catch (err) {
-          console.error("Error cargando cartelera:", err);
-        } finally {
-          setCargandoCartelera(false);
-        }
-      };
-
-      const cargarEstrenosStreaming = async (providerId = null) => {
-        setCargandoStreaming(true);
-        try {
-          let providerParam = providerId ? `&with_watch_providers=${providerId}` : '';
-          const url = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&language=es-ES&sort_by=popularity.desc&page=1${providerParam}`;
-
-          const res = await fetch(url);
-          const data = await res.json();
-
-          if (data.results && data.results.length > 0) {
-            const formateados = data.results.slice(0, 9).map(item => ({
-              id: item.id,
-              title: item.title || item.name,
-              rating: item.vote_average ? item.vote_average.toFixed(1) : 'N/A',
-              overview: item.overview ? item.overview.substring(0, 90) + '...' : 'Sin descripción disponible.',
-              poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
-              releaseDate: item.release_date || item.first_air_date,
-              imdbSearchUrl: `https://www.imdb.com/find?q=${encodeURIComponent(item.title || item.name)}`
-            }));
-            setStreamingReleases(formateados);
-          } else {
-            setStreamingReleases([]);
-          }
-        } catch (err) {
-          console.error("Error en streaming:", err);
-        } finally {
-          setCargandoStreaming(false);
-        }
-      };
 
       useEffect(() => {
-        cargarCarteleraEnCines(countryCode);
-      }, [countryCode]);
-
-      useEffect(() => {
-        if (activeTab === 'streaming') {
-          const plataforma = streamingPlatforms.find(p => p.name === streamingFilter);
-          cargarEstrenosStreaming(plataforma ? plataforma.id : null);
-        }
-      }, [activeTab, streamingFilter, countryCode]);
-
-      const actualizarUbicacionManual = async (e) => {
-        e.preventDefault();
-        if (!searchCityInput.trim()) return;
-
-        setCargandoCines(true);
-        setLocationStatus(`Buscando: ${searchCityInput}`);
-
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchCityInput)}`);
-          const data = await res.json();
-
-          if (data && data.length > 0) {
-            const lat = parseFloat(data[0].lat);
-            const lng = parseFloat(data[0].lon);
-            setUserCoords({ lat, lng });
-
-            const revRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-            const revData = await revRes.json();
-
-            if (revData.address) {
-              const cc = revData.address.country_code ? revData.address.country_code.toUpperCase() : 'AR';
-              const ciudad = revData.address.city || revData.address.town || revData.address.state || searchCityInput;
-              setCountryCode(cc);
-              setCityName(ciudad);
+        const fetchMovies = async () => {
+          try {
+            const res = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&language=es-ES&page=1&region=AR`);
+            const data = await res.json();
+            if (data.results) {
+              setCartelera(data.results.slice(0, 8).map(m => ({
+                id: m.id,
+                title: m.title,
+                rating: m.vote_average ? m.vote_average.toFixed(1) : 'N/A',
+                overview: m.overview ? m.overview.substring(0, 90) + '...' : 'Sin descripción.',
+                poster: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null
+              })));
             }
-
-            buscarCinesMundiales(lat, lng);
-            setLocationStatus(`Ubicación: ${searchCityInput}`);
-          } else {
-            alert('Ciudad no encontrada.');
-            setCargandoCines(false);
-          }
-        } catch (err) {
-          console.error("Error al buscar ciudad:", err);
-          setCargandoCines(false);
-        }
-      };
-
-      const getGeoLocation = () => {
-        setLocationStatus('Obteniendo GPS...');
-        setCargandoCines(true);
-
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            async (pos) => {
-              const lat = pos.coords.latitude;
-              const lng = pos.coords.longitude;
-              setUserCoords({ lat, lng });
-              
-              try {
-                const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                const geoData = await geoRes.json();
-                if (geoData.address) {
-                  const cc = geoData.address.country_code ? geoData.address.country_code.toUpperCase() : 'AR';
-                  const ciudad = geoData.address.city || geoData.address.town || geoData.address.state || 'Tu Ciudad';
-                  setCountryCode(cc);
-                  setCityName(ciudad);
-                }
-              } catch (e) {}
-
-              setLocationStatus(`GPS Activo (${lat.toFixed(2)}, ${lng.toFixed(2)})`);
-              buscarCinesMundiales(lat, lng);
-            },
-            () => {
-              setLocationStatus('GPS deshabilitado.');
-              setCargandoCines(false);
-            }
-          );
-        } else {
-          setLocationStatus('Sin soporte GPS.');
-          setCargandoCines(false);
-        }
-      };
-
-      const buscarCinesMundiales = async (lat, lng) => {
-        setCargandoCines(true);
-        const radioMetros = (currentUser?.isPremium || currentUser?.isAdmin ? 500 : 100) * 1000;
-        
-        try {
-          const query = `[out:json];node["amenity"="cinema"](around:${radioMetros},${lat},${lng});out 15;`;
-          const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
-          const data = await response.json();
-
-          if (data.elements && data.elements.length > 0) {
-            const resultados = data.elements.map(cine => ({
-              id: cine.id,
-              nombre: cine.tags.name || "Cine Local",
-              direccion: cine.tags["addr:street"] ? `${cine.tags["addr:street"]} ${cine.tags["addr:housenumber"] || ''}` : "Ver en mapa",
-              lat: cine.lat,
-              lng: cine.lon,
-              distanciaKm: calcularDistanciaKm(lat, lng, cine.lat, cine.lon)
-            })).sort((a, b) => a.distanciaKm - b.distanciaKm);
-
-            setCinesGlobales(resultados);
-          } else {
-            setCinesGlobales([]);
-          }
-        } catch (error) {
-          console.error("Error cines:", error);
-        } finally {
-          setCargandoCines(false);
-        }
-      };
-
-      const handleCrearWatchParty = (pelicula) => {
-        const nuevaParty = {
-          id: Date.now(),
-          titulo: pelicula.title,
-          host: currentUser.name,
-          plataforma: streamingFilter === 'Todos' ? 'Plataformas Digitales' : streamingFilter,
-          participantes: 1,
-          hora: 'Hoy 22:00 hs'
+          } catch (e) { console.error(e); }
         };
-        setWatchParties([nuevaParty, ...watchParties]);
-        alert(`¡Watch Party creada para "${pelicula.title}"! Ahora otros usuarios podrán unirse al debate virtual.`);
-      };
-
-      const handleAuthSubmit = (e) => {
-        e.preventDefault();
-        const isAdmin = authForm.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-        setCurrentUser({ 
-          ...currentUser,
-          name: authForm.name || authForm.email.split('@')[0], 
-          email: authForm.email, 
-          isPremium: isAdmin ? true : currentUser.isPremium,
-          isCritic: isAdmin ? true : currentUser.isCritic,
-          isAdmin: isAdmin
-        });
-        setShowAuthModal(false);
-      };
+        fetchMovies();
+      }, []);
 
       return (
-        <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-gray-100 text-slate-900'}`}>
-          
-          <header className={`border-b p-4 sticky top-0 z-40 ${theme === 'dark' ? 'border-slate-800 bg-slate-950/90 backdrop-blur' : 'border-gray-300 bg-white/90 backdrop-blur'}`}>
-            <div className="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-4">
-              <h1 className="font-black text-2xl text-amber-500 tracking-wider cursor-pointer" onClick={() => setActiveTab('cartelera')}>PLOTTWISME 🌐</h1>
-              
-              <nav className="flex flex-wrap gap-2 text-xs font-bold uppercase">
-                {[
-                  { id: 'cartelera', label: '🍿 Cartelera en Cines' },
-                  { id: 'radar', label: '🎯 Radar Cines' },
-                  { id: 'streaming', label: '📺 Streaming / Debates' },
-                  { id: 'match', label: '🔥 Match' },
-                  { id: 'perfil', label: '👤 Perfil / Admin' }
-                ].map(tab => (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 font-black shadow' : 'hover:bg-slate-800 hover:text-white'}`}>{tab.label}</button>
-                ))}
-              </nav>
-
-              <div className="flex items-center gap-3">
-                <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 bg-slate-800 text-white rounded-xl text-sm">🌓</button>
-                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs shadow">
-                  <img src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} className="w-5 h-5 rounded-full object-cover border border-slate-950" />
-                  <span>{currentUser.email === 'invitado@plottwisme.com' ? 'Iniciar Sesión' : currentUser.name}</span>
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+          {/* BARRA DE NAVEGACIÓN LIMPIA */}
+          <header className="max-w-6xl mx-auto flex flex-wrap justify-between items-center mb-8 border-b border-slate-800 pb-4">
+            <h1 className="font-black text-2xl text-amber-500 tracking-wider">PLOTTWISME 🌐</h1>
+            <nav className="flex gap-2 text-xs font-bold uppercase mt-4 md:mt-0">
+              {['Cartelera', 'Radar Cines', 'Watch Parties', 'Match', 'Perfil'].map(tab => (
+                <button 
+                  key={tab} 
+                  onClick={() => setActiveTab(tab.toLowerCase())}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.toLowerCase() ? 'bg-amber-500 text-slate-950' : 'hover:bg-slate-800'}`}
+                >
+                  {tab}
                 </button>
-              </div>
-            </div>
+              ))}
+            </nav>
           </header>
 
-          <main className="max-w-5xl mx-auto p-6">
-            
-            {/* CARTELERA */}
-            {activeTab === 'cartelera' && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center flex-wrap gap-3">
-                  <div>
-                    <h2 className="text-2xl font-black text-amber-500">🍿 Cartelera de Estrenos</h2>
-                    <p className="text-xs text-slate-400">
-                      Ubicación activa: <strong className="text-amber-400">{cityName ? `${cityName} (${countryCode})` : countryCode}</strong>
-                    </p>
-                  </div>
-
-                  <form onSubmit={actualizarUbicacionManual} className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Escribe tu ciudad..." 
-                      value={searchCityInput}
-                      onChange={(e) => setSearchCityInput(e.target.value)}
-                      className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-amber-500"
-                    />
-                    <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs">
-                      Buscar 🔍
-                    </button>
-                    <button type="button" onClick={getGeoLocation} className="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold text-xs">
-                      📍 GPS
-                    </button>
-                  </form>
-                </div>
-
-                {cityName && (
-                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex flex-wrap justify-between items-center gap-3">
-                    <span className="text-xs text-slate-300">
-                      🎟️ Consultar funciones y salas disponibles en <strong className="text-amber-400">{cityName}</strong>:
-                    </span>
-                    <a 
-                      href={`https://www.google.com/search?q=cartelera+de+cine+horarios+cerca+de+${encodeURIComponent(cityName)}`} 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase shadow"
-                    >
-                      Ver Programación en {cityName} 🍿
-                    </a>
-                  </div>
-                )}
-
-                {cargandoCartelera ? (
-                  <div className="p-12 text-center text-amber-400 bg-slate-900 rounded-3xl border border-slate-800 animate-pulse">
-                    🎬 Actualizando estrenos en cartelera...
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                    {cartelera.map((film) => (
-                      <div key={film.id} className={`p-4 rounded-3xl border flex flex-col justify-between space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                        {film.poster ? (
-                          <img src={film.poster} alt={film.title} className="w-full h-64 object-cover rounded-2xl" />
-                        ) : (
-                          <div className="w-full h-64 bg-slate-800 rounded-2xl flex items-center justify-center text-4xl">🍿</div>
-                        )}
-
-                        <div className="space-y-1 flex-1">
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] bg-amber-500/10 text-amber-400 font-black px-2 py-0.5 rounded border border-amber-500/20">
-                              ★ {film.rating}
-                            </span>
-                            <a href={film.imdbSearchUrl} target="_blank" rel="noreferrer" className="bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded">
-                              IMDb 🟡
-                            </a>
-                          </div>
-                          <h3 className="font-black text-sm text-white pt-1">{film.title}</h3>
-                          <p className="text-[11px] text-slate-400 leading-snug">{film.overview}</p>
-                        </div>
-
-                        <div className="space-y-2">
-                          {cityName && (
-                            <a 
-                              href={`https://www.google.com/search?q=cartelera+de+cine+horarios+cerca+de+${encodeURIComponent(film.title)}+${encodeURIComponent(cityName)}`} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-1.5 rounded-xl text-[11px] block text-center border border-slate-700"
-                            >
-                              🔎 Funciones en {cityName}
-                            </a>
-                          )}
-                          <button onClick={() => setActiveTab('match')} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider">
-                            Buscar Compañero 🤝
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* RADAR CINES */}
-            {activeTab === 'radar' && (
-              <div className="space-y-6">
-                <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                  <div className="flex justify-between items-center flex-wrap gap-2">
-                    <div>
-                      <h2 className="font-bold text-lg">🌍 Radar de Cines Locales</h2>
-                      <p className="text-xs text-slate-400">Salas y complejos detectados cerca de {cityName || 'tu ubicación'}.</p>
-                    </div>
-                    <button onClick={getGeoLocation} className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs">
-                      📍 {locationStatus}
-                    </button>
-                  </div>
-                </div>
-
-                {cargandoCines && (
-                  <div className="p-8 text-center text-amber-400 bg-slate-900 rounded-2xl border border-slate-800 animate-pulse">
-                    🔍 Escaneando cines locales...
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  {cinesGlobales.length === 0 && !cargandoCines && (
-                    <p className="text-xs text-slate-400 text-center py-6">Utiliza el buscador o activa el GPS para detectar los cines de tu zona.</p>
-                  )}
-                  {cinesGlobales.map((cine) => {
-                    const linkOficial = obtenerLinkCine(cine.nombre, cityName);
-                    return (
-                      <div key={cine.id} className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                        <div className="flex justify-between items-start flex-wrap gap-2">
-                          <div>
-                            <h4 className="font-bold text-lg text-amber-500">{cine.nombre}</h4>
-                            <p className="text-xs text-slate-400">{cine.direccion}</p>
-                          </div>
-                          <span className="bg-slate-800 text-amber-400 text-xs px-3 py-1 rounded-full font-mono font-bold border border-slate-700">
-                            📍 {cine.distanciaKm.toFixed(1)} km
-                          </span>
-                        </div>
-                        <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap gap-2">
-                          <a href={`https://www.google.com/maps/search/?api=1&query=${cine.lat},${cine.lng}`} target="_blank" rel="noreferrer" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center gap-1.5">
-                            🗺️ Ver Mapa
-                          </a>
-                          <a href={linkOficial} target="_blank" rel="noreferrer" className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-4 py-2 rounded-xl inline-flex items-center gap-1.5 shadow">
-                            🎟️ Ir a Cartelera / Web Oficial
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* STREAMING CON FUNCIONALIDADES INTERACTIVAS (OPCIÓN 1 + OPCIÓN 2) */}
-            {activeTab === 'streaming' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-black text-amber-500">📺 Cine en Casa & Watch Parties</h2>
-                  <p className="text-xs text-slate-400">Accede directamente al catálogo oficial o coordina salas de debate virtual con otros cinéfilos.</p>
-                </div>
-
-                {/* Filtros de Plataforma */}
-                <div className="flex flex-wrap gap-2">
-                  <button onClick={() => setStreamingFilter('Todos')} className={`px-4 py-2 rounded-xl text-xs font-bold ${streamingFilter === 'Todos' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 border border-slate-800'}`}>🌐 Todas</button>
-                  {streamingPlatforms.map((platform) => (
-                    <button key={platform.name} onClick={() => setStreamingFilter(platform.name)} className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 ${streamingFilter === platform.name ? 'ring-2 ring-amber-500 bg-slate-800 text-white' : 'bg-slate-900 border border-slate-800'}`}>
-                      <span className={`px-2 py-0.5 rounded text-[10px] text-white font-black ${platform.color}`}>{platform.logo}</span>
-                      <span>{platform.name}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Watch Parties Activas */}
-                {watchParties.length > 0 && (
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
-                    <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">🎧 Watch Parties Programadas por la Comunidad</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {watchParties.map(party => (
-                        <div key={party.id} className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                          <div>
-                            <span className="font-bold text-white block">{party.titulo}</span>
-                            <span className="text-[10px] text-slate-400">Organiza: {party.host} • {party.hora}</span>
-                          </div>
-                          <button onClick={() => alert(`Unido al chat de "${party.titulo}"`)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1 rounded-lg text-[10px] uppercase">
-                            Unirme 💬
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {cargandoStreaming ? (
-                  <div className="p-12 text-center text-amber-400 bg-slate-900 rounded-3xl border border-slate-800 animate-pulse">🎬 Cargando títulos...</div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    {streamingReleases.map((item) => {
-                      const linkReproduccion = obtenerLinkStreaming(item.title, streamingFilter);
-                      return (
-                        <div key={item.id} className={`p-4 rounded-3xl border flex flex-col justify-between space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                          {item.poster ? <img src={item.poster} alt={item.title} className="w-full h-56 object-cover rounded-2xl" /> : <div className="w-full h-56 bg-slate-800 rounded-2xl flex items-center justify-center text-4xl">🎬</div>}
-                          
-                          <div className="space-y-1 flex-1">
-                            <div className="flex justify-between items-center">
-                              <span className="text-[10px] bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded border border-amber-500/20">★ {item.rating}</span>
-                              <a href={item.imdbSearchUrl} target="_blank" rel="noreferrer" className="bg-yellow-500 hover:bg-yellow-400 text-slate-950 px-2 py-0.5 rounded text-[10px] font-black">IMDb 🟡</a>
-                            </div>
-                            <h3 className="font-black text-base text-white pt-1">{item.title}</h3>
-                            <p className="text-xs text-slate-400">{item.overview}</p>
-                          </div>
-
-                          <div className="space-y-2 pt-2 border-t border-slate-800">
-                            {/* Opción 1: Redirección directa al catálogo / reproductor */}
-                            <a 
-                              href={linkReproduccion} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs block text-center uppercase shadow"
-                            >
-                              ▶️ Dónde Ver / Reproducir
-                            </a>
-
-                            {/* Opción 2: Evento Social / Watch Party */}
-                            <button 
-                              onClick={() => handleCrearWatchParty(item)} 
-                              className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-1.5 rounded-xl text-xs border border-slate-700"
-                            >
-                              🎧 Organizar Watch Party
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* PERFIL & PANEL ADMINISTRADOR */}
-            {activeTab === 'perfil' && (
-              <div className="space-y-6 max-w-2xl mx-auto">
-                <div className={`p-8 rounded-3xl border space-y-6 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                  
-                  <div className="flex items-center gap-5 border-b border-slate-800 pb-6">
-                    <img src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} className="w-24 h-24 rounded-2xl object-cover border-2 border-amber-500" />
-                    <div>
-                      <h3 className="text-2xl font-black">{currentUser.name}</h3>
-                      <p className="text-xs text-slate-400">{currentUser.email}</p>
-                      {currentUser.isAdmin && (
-                        <span className="inline-block mt-1 bg-amber-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded">
-                          ⚡ ADMINISTRADOR MASTER
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
-                    <h4 className="font-black text-xs uppercase text-amber-500">🎯 Modalidad de Uso</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[{ id: 'community', label: '🍿 Solo Cine' }, { id: 'friends', label: '🤝 Amigos' }, { id: 'dating', label: '❤️ Citas' }].map(mode => (
-                        <button key={mode.id} onClick={() => setCurrentUser({ ...currentUser, usageMode: mode.id })} className={`py-2 rounded-xl text-xs font-bold transition-all ${currentUser.usageMode === mode.id ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 text-slate-400 border border-slate-800'}`}>
-                          {mode.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            )}
-
-            {/* MATCH */}
-            {activeTab === 'match' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-black text-amber-500">🔥 Match Cinéfilo</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className={`p-6 rounded-3xl border space-y-4 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                    <div className="flex items-center gap-4">
-                      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" className="w-14 h-14 rounded-2xl object-cover border border-amber-500" />
-                      <div>
-                        <h3 className="font-bold text-base text-white">Carlos Ruiz</h3>
-                        <span className="text-[10px] bg-slate-800 px-2.5 py-0.5 rounded-full text-amber-400 font-bold">📍 a 12 km</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-300 italic">"Fan de la ciencia ficción y el cine de suspenso."</p>
-                    <button className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase">Enviar Invitación al Cine 🎟️</button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-          </main>
-
-          {/* MODAL AUTH */}
-          {showAuthModal && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative">
-                <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
-                <h3 className="text-lg font-black text-center text-white">Iniciar Sesión / Registro</h3>
-                <form onSubmit={handleAuthSubmit} className="space-y-3 text-xs">
-                  <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} placeholder="Correo Electrónico" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
-                  <input type="password" required value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} placeholder="Contraseña" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
-                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase">Ingresar</button>
-                </form>
-              </div>
+          <main className="max-w-6xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-black text-amber-500">Cartelera</h2>
+              <input 
+                type="text" value={cityName} onChange={(e) => setCityName(e.target.value)} 
+                className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1 text-xs text-amber-400" 
+              />
             </div>
-          )}
 
+            {/* GRILLA DE PELÍCULAS RESTAURADA */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              {cartelera.map(film => (
+                <div key={film.id} className="p-4 bg-slate-900 border border-slate-800 rounded-3xl flex flex-col gap-3 hover:border-slate-700 transition-all">
+                  <img src={film.poster} className="w-full h-72 object-cover rounded-2xl" />
+                  <h3 className="font-bold text-sm text-white">{film.title}</h3>
+                  
+                  {/* Botones principales limpios */}
+                  <a href="#" className="w-full bg-amber-500 text-slate-950 font-black py-2 rounded-xl text-xs text-center uppercase">
+                    Ver Salas y Horarios 🎟️
+                  </a>
+                  
+                  <div className="bg-slate-950 p-2 rounded-xl border border-slate-800 text-center text-[10px] font-bold text-slate-400">
+                    WATCH PARTY EN PLATAFORMAS
+                  </div>
+                  
+                  <button className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-2 rounded-xl text-xs uppercase border border-slate-700">
+                    Buscar Compañero 🤝
+                  </button>
+                </div>
+              ))}
+            </div>
+          </main>
         </div>
       );
     }
