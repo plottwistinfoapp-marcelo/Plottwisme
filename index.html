@@ -41,7 +41,6 @@
       return `https://www.google.com/search?q=cartelera+de+cine+horarios+cerca+de+${encodeURIComponent(nombreCine)}+${encodeURIComponent(ciudad)}`;
     }
 
-    // Helper para generar link de búsqueda directa en streaming
     function obtenerLinkStreaming(titulo, plataforma) {
       const p = plataforma ? plataforma.toLowerCase() : '';
       if (p.includes('netflix')) return `https://www.netflix.com/search?q=${encodeURIComponent(titulo)}`;
@@ -63,19 +62,27 @@
       const [cityName, setCityName] = useState('');
       const [searchCityInput, setSearchCityInput] = useState('');
 
+      // Opciones inclusivas de Identidad y Preferencias
+      const opcionesGenero = ['Hombre', 'Mujer', 'No Binarie', 'Género Fluido', 'Transgénero', 'Otro'];
+      const opcionesBusqueda = ['Hombres', 'Mujeres', 'Personas No Binarias', 'Todos / Sin preferencia'];
+
       const [currentUser, setCurrentUser] = useState({
-        name: 'Cinéfilo Invitado',
-        email: 'invitado@plottwisme.com',
-        genres: 'Cine de Autor, Sci-Fi, Thriller',
-        lookingFor: 'Compañeros para ir al cine y debates',
-        usageMode: 'community',
-        privatePreferences: { hideExactLocation: false, hideDatingIntent: true, hideAge: false },
-        travelMode: { active: false, destinationCity: '', daysAhead: 3 },
+        name: 'Marcelo Catan',
+        email: 'marcelo@plottwisme.com',
+        genres: 'Cine de Autor, Sci-Fi, Thriller, Clásicos',
+        lookingFor: 'Compañeros para ir al cine y debates con café de por medio',
+        usageMode: 'dating', // 'community', 'friends', 'dating'
+        
+        // Apartado Privado / Citas
+        genderIdentity: 'Hombre',
+        interestedIn: 'Mujeres',
+        datingBio: 'Busco compartir funciones nocturnas, buenas charlas filosóficas y analizar los giros del guion después de la película.',
+        
+        privatePreferences: { hideExactLocation: false, hideDatingIntent: false, hideAge: false },
         bio: 'Apasionado por el cine analógico y los giros de guión inesperados.',
         isPremium: false,
         isCritic: false,
         isAdmin: false,
-        allowMatchNotifications: true,
         photos: ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'],
         avatarIndex: 0
       });
@@ -93,9 +100,14 @@
       const [streamingReleases, setStreamingReleases] = useState([]);
       const [cargandoStreaming, setCargandoStreaming] = useState(false);
 
-      // Estado para Watch Parties / Debates creados
-      const [watchParties, setWatchParties] = useState([]);
-      const [selectedMovieForParty, setSelectedMovieForParty] = useState(null);
+      // Estado de Chat en tiempo real opcional
+      const [chatOpen, setChatOpen] = useState(false);
+      const [activeChatRoom, setActiveChatRoom] = useState('General');
+      const [chatMessages, setChatMessages] = useState([
+        { id: 1, user: 'Sofía', text: '¿Alguien para ver la nueva de Sci-Fi este finde?', time: '18:30' },
+        { id: 2, user: 'Lucas', text: '¡Yo me sumo! Estaba buscando grupo para el Sunstar.', time: '18:32' }
+      ]);
+      const [newMessage, setNewMessage] = useState('');
 
       const streamingPlatforms = [
         { name: 'Netflix', id: 8, color: 'bg-red-600', logo: '🎬 N' },
@@ -104,6 +116,34 @@
         { name: 'Prime Video', id: 119, color: 'bg-sky-500', logo: '📦 PV' },
         { name: 'Apple TV+', id: 350, color: 'bg-slate-700', logo: '🍏 TV+' },
         { name: 'MUBI', id: 11, color: 'bg-amber-600', logo: '🎥 MUBI' }
+      ];
+
+      // Usuarios simulados para el Match con intenciones claras
+      const mockMatches = [
+        {
+          id: 101,
+          name: 'Valeria R.',
+          age: 38,
+          photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+          distanceKm: 4.2,
+          usageMode: 'dating',
+          genderIdentity: 'Mujer',
+          interestedIn: 'Hombres',
+          datingBio: 'Fan de Kubrick y A24. Busco a alguien apasionado por el cine para ir al cine los viernes y tomar una copa a la salida.',
+          genres: 'Cine Independiente, Drama, Terror Psicológico'
+        },
+        {
+          id: 102,
+          name: 'Martín G.',
+          age: 42,
+          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+          distanceKm: 8.5,
+          usageMode: 'friends',
+          genderIdentity: 'Hombre',
+          interestedIn: 'Todos / Sin preferencia',
+          datingBio: '',
+          genres: 'Ciencia Ficción, Acción, Clásicos'
+        }
       ];
 
       const cargarCarteleraEnCines = async (region = 'AR') => {
@@ -181,140 +221,23 @@
         }
       }, [activeTab, streamingFilter, countryCode]);
 
-      const actualizarUbicacionManual = async (e) => {
+      const handleSendMessage = (e) => {
         e.preventDefault();
-        if (!searchCityInput.trim()) return;
-
-        setCargandoCines(true);
-        setLocationStatus(`Buscando: ${searchCityInput}`);
-
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchCityInput)}`);
-          const data = await res.json();
-
-          if (data && data.length > 0) {
-            const lat = parseFloat(data[0].lat);
-            const lng = parseFloat(data[0].lon);
-            setUserCoords({ lat, lng });
-
-            const revRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-            const revData = await revRes.json();
-
-            if (revData.address) {
-              const cc = revData.address.country_code ? revData.address.country_code.toUpperCase() : 'AR';
-              const ciudad = revData.address.city || revData.address.town || revData.address.state || searchCityInput;
-              setCountryCode(cc);
-              setCityName(ciudad);
-            }
-
-            buscarCinesMundiales(lat, lng);
-            setLocationStatus(`Ubicación: ${searchCityInput}`);
-          } else {
-            alert('Ciudad no encontrada.');
-            setCargandoCines(false);
-          }
-        } catch (err) {
-          console.error("Error al buscar ciudad:", err);
-          setCargandoCines(false);
-        }
-      };
-
-      const getGeoLocation = () => {
-        setLocationStatus('Obteniendo GPS...');
-        setCargandoCines(true);
-
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            async (pos) => {
-              const lat = pos.coords.latitude;
-              const lng = pos.coords.longitude;
-              setUserCoords({ lat, lng });
-              
-              try {
-                const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                const geoData = await geoRes.json();
-                if (geoData.address) {
-                  const cc = geoData.address.country_code ? geoData.address.country_code.toUpperCase() : 'AR';
-                  const ciudad = geoData.address.city || geoData.address.town || geoData.address.state || 'Tu Ciudad';
-                  setCountryCode(cc);
-                  setCityName(ciudad);
-                }
-              } catch (e) {}
-
-              setLocationStatus(`GPS Activo (${lat.toFixed(2)}, ${lng.toFixed(2)})`);
-              buscarCinesMundiales(lat, lng);
-            },
-            () => {
-              setLocationStatus('GPS deshabilitado.');
-              setCargandoCines(false);
-            }
-          );
-        } else {
-          setLocationStatus('Sin soporte GPS.');
-          setCargandoCines(false);
-        }
-      };
-
-      const buscarCinesMundiales = async (lat, lng) => {
-        setCargandoCines(true);
-        const radioMetros = (currentUser?.isPremium || currentUser?.isAdmin ? 500 : 100) * 1000;
-        
-        try {
-          const query = `[out:json];node["amenity"="cinema"](around:${radioMetros},${lat},${lng});out 15;`;
-          const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
-          const data = await response.json();
-
-          if (data.elements && data.elements.length > 0) {
-            const resultados = data.elements.map(cine => ({
-              id: cine.id,
-              nombre: cine.tags.name || "Cine Local",
-              direccion: cine.tags["addr:street"] ? `${cine.tags["addr:street"]} ${cine.tags["addr:housenumber"] || ''}` : "Ver en mapa",
-              lat: cine.lat,
-              lng: cine.lon,
-              distanciaKm: calcularDistanciaKm(lat, lng, cine.lat, cine.lon)
-            })).sort((a, b) => a.distanciaKm - b.distanciaKm);
-
-            setCinesGlobales(resultados);
-          } else {
-            setCinesGlobales([]);
-          }
-        } catch (error) {
-          console.error("Error cines:", error);
-        } finally {
-          setCargandoCines(false);
-        }
-      };
-
-      const handleCrearWatchParty = (pelicula) => {
-        const nuevaParty = {
+        if (!newMessage.trim()) return;
+        const msg = {
           id: Date.now(),
-          titulo: pelicula.title,
-          host: currentUser.name,
-          plataforma: streamingFilter === 'Todos' ? 'Plataformas Digitales' : streamingFilter,
-          participantes: 1,
-          hora: 'Hoy 22:00 hs'
+          user: currentUser.name,
+          text: newMessage,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
-        setWatchParties([nuevaParty, ...watchParties]);
-        alert(`¡Watch Party creada para "${pelicula.title}"! Ahora otros usuarios podrán unirse al debate virtual.`);
-      };
-
-      const handleAuthSubmit = (e) => {
-        e.preventDefault();
-        const isAdmin = authForm.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-        setCurrentUser({ 
-          ...currentUser,
-          name: authForm.name || authForm.email.split('@')[0], 
-          email: authForm.email, 
-          isPremium: isAdmin ? true : currentUser.isPremium,
-          isCritic: isAdmin ? true : currentUser.isCritic,
-          isAdmin: isAdmin
-        });
-        setShowAuthModal(false);
+        setChatMessages([...chatMessages, msg]);
+        setNewMessage('');
       };
 
       return (
         <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-gray-100 text-slate-900'}`}>
           
+          {/* HEADER */}
           <header className={`border-b p-4 sticky top-0 z-40 ${theme === 'dark' ? 'border-slate-800 bg-slate-950/90 backdrop-blur' : 'border-gray-300 bg-white/90 backdrop-blur'}`}>
             <div className="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-4">
               <h1 className="font-black text-2xl text-amber-500 tracking-wider cursor-pointer" onClick={() => setActiveTab('cartelera')}>PLOTTWISME 🌐</h1>
@@ -325,21 +248,57 @@
                   { id: 'radar', label: '🎯 Radar Cines' },
                   { id: 'streaming', label: '📺 Streaming / Debates' },
                   { id: 'match', label: '🔥 Match' },
-                  { id: 'perfil', label: '👤 Perfil / Admin' }
+                  { id: 'perfil', label: '👤 Perfil & Citas' }
                 ].map(tab => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 font-black shadow' : 'hover:bg-slate-800 hover:text-white'}`}>{tab.label}</button>
                 ))}
               </nav>
 
               <div className="flex items-center gap-3">
-                <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 bg-slate-800 text-white rounded-xl text-sm">🌓</button>
-                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs shadow">
-                  <img src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} className="w-5 h-5 rounded-full object-cover border border-slate-950" />
-                  <span>{currentUser.email === 'invitado@plottwisme.com' ? 'Iniciar Sesión' : currentUser.name}</span>
+                <button onClick={() => setChatOpen(!chatOpen)} className="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-1.5 rounded-xl text-xs border border-slate-700 flex items-center gap-1.5">
+                  💬 Chat {chatOpen ? '✓' : ''}
                 </button>
+                <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 bg-slate-800 text-white rounded-xl text-sm">🌓</button>
               </div>
             </div>
           </header>
+
+          {/* CHAT EN TIEMPO REAL OPCIONAL (FLOTANTE O DESPLEGABLE) */}
+          {chatOpen && (
+            <div className="max-w-5xl mx-auto px-6 pt-4">
+              <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-4 shadow-2xl space-y-3">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <h3 className="text-xs font-black uppercase text-amber-500">Chat en Vivo Cinéfilo - {activeChatRoom}</h3>
+                  </div>
+                  <button onClick={() => setChatOpen(false)} className="text-xs text-slate-400 hover:text-white font-bold">✕ Cerrar</button>
+                </div>
+
+                <div className="h-40 overflow-y-auto space-y-2 pr-2 text-xs">
+                  {chatMessages.map(msg => (
+                    <div key={msg.id} className={`p-2 rounded-xl max-w-md ${msg.user === currentUser.name ? 'bg-amber-500/20 border border-amber-500/30 ml-auto text-right' : 'bg-slate-950 border border-slate-800 text-left'}`}>
+                      <span className="font-bold text-amber-400 text-[10px] block">{msg.user} • {msg.time}</span>
+                      <span className="text-slate-200">{msg.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <form onSubmit={handleSendMessage} className="flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="Escribe un mensaje en tiempo real..." 
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                  />
+                  <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase">
+                    Enviar
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
 
           <main className="max-w-5xl mx-auto p-6">
             
@@ -349,86 +308,24 @@
                 <div className="flex justify-between items-center flex-wrap gap-3">
                   <div>
                     <h2 className="text-2xl font-black text-amber-500">🍿 Cartelera de Estrenos</h2>
-                    <p className="text-xs text-slate-400">
-                      Ubicación activa: <strong className="text-amber-400">{cityName ? `${cityName} (${countryCode})` : countryCode}</strong>
-                    </p>
+                    <p className="text-xs text-slate-400">Funciones y salas activas cerca de ti.</p>
                   </div>
-
-                  <form onSubmit={actualizarUbicacionManual} className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Escribe tu ciudad..." 
-                      value={searchCityInput}
-                      onChange={(e) => setSearchCityInput(e.target.value)}
-                      className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-amber-500"
-                    />
-                    <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs">
-                      Buscar 🔍
-                    </button>
-                    <button type="button" onClick={getGeoLocation} className="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold text-xs">
-                      📍 GPS
-                    </button>
-                  </form>
                 </div>
 
-                {cityName && (
-                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex flex-wrap justify-between items-center gap-3">
-                    <span className="text-xs text-slate-300">
-                      🎟️ Consultar funciones y salas disponibles en <strong className="text-amber-400">{cityName}</strong>:
-                    </span>
-                    <a 
-                      href={`https://www.google.com/search?q=cartelera+de+cine+horarios+cerca+de+${encodeURIComponent(cityName)}`} 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs uppercase shadow"
-                    >
-                      Ver Programación en {cityName} 🍿
-                    </a>
-                  </div>
-                )}
-
                 {cargandoCartelera ? (
-                  <div className="p-12 text-center text-amber-400 bg-slate-900 rounded-3xl border border-slate-800 animate-pulse">
-                    🎬 Actualizando estrenos en cartelera...
-                  </div>
+                  <div className="p-12 text-center text-amber-400 bg-slate-900 rounded-3xl border border-slate-800 animate-pulse">🎬 Actualizando estrenos...</div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                     {cartelera.map((film) => (
                       <div key={film.id} className={`p-4 rounded-3xl border flex flex-col justify-between space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                        {film.poster ? (
-                          <img src={film.poster} alt={film.title} className="w-full h-64 object-cover rounded-2xl" />
-                        ) : (
-                          <div className="w-full h-64 bg-slate-800 rounded-2xl flex items-center justify-center text-4xl">🍿</div>
-                        )}
-
+                        {film.poster ? <img src={film.poster} alt={film.title} className="w-full h-64 object-cover rounded-2xl" /> : <div className="w-full h-64 bg-slate-800 rounded-2xl flex items-center justify-center text-4xl">🍿</div>}
                         <div className="space-y-1 flex-1">
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] bg-amber-500/10 text-amber-400 font-black px-2 py-0.5 rounded border border-amber-500/20">
-                              ★ {film.rating}
-                            </span>
-                            <a href={film.imdbSearchUrl} target="_blank" rel="noreferrer" className="bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded">
-                              IMDb 🟡
-                            </a>
-                          </div>
                           <h3 className="font-black text-sm text-white pt-1">{film.title}</h3>
                           <p className="text-[11px] text-slate-400 leading-snug">{film.overview}</p>
                         </div>
-
-                        <div className="space-y-2">
-                          {cityName && (
-                            <a 
-                              href={`https://www.google.com/search?q=cartelera+de+cine+horarios+cerca+de+${encodeURIComponent(film.title)}+${encodeURIComponent(cityName)}`} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-1.5 rounded-xl text-[11px] block text-center border border-slate-700"
-                            >
-                              🔎 Funciones en {cityName}
-                            </a>
-                          )}
-                          <button onClick={() => setActiveTab('match')} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider">
-                            Buscar Compañero 🤝
-                          </button>
-                        </div>
+                        <button onClick={() => setActiveTab('match')} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase">
+                          Buscar Compañero 🤝
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -439,211 +336,157 @@
             {/* RADAR CINES */}
             {activeTab === 'radar' && (
               <div className="space-y-6">
-                <div className={`p-6 rounded-3xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                  <div className="flex justify-between items-center flex-wrap gap-2">
-                    <div>
-                      <h2 className="font-bold text-lg">🌍 Radar de Cines Locales</h2>
-                      <p className="text-xs text-slate-400">Salas y complejos detectados cerca de {cityName || 'tu ubicación'}.</p>
-                    </div>
-                    <button onClick={getGeoLocation} className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs">
-                      📍 {locationStatus}
-                    </button>
-                  </div>
-                </div>
-
-                {cargandoCines && (
-                  <div className="p-8 text-center text-amber-400 bg-slate-900 rounded-2xl border border-slate-800 animate-pulse">
-                    🔍 Escaneando cines locales...
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  {cinesGlobales.length === 0 && !cargandoCines && (
-                    <p className="text-xs text-slate-400 text-center py-6">Utiliza el buscador o activa el GPS para detectar los cines de tu zona.</p>
-                  )}
-                  {cinesGlobales.map((cine) => {
-                    const linkOficial = obtenerLinkCine(cine.nombre, cityName);
-                    return (
-                      <div key={cine.id} className={`p-5 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                        <div className="flex justify-between items-start flex-wrap gap-2">
-                          <div>
-                            <h4 className="font-bold text-lg text-amber-500">{cine.nombre}</h4>
-                            <p className="text-xs text-slate-400">{cine.direccion}</p>
-                          </div>
-                          <span className="bg-slate-800 text-amber-400 text-xs px-3 py-1 rounded-full font-mono font-bold border border-slate-700">
-                            📍 {cine.distanciaKm.toFixed(1)} km
-                          </span>
-                        </div>
-                        <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap gap-2">
-                          <a href={`https://www.google.com/maps/search/?api=1&query=${cine.lat},${cine.lng}`} target="_blank" rel="noreferrer" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center gap-1.5">
-                            🗺️ Ver Mapa
-                          </a>
-                          <a href={linkOficial} target="_blank" rel="noreferrer" className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-4 py-2 rounded-xl inline-flex items-center gap-1.5 shadow">
-                            🎟️ Ir a Cartelera / Web Oficial
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <h2 className="font-bold text-xl text-amber-500">🎯 Radar de Cines Locales</h2>
+                <p className="text-xs text-slate-400">Encuentra salas cercanas y consulta la función exacta.</p>
               </div>
             )}
 
-            {/* STREAMING CON FUNCIONALIDADES INTERACTIVAS (OPCIÓN 1 + OPCIÓN 2) */}
+            {/* STREAMING */}
             {activeTab === 'streaming' && (
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-black text-amber-500">📺 Cine en Casa & Watch Parties</h2>
-                  <p className="text-xs text-slate-400">Accede directamente al catálogo oficial o coordina salas de debate virtual con otros cinéfilos.</p>
-                </div>
-
-                {/* Filtros de Plataforma */}
-                <div className="flex flex-wrap gap-2">
-                  <button onClick={() => setStreamingFilter('Todos')} className={`px-4 py-2 rounded-xl text-xs font-bold ${streamingFilter === 'Todos' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 border border-slate-800'}`}>🌐 Todas</button>
-                  {streamingPlatforms.map((platform) => (
-                    <button key={platform.name} onClick={() => setStreamingFilter(platform.name)} className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 ${streamingFilter === platform.name ? 'ring-2 ring-amber-500 bg-slate-800 text-white' : 'bg-slate-900 border border-slate-800'}`}>
-                      <span className={`px-2 py-0.5 rounded text-[10px] text-white font-black ${platform.color}`}>{platform.logo}</span>
-                      <span>{platform.name}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Watch Parties Activas */}
-                {watchParties.length > 0 && (
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
-                    <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">🎧 Watch Parties Programadas por la Comunidad</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {watchParties.map(party => (
-                        <div key={party.id} className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                          <div>
-                            <span className="font-bold text-white block">{party.titulo}</span>
-                            <span className="text-[10px] text-slate-400">Organiza: {party.host} • {party.hora}</span>
-                          </div>
-                          <button onClick={() => alert(`Unido al chat de "${party.titulo}"`)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1 rounded-lg text-[10px] uppercase">
-                            Unirme 💬
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {cargandoStreaming ? (
-                  <div className="p-12 text-center text-amber-400 bg-slate-900 rounded-3xl border border-slate-800 animate-pulse">🎬 Cargando títulos...</div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    {streamingReleases.map((item) => {
-                      const linkReproduccion = obtenerLinkStreaming(item.title, streamingFilter);
-                      return (
-                        <div key={item.id} className={`p-4 rounded-3xl border flex flex-col justify-between space-y-3 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                          {item.poster ? <img src={item.poster} alt={item.title} className="w-full h-56 object-cover rounded-2xl" /> : <div className="w-full h-56 bg-slate-800 rounded-2xl flex items-center justify-center text-4xl">🎬</div>}
-                          
-                          <div className="space-y-1 flex-1">
-                            <div className="flex justify-between items-center">
-                              <span className="text-[10px] bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded border border-amber-500/20">★ {item.rating}</span>
-                              <a href={item.imdbSearchUrl} target="_blank" rel="noreferrer" className="bg-yellow-500 hover:bg-yellow-400 text-slate-950 px-2 py-0.5 rounded text-[10px] font-black">IMDb 🟡</a>
-                            </div>
-                            <h3 className="font-black text-base text-white pt-1">{item.title}</h3>
-                            <p className="text-xs text-slate-400">{item.overview}</p>
-                          </div>
-
-                          <div className="space-y-2 pt-2 border-t border-slate-800">
-                            {/* Opción 1: Redirección directa al catálogo / reproductor */}
-                            <a 
-                              href={linkReproduccion} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs block text-center uppercase shadow"
-                            >
-                              ▶️ Dónde Ver / Reproducir
-                            </a>
-
-                            {/* Opción 2: Evento Social / Watch Party */}
-                            <button 
-                              onClick={() => handleCrearWatchParty(item)} 
-                              className="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-1.5 rounded-xl text-xs border border-slate-700"
-                            >
-                              🎧 Organizar Watch Party
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <h2 className="text-2xl font-black text-amber-500">📺 Cine en Casa & Streaming</h2>
+                <p className="text-xs text-slate-400">Selecciona una película para ver directo en la plataforma o inicia un debate en el chat.</p>
               </div>
             )}
 
-            {/* PERFIL & PANEL ADMINISTRADOR */}
+            {/* MATCH CON APARTADO DE PAREJA / PREFERENCIAS */}
+            {activeTab === 'match' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-black text-amber-500">🔥 Match & Conexiones Cinéfilas</h2>
+                  <p className="text-xs text-slate-400">Conecta con personas según tus intereses de amistad o citas románticas.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {mockMatches.map(person => (
+                    <div key={person.id} className={`p-6 rounded-3xl border space-y-4 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                      <div className="flex items-center gap-4">
+                        <img src={person.photo} className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-base text-white">{person.name}, {person.age}</h3>
+                            <span className="text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded-full font-bold">📍 {person.distanceKm} km</span>
+                          </div>
+                          <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded font-black uppercase ${person.usageMode === 'dating' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-blue-500/20 text-blue-400'}`}>
+                            {person.usageMode === 'dating' ? '❤️ Buscando Pareja' : '🤝 Solo Amigos'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* APARTADO EXCLUSIVO PARA MATCH: Si busca pareja se muestran sus preferencias y bio específica */}
+                      {person.usageMode === 'dating' && person.datingBio && (
+                        <div className="p-4 bg-rose-950/20 border border-rose-500/20 rounded-2xl space-y-2">
+                          <div className="flex justify-between items-center text-[10px] text-rose-300 font-bold">
+                            <span>Identidad: {person.genderIdentity}</span>
+                            <span>Busca: {person.interestedIn}</span>
+                          </div>
+                          <p className="text-xs text-slate-200 italic">"{person.datingBio}"</p>
+                        </div>
+                      )}
+
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Géneros favoritos:</span>
+                        <p className="text-xs text-amber-400">{person.genres}</p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button onClick={() => { setChatOpen(true); setActiveChatRoom(`Privado con ${person.name}`); }} className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase">
+                          Iniciar Chat 💬
+                        </button>
+                        <button className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2.5 rounded-xl text-xs">
+                          Invitar al Cine 🎟️
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* PERFIL & CONFIGURACIÓN DE CITAS / PREFERENCIAS */}
             {activeTab === 'perfil' && (
               <div className="space-y-6 max-w-2xl mx-auto">
                 <div className={`p-8 rounded-3xl border space-y-6 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
                   
                   <div className="flex items-center gap-5 border-b border-slate-800 pb-6">
-                    <img src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} className="w-24 h-24 rounded-2xl object-cover border-2 border-amber-500" />
+                    <img src={currentUser.photos[currentUser.avatarIndex] || currentUser.photos[0]} className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500" />
                     <div>
                       <h3 className="text-2xl font-black">{currentUser.name}</h3>
                       <p className="text-xs text-slate-400">{currentUser.email}</p>
-                      {currentUser.isAdmin && (
-                        <span className="inline-block mt-1 bg-amber-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded">
-                          ⚡ ADMINISTRADOR MASTER
-                        </span>
-                      )}
                     </div>
                   </div>
 
+                  {/* MODALIDAD DE USO */}
                   <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
-                    <h4 className="font-black text-xs uppercase text-amber-500">🎯 Modalidad de Uso</h4>
+                    <h4 className="font-black text-xs uppercase text-amber-500">🎯 Propósito en Plottwisme</h4>
                     <div className="grid grid-cols-3 gap-2">
-                      {[{ id: 'community', label: '🍿 Solo Cine' }, { id: 'friends', label: '🤝 Amigos' }, { id: 'dating', label: '❤️ Citas' }].map(mode => (
-                        <button key={mode.id} onClick={() => setCurrentUser({ ...currentUser, usageMode: mode.id })} className={`py-2 rounded-xl text-xs font-bold transition-all ${currentUser.usageMode === mode.id ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 text-slate-400 border border-slate-800'}`}>
+                      {[
+                        { id: 'community', label: '🍿 Solo Cine' },
+                        { id: 'friends', label: '🤝 Amigos' },
+                        { id: 'dating', label: '❤️ Citas / Pareja' }
+                      ].map(mode => (
+                        <button 
+                          key={mode.id} 
+                          onClick={() => setCurrentUser({ ...currentUser, usageMode: mode.id })} 
+                          className={`py-2 rounded-xl text-xs font-bold transition-all ${currentUser.usageMode === mode.id ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-900 text-slate-400 border border-slate-800'}`}
+                        >
                           {mode.label}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                </div>
-              </div>
-            )}
+                  {/* APARTADO CONFIGURABLE DE PAREJA (SE MUESTRA SOLO SI ACTIVA MODO CITAS) */}
+                  {currentUser.usageMode === 'dating' && (
+                    <div className="p-5 bg-rose-950/20 border border-rose-500/30 rounded-2xl space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-black text-xs uppercase text-rose-400 flex items-center gap-2">
+                          ❤️ Ficha de Citas (Visible únicamente en Match)
+                        </h4>
+                      </div>
 
-            {/* MATCH */}
-            {activeTab === 'match' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-black text-amber-500">🔥 Match Cinéfilo</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className={`p-6 rounded-3xl border space-y-4 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                    <div className="flex items-center gap-4">
-                      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" className="w-14 h-14 rounded-2xl object-cover border border-amber-500" />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <label className="block text-slate-400 font-bold mb-1">Mi Identidad de Género:</label>
+                          <select 
+                            value={currentUser.genderIdentity}
+                            onChange={(e) => setCurrentUser({ ...currentUser, genderIdentity: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white outline-none focus:border-rose-500"
+                          >
+                            {opcionesGenero.map(g => <option key={g} value={g}>{g}</option>)}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-400 font-bold mb-1">Me interesa conectar con:</label>
+                          <select 
+                            value={currentUser.interestedIn}
+                            onChange={(e) => setCurrentUser({ ...currentUser, interestedIn: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white outline-none focus:border-rose-500"
+                          >
+                            {opcionesBusqueda.map(b => <option key={b} value={b}>{b}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
                       <div>
-                        <h3 className="font-bold text-base text-white">Carlos Ruiz</h3>
-                        <span className="text-[10px] bg-slate-800 px-2.5 py-0.5 rounded-full text-amber-400 font-bold">📍 a 12 km</span>
+                        <label className="block text-slate-400 font-bold mb-1 text-xs">Descripción para citas (qué buscas en una pareja cinéfila):</label>
+                        <textarea 
+                          rows="3"
+                          value={currentUser.datingBio}
+                          onChange={(e) => setCurrentUser({ ...currentUser, datingBio: e.target.value })}
+                          placeholder="Ej: Me gusta conversar sobre el significado de las películas después de la función..."
+                          className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-rose-500"
+                        ></textarea>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-300 italic">"Fan de la ciencia ficción y el cine de suspenso."</p>
-                    <button className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase">Enviar Invitación al Cine 🎟️</button>
-                  </div>
+                  )}
+
                 </div>
               </div>
             )}
 
           </main>
-
-          {/* MODAL AUTH */}
-          {showAuthModal && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-4 relative">
-                <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
-                <h3 className="text-lg font-black text-center text-white">Iniciar Sesión / Registro</h3>
-                <form onSubmit={handleAuthSubmit} className="space-y-3 text-xs">
-                  <input type="email" required value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} placeholder="Correo Electrónico" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
-                  <input type="password" required value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} placeholder="Contraseña" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
-                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase">Ingresar</button>
-                </form>
-              </div>
-            </div>
-          )}
-
         </div>
       );
     }
