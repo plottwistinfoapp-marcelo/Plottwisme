@@ -299,11 +299,11 @@ const obtenerUbicacionGPS = () => {
     // --- COMPONENTE PRINCIPAL ---
     function App() {
       const [candidates, setCandidates] = useState(() => {
-      const saved = localStorage.getItem('plottwist_candidates');
+      const saved = localStorage.getItem('plottwist_candidates_v2');
       return saved ? JSON.parse(saved) : INITIAL_USERS;
 });
 useEffect(() => {
-    localStorage.setItem('plottwist_candidates', JSON.stringify(candidates));
+    localStorage.setItem('plottwist_candidates_v2', JSON.stringify(candidates));
   }, [candidates]);
       const [matches, setMatches] = useState([]);
       const [likesAvailable, setLikesAvailable] = useState(12);
