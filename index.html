@@ -48,17 +48,41 @@
 
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
-
+const obtenerUbicacionGPS = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          try {
+            const respuesta = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const datos = await respuesta.json();
+            const ciudad = datos.address.city || datos.address.town || datos.address.village || "Ciudad desconocida";
+            const pais = datos.address.country || "";
+            alert(`¡Ubicación detectada por GPS: ${ciudad}, ${pais}!`);
+          } catch (error) {
+            alert(`Coordenadas obtenidas: Lat ${lat.toFixed(2)}, Lon ${lon.toFixed(2)}`);
+          }
+        },
+        (error) => {
+          alert("No pudimos acceder a tu GPS. Revisa los permisos.");
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      alert("Tu navegador no soporta geolocalización.");
+    }
+  };
     // --- BASE DE DATOS Y PERFILES CINÉFILOS ---
     const INITIAL_USERS = [
       {
         id: 'u1',
         name: 'Marcelo Buttice',
         age: 56,
-        location: 'Obera, MN, Argentina',
-        distanceKm: 2s,
+        location: 'Obera, Misiones, Argentina',
+        distanceKm: 2.5,
         role: 'admin',
-        roleLabel: 'Administrador',
+        roleLabel: 'Admin',
         verified: true,
         bio: 'Devoto del cine de autor y la ciencia ficción dura. Siempre listo para debatir sobre Villeneuve y Nolan con un buen café antes de la función.',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
