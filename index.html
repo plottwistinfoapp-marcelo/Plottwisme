@@ -48,31 +48,33 @@
 
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
-const obtenerUbicacionGPS = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          try {
-            const respuesta = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-            const datos = await respuesta.json();
-            const ciudad = datos.address.city || datos.address.town || datos.address.village || "Ciudad desconocida";
-            const pais = datos.address.country || "";
-            alert(`¡Ubicación detectada por GPS: ${ciudad}, ${pais}!`);
-          } catch (error) {
-            alert(`Coordenadas obtenidas: Lat ${lat.toFixed(2)}, Lon ${lon.toFixed(2)}`);
-          }
-        },
-        (error) => {
-          alert("No pudimos acceder a tu GPS. Revisa los permisos.");
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    } else {
-      alert("Tu navegador no soporta geolocalización.");
-    }
-  };
+    
+    const obtenerUbicacionGPS = () => {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            try {
+              const respuesta = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+              const datos = await respuesta.json();
+              const ciudad = datos.address.city || datos.address.town || datos.address.village || "Ciudad desconocida";
+              const pais = datos.address.country || "";
+              alert(`¡Ubicación detectada por GPS: ${ciudad}, ${pais}!`);
+            } catch (error) {
+              alert(`Coordenadas obtenidas: Lat ${lat.toFixed(2)}, Lon ${lon.toFixed(2)}`);
+            }
+          },
+          (error) => {
+            alert("No pudimos acceder a tu GPS. Revisa los permisos.");
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        alert("Tu navegador no soporta geolocalización.");
+      }
+    };
+
     // --- BASE DE DATOS Y PERFILES CINÉFILOS ---
     const INITIAL_USERS = [
       {
@@ -298,13 +300,17 @@ const obtenerUbicacionGPS = () => {
 
     // --- COMPONENTE PRINCIPAL ---
     function App() {
+      const [activeTab, setActiveTab] = useState('radar');
       const [candidates, setCandidates] = useState(() => {
-      const saved = localStorage.getItem('plottwist_candidates_v2');
-      return saved ? JSON.parse(saved) : INITIAL_USERS;
-});
-useEffect(() => {
-    localStorage.setItem('plottwist_candidates_v2', JSON.stringify(candidates));
-  }, [candidates]);
+        const saved = localStorage.getItem('plottwist_candidates_v2');
+        return saved ? JSON.parse(saved) : INITIAL_USERS;
+      });
+      const [currentIndex, setCurrentIndex] = useState(0);
+
+      useEffect(() => {
+        localStorage.setItem('plottwist_candidates_v2', JSON.stringify(candidates));
+      }, [candidates]);
+
       const [matches, setMatches] = useState([]);
       const [likesAvailable, setLikesAvailable] = useState(12);
       const [showMatchModal, setShowMatchModal] = useState(null);
@@ -323,15 +329,16 @@ useEffect(() => {
       const [activeRoomId, setActiveRoomId] = useState(INITIAL_ROOMS[0].id);
       const [roomInput, setRoomInput] = useState('');
 
-      // Perfil de Usuario Propio
+      // Perfil de Usuario Propio (Detectando a Marcelo Buttice como Admin inicial)
+      const currentUser = candidates[0]; 
       const [myProfile, setMyProfile] = useState({
-        name: 'Alex Rivera',
-        age: 25,
-        location: 'Madrid, España',
-        role: 'Cinéfilo Entusiasta',
-        bio: 'Amante de las bandas sonoras orquestales, el cyberpunk y las películas que te hacen pensar durante días después de salir de la sala.',
-        topMovies: ['Interstellar', 'Arrival', 'Whiplash'],
-        favoriteGenres: ['Sci-Fi', 'Drama', 'Thriller', 'Misterio']
+        name: currentUser ? currentUser.name : 'Marcelo Buttice',
+        age: currentUser ? currentUser.age : 56,
+        location: currentUser ? currentUser.location : 'Obera, Misiones, Argentina',
+        role: currentUser ? currentUser.roleLabel : 'Admin',
+        bio: currentUser ? currentUser.bio : 'Devoto del cine de autor y la ciencia ficción dura.',
+        topMovies: currentUser ? currentUser.topMovies : ['Dune: Parte 2', 'Blade Runner 2049'],
+        favoriteGenres: currentUser ? currentUser.favoriteGenres : ['Sci-Fi', 'Thriller']
       });
 
       const currentCandidate = candidates[currentIndex];
@@ -448,7 +455,8 @@ useEffect(() => {
                   { id: 'streaming', label: 'Streaming', icon: '📺' },
                   { id: 'forums', label: 'Foros', icon: '💬' },
                   { id: 'rooms', label: 'Salas', icon: '🎙️' },
-                  { id: 'profile', label: 'Mi Perfil', icon: '👤' }
+                  { id: 'profile', label: 'Mi Perfil', icon: '👤' },
+                  ...(currentUser && currentUser.role === 'admin' ? [{ id: 'admin', label: 'Panel Admin', icon: '🛡️' }] : [])
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -988,6 +996,59 @@ useEffect(() => {
                       class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider transition-all"
                     >
                       Guardar Cambios
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 7: PANEL DE ADMINISTRADOR EXCLUSIVO */}
+            {activeTab === 'admin' && currentUser && currentUser.role === 'admin' && (
+              <div class="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div>
+                    <h2 class="text-2xl font-black text-white flex items-center gap-2">
+                      <span>🛡️ Panel de Control del Administrador</span>
+                    </h2>
+                    <p class="text-xs text-amber-400 mt-1">Sesión activa como: <b>{currentUser.name}</b> ({currentUser.roleLabel})</p>
+                  </div>
+                  <span class="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
+                    Acceso Total Concedido
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <p class="text-xs text-slate-400">Usuarios Registrados</p>
+                    <p class="text-2xl font-black text-white mt-1">{candidates.length}</p>
+                  </div>
+                  <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <p class="text-xs text-slate-400">Debates en Foros</p>
+                    <p class="text-2xl font-black text-white mt-1">{forumThreads.length}</p>
+                  </div>
+                  <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <p class="text-xs text-slate-400">Salas de Chat Activas</p>
+                    <p class="text-2xl font-black text-white mt-1">{chatRooms.length}</p>
+                  </div>
+                </div>
+
+                <div class="space-y-4 pt-2">
+                  <h3 class="text-sm font-bold text-white">⚙️ Acciones de Moderación Global</h3>
+                  <div class="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => alert('¡Caché de la plataforma limpiada correctamente!')}
+                      class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl transition-all border border-slate-700"
+                    >
+                      🧹 Limpiar Caché General
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCandidates(INITIAL_USERS);
+                        alert('¡Base de datos de perfiles restablecida al estado inicial!');
+                      }}
+                      class="bg-rose-900/40 hover:bg-rose-900/70 text-rose-300 text-xs font-bold px-4 py-2.5 rounded-xl transition-all border border-rose-800/50"
+                    >
+                      🔄 Resetear Perfiles del Radar
                     </button>
                   </div>
                 </div>
