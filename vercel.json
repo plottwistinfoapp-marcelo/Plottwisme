@@ -1,5 +1,5 @@
 {
-  "cleanUrls": true,
+  "cleanUrls": false,
   "routes": [
     { "src": "/(.*)", "dest": "/$1" }
   ],
