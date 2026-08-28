@@ -44,11 +44,8 @@
         verified: true,
         bio: 'Devoto del cine de autor y la ciencia ficción dura. Creador de Plottwisme.',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-        photos: [
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80'
-        ],
-        topMovies: ['Dune: Parte 2', 'Blade Runner 2049', 'Oppenheimer'],
+        photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
+        topMovies: ['Dune: Parte 2', 'Blade Runner 2049'],
         favoriteGenres: ['Sci-Fi', 'Thriller', 'Drama'],
         affinity: 100
       },
@@ -61,12 +58,12 @@
         lookingFor: 'Amigos Cinéfilos',
         location: 'Posadas, Misiones',
         distanceKm: 85.0,
-        role: 'critic',
-        roleLabel: 'Crítica Certificada',
+        role: 'general',
+        roleLabel: 'Cinéfila Pro',
         isPremium: false,
         isCritic: true,
         verified: true,
-        bio: 'Directora de cortos amateur y crítica de cine asiático y europeo.',
+        bio: 'Directora de cortos amateur y crítica de cine asiático.',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
         photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80'],
         topMovies: ['Parasite', 'Perfect Blue'],
@@ -81,13 +78,13 @@
         sex: 'Femenino',
         lookingFor: 'Cita / Pareja',
         location: 'Corrientes Capital',
-        distanceKm: 180.0,
+        distanceKm: 180.0, // Fuera del estándar de 100km, requiere Premium
         role: 'general',
         roleLabel: 'Cinéfila Pro',
         isPremium: false,
         isCritic: false,
         verified: true,
-        bio: 'Amante de las películas de terror clásico y festivales de cine independiente.',
+        bio: 'Amante del terror clásico y festivales independientes.',
         avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80',
         photos: ['https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80'],
         topMovies: ['El Resplandor', 'Hereditary'],
@@ -149,7 +146,9 @@
         }
       });
 
-      // Estado para el Modo Claro / Oscuro
+      // Estado para controlar la pantalla de bienvenida post-registro
+      const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
       const [isDarkMode, setIsDarkMode] = useState(() => {
         try {
           const saved = localStorage.getItem('plottwist_dark_mode');
@@ -174,12 +173,11 @@
       const [activeTab, setActiveTab] = useState('radar');
       const [currentIndex, setCurrentIndex] = useState(0);
 
-      const [adminGlobalCity, setAdminGlobalCity] = useState('Oberá, Misiones');
+      const [userCity, setUserCity] = useState('Oberá, Misiones');
       const [selectedMovieTheaters, setSelectedMovieTheaters] = useState(null);
 
       const [reportModalUser, setReportModalUser] = useState(null);
       const [reportReason, setReportReason] = useState('Foto falsa o inapropiada');
-      const [reportDetails, setReportDetails] = useState('');
 
       const [reportsList, setReportsList] = useState(() => {
         try {
@@ -199,6 +197,22 @@
         }
       });
 
+      // Geolocalización automática al iniciar sesión
+      useEffect(() => {
+        if (currentUser && navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              // Geolocalización exitosa (simulamos lectura de coordenadas aproximadas a ciudad local o Misiones)
+              setUserCity('Oberá, Misiones'); 
+            },
+            () => {
+              // Fallback si el usuario deniega el GPS
+              setUserCity('Oberá, Misiones');
+            }
+          );
+        }
+      }, [currentUser]);
+
       useEffect(() => {
         try {
           localStorage.setItem('plottwist_dark_mode', JSON.stringify(isDarkMode));
@@ -213,12 +227,6 @@
 
       useEffect(() => {
         try {
-          localStorage.setItem('plottwist_all_reports', JSON.stringify(reportsList));
-        } catch (e) {}
-      }, [reportsList]);
-
-      useEffect(() => {
-        try {
           if (currentUser) {
             localStorage.setItem('plottwist_current_session', JSON.stringify(currentUser));
           } else {
@@ -228,7 +236,7 @@
       }, [currentUser]);
 
       const dynamicBillboard = useMemo(() => {
-        const cityName = adminGlobalCity.trim() || 'Oberá, Misiones';
+        const cityName = userCity.trim() || 'Oberá';
         return BASE_MOVIES.map(movie => ({
           ...movie,
           theaters: [
@@ -237,8 +245,9 @@
             { name: `Cinemark Hoyts (${cityName.split(',')[0]})`, distance: '9.2 km', showtimes: ['14:30', '18:00', '21:00'] }
           ]
         }));
-      }, [adminGlobalCity]);
+      }, [userCity]);
 
+      // FILTRO ESTRICTO DE DISTANCIA: 100km estándar o 500km si es Premium
       const maxDistance = currentUser?.isPremium ? 500 : 100;
       const filteredCandidates = useMemo(() => {
         return usersList.filter(u => u.email !== currentUser?.email && u.distanceKm <= maxDistance);
@@ -275,7 +284,7 @@
           distanceKm: 45.0,
           role: regEmail === 'marbuttice@gmail.com' ? 'admin' : 'general',
           roleLabel: regEmail === 'marbuttice@gmail.com' ? 'Administrador General' : 'Cinéfilo Pro',
-          isPremium: regEmail === 'marbuttice@gmail.com',
+          isPremium: false, // Nueva cuenta comienza como Estándar
           isCritic: false,
           verified: true,
           bio: regBio || 'Apasionado del cine.',
@@ -287,44 +296,18 @@
         };
         setUsersList([...usersList, newUser]);
         setCurrentUser(newUser);
-        setActiveTab('radar');
+        setShowWelcomeModal(true); // Activa el modal de bienvenida y oferta premium
       };
 
-      const handleSubscribePremium = () => {
-        const updated = { ...currentUser, isPremium: true, roleLabel: currentUser.role === 'admin' ? 'Administrador General' : 'Cinéfilo Premium ⭐' };
+      const handleUpgradeToPremium = () => {
+        const updated = { ...currentUser, isPremium: true, roleLabel: 'Cinéfilo Premium ⭐' };
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === currentUser.email ? updated : u));
-        alert('🎉 ¡Felicitaciones! Ya eres miembro Premium. Tu radar se ha ampliado a 500 km.');
+        setShowWelcomeModal(false);
+        alert('🎉 ¡Bienvenido a Plottwisme Premium! Tu radar se ha ampliado a 500 km.');
         setActiveTab('radar');
       };
 
-      const handleDeleteAccount = () => {
-        if (confirm('¿Estás seguro de eliminar tu cuenta permanentemente?')) {
-          setUsersList(usersList.filter(u => u.email !== currentUser.email));
-          setCurrentUser(null);
-        }
-      };
-
-      const submitReport = (e) => {
-        e.preventDefault();
-        if (!reportModalUser) return;
-        const newReport = {
-          id: 'rep_' + Date.now(),
-          reporterName: currentUser.name,
-          reporterEmail: currentUser.email,
-          targetName: reportModalUser.name,
-          targetEmail: reportModalUser.email,
-          reason: reportReason,
-          details: reportDetails || 'Sin detalles adicionales',
-          date: new Date().toLocaleDateString()
-        };
-        setReportsList([newReport, ...reportsList]);
-        alert('Reporte enviado correctamente al Administrador.');
-        setReportModalUser(null);
-        setReportDetails('');
-      };
-
-      // Clases dinámicas según el tema
       const bgApp = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900';
       const bgHeader = isDarkMode ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200';
       const cardBg = isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900 shadow-lg';
@@ -341,18 +324,18 @@
               </div>
 
               <div className={`flex ${inputBg} p-1 rounded-2xl border`}>
-                <button type="button" onClick={() => setAuthMode('login')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authMode === 'login' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Iniciar Sesión</button>
-                <button type="button" onClick={() => setAuthMode('register')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authMode === 'register' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Crear Cuenta</button>
+                <button type="button" onClick={() => setAuthMode('login')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authMode === 'login' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>Iniciar Sesión</button>
+                <button type="button" onClick={() => setAuthMode('register')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authMode === 'register' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>Crear Cuenta</button>
               </div>
 
               {authMode === 'login' ? (
                 <form onSubmit={handleLogin} className="space-y-4 text-xs">
                   <div>
-                    <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Correo Electrónico:</label>
+                    <label className="block mb-1 text-slate-400">Correo Electrónico:</label>
                     <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 border`} required />
                   </div>
                   <div>
-                    <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Contraseña:</label>
+                    <label className="block mb-1 text-slate-400">Contraseña:</label>
                     <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 border`} required />
                   </div>
                   <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider">Entrar</button>
@@ -360,24 +343,24 @@
               ) : (
                 <form onSubmit={handleRegister} className="space-y-3 text-xs">
                   <div>
-                    <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Nombre Completo:</label>
+                    <label className="block mb-1 text-slate-400">Nombre Completo:</label>
                     <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
                   </div>
                   <div>
-                    <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Correo Electrónico:</label>
+                    <label className="block mb-1 text-slate-400">Correo Electrónico:</label>
                     <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
                   </div>
                   <div>
-                    <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Contraseña:</label>
+                    <label className="block mb-1 text-slate-400">Contraseña:</label>
                     <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Edad (+18):</label>
+                      <label className="block mb-1 text-slate-400">Edad (+18):</label>
                       <input type="number" min="18" value={regAge} onChange={(e) => setRegAge(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
                     </div>
                     <div>
-                      <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Sexo:</label>
+                      <label className="block mb-1 text-slate-400">Sexo:</label>
                       <select value={regSex} onChange={(e) => setRegSex(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`}>
                         <option value="Femenino">Femenino</option>
                         <option value="Masculino">Masculino</option>
@@ -395,6 +378,33 @@
 
       return (
         <div className={`flex flex-col min-h-screen ${bgApp} transition-colors`}>
+          {/* MODAL DE BIENVENIDA Y OFERTA PREMIUM POST-REGISTRO */}
+          {showWelcomeModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+              <div className={`${cardBg} rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-amber-500/40 text-center animate-pulse`}>
+                <div className="w-16 h-16 bg-amber-500 text-slate-950 rounded-3xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg">🎬</div>
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-black text-amber-500 font-brand">¡Bienvenido a Plottwisme, {currentUser.name}!</h2>
+                  <p className="text-xs text-slate-300">Tu perfil ha sido creado con éxito. Detectamos automáticamente tu ubicación en <b>{userCity}</b> y tu radar estándar de 100 km está activo.</p>
+                </div>
+
+                <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-left space-y-2 text-xs">
+                  <p className="text-amber-400 font-bold">✨ ¿Quieres desbloquear todo el potencial de inmediato?</p>
+                  <p className="text-slate-300">Actualiza a <b>Premium</b> ahora para ampliar tu radar de búsqueda a <b>500 km</b> y conectar con cinéfilos en toda la región.</p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <button type="button" onClick={handleUpgradeToPremium} className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3.5 rounded-xl uppercase tracking-wider text-xs shadow-lg">
+                    ⭐ Comprar Premium (500 km)
+                  </button>
+                  <button type="button" onClick={() => setShowWelcomeModal(false)} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3.5 rounded-xl text-xs">
+                    Continuar Gratis (100 km)
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <header className={`sticky top-0 z-40 backdrop-blur-md border-b px-4 py-3 ${bgHeader}`}>
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center justify-between w-full sm:w-auto">
@@ -402,15 +412,16 @@
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center font-bold text-xl text-slate-950">P</div>
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
-                    <p className={`text-[10px] uppercase ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{currentUser.isPremium ? '⭐ Premium (500km)' : '👤 Estándar (100km)'}</p>
+                    <p className={`text-[10px] uppercase ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{currentUser.isPremium ? '⭐ Premium (Radio 500km)' : '👤 Estándar (Radio 100km)'}</p>
                   </div>
                 </div>
                 <button type="button" onClick={() => setCurrentUser(null)} className="sm:hidden text-xs text-rose-500 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/30">Salir</button>
               </div>
 
+              {/* Geolocalización / Ciudad detectada */}
               <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full sm:w-auto justify-center">
-                <span className="text-amber-500 font-bold whitespace-nowrap">🌍 Ciudad Activa:</span>
-                <input type="text" value={adminGlobalCity} onChange={(e) => setAdminGlobalCity(e.target.value)} className={`bg-transparent border-0 px-1 py-0.5 font-bold w-48 focus:outline-none ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`} />
+                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ubicación GPS:</span>
+                <input type="text" value={userCity} onChange={(e) => setUserCity(e.target.value)} className={`bg-transparent border-0 px-1 py-0.5 font-bold w-44 focus:outline-none ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`} title="Puedes editar tu ubicación si lo deseas" />
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
@@ -422,8 +433,7 @@
                   <button type="button" onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>👤 Perfil</button>
                 </nav>
 
-                {/* Botón de Modo Claro / Oscuro */}
-                <button type="button" onClick={() => setIsDarkMode(!isDarkMode)} className={`p-2 rounded-xl border text-xs font-bold transition-all ${isDarkMode ? 'bg-slate-900 border-slate-700 text-amber-400 hover:bg-slate-800' : 'bg-slate-200 border-slate-300 text-amber-700 hover:bg-slate-300'}`} title="Cambiar Tema Claro/Oscuro">
+                <button type="button" onClick={() => setIsDarkMode(!isDarkMode)} className={`p-2 rounded-xl border text-xs font-bold transition-all ${isDarkMode ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-slate-200 border-slate-300 text-amber-700'}`} title="Cambiar Tema Claro/Oscuro">
                   {isDarkMode ? '☀️ Claro' : '🌙 Oscuro'}
                 </button>
 
@@ -436,12 +446,11 @@
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center">
                 <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center space-y-1">
-                  <p>🎯 Radio activo: <b>{currentUser.isPremium ? '500 km (Plan Premium)' : '100 km (Plan Estándar)'}</b></p>
+                  <p>🎯 Radar activo en <b>{userCity}</b> (Radio: <b>{currentUser.isPremium ? '500 km' : '100 km'}</b>)</p>
                 </div>
 
                 {currentCandidate ? (
                   <div className={`w-full max-w-md ${cardBg} rounded-3xl overflow-hidden shadow-2xl relative border`}>
-                    <button type="button" onClick={() => setReportModalUser(currentCandidate)} className="absolute top-4 right-4 z-10 bg-slate-950/80 hover:bg-rose-600 text-rose-400 hover:text-white px-3 py-1.5 rounded-full text-xs font-bold border border-rose-500/30 transition-all">🚨 Reportar</button>
                     <div className="relative h-96 w-full bg-slate-900">
                       <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
                       <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
@@ -462,10 +471,7 @@
                   <div className="text-center py-20 space-y-4 max-w-md">
                     <h3 className="text-xl font-bold">No hay más perfiles en tu radio de {maxDistance} km.</h3>
                     {!currentUser.isPremium && (
-                      <div className={`${cardBg} p-6 rounded-3xl space-y-3 border`}>
-                        <p className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>Tu plan actual está limitado a 100 km.</p>
-                        <button type="button" onClick={() => setActiveTab('premium')} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider">⭐ Ampliar a 500 km (Premium)</button>
-                      </div>
+                      <button type="button" onClick={() => setActiveTab('premium')} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider">⭐ Ampliar a 500 km (Premium)</button>
                     )}
                   </div>
                 )}
@@ -475,8 +481,8 @@
             {activeTab === 'cinema' && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-black">🎬 Cartelera en {adminGlobalCity}</h2>
-                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Haz clic en cualquier cine para abrir su ubicación exacta en Google Maps.</p>
+                  <h2 className="text-2xl font-black">🎬 Cartelera de Cines en {userCity}</h2>
+                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Salas y horarios detectados para tu ubicación actual.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {dynamicBillboard.map(m => (
@@ -491,7 +497,6 @@
                           <h3 className="text-base font-black">{m.title}</h3>
                           <p className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dir. {m.director} • {m.duration}</p>
                         </div>
-                        <p className={`text-xs line-clamp-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{m.synopsis}</p>
                       </div>
                       <button type="button" onClick={() => setSelectedMovieTheaters(m)} className="w-full bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-500 font-bold py-2.5 rounded-xl text-xs transition-all border border-amber-500/40">📍 Dónde ver y Cines</button>
                     </div>
@@ -501,22 +506,16 @@
                 {selectedMovieTheaters && (
                   <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className={`${cardBg} rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border`}>
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-base font-black">Salas para: {selectedMovieTheaters.title}</h3>
-                        <button type="button" onClick={() => setSelectedMovieTheaters(null)} className="font-bold">✕</button>
-                      </div>
-                      <div className="space-y-3 max-h-60 overflow-y-auto">
-                        {selectedMovieTheaters.theaters.map((t, idx) => {
-                          const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.name + ' ' + adminGlobalCity)}`;
-                          return (
-                            <a key={idx} href={mapsUrl} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-2xl border transition-all space-y-2 ${isDarkMode ? 'bg-slate-950 border-slate-800 hover:border-amber-500' : 'bg-slate-100 border-slate-300 hover:border-amber-500'}`}>
-                              <div className="flex justify-between text-xs font-bold">
-                                <span>🗺️ {t.name}</span>
-                                <span className="text-amber-500">{t.distance}</span>
-                              </div>
-                            </a>
-                          );
-                        })}
+                      <h3 className="text-base font-black">Salas para: {selectedMovieTheaters.title}</h3>
+                      <div className="space-y-3">
+                        {selectedMovieTheaters.theaters.map((t, idx) => (
+                          <div key={idx} className={`p-3 rounded-2xl border space-y-1 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-300'}`}>
+                            <div className="flex justify-between text-xs font-bold">
+                              <span>🗺️ {t.name}</span>
+                              <span className="text-amber-500">{t.distance}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                       <button type="button" onClick={() => setSelectedMovieTheaters(null)} className="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs">Cerrar</button>
                     </div>
@@ -528,19 +527,12 @@
             {activeTab === 'premium' && (
               <div className={`max-w-xl mx-auto ${cardBg} border-amber-500/30 rounded-3xl p-8 space-y-6 shadow-2xl text-center border`}>
                 <div className="w-16 h-16 bg-amber-500 text-slate-950 rounded-3xl mx-auto flex items-center justify-center text-3xl font-black">⭐</div>
-                <h2 className="text-2xl font-black text-amber-500 font-brand">Súmate a Plottwisme Premium</h2>
+                <h2 className="text-2xl font-black text-amber-500 font-brand">Plottwisme Premium</h2>
                 <div className={`p-6 rounded-2xl border text-left space-y-3 text-xs ${inputBg}`}>
-                  <p>✓ <b>Radar ampliado a 500 km</b></p>
-                  <p>✓ <b>Insignia Dorada VIP</b></p>
+                  <p>✓ <b>Radar ampliado a 500 km</b> (Ideal para conectar con otras ciudades y provincias).</p>
+                  <p>✓ <b>Insignia Dorada VIP</b> en tu perfil cinéfilo.</p>
                 </div>
-                <button type="button" onClick={handleSubscribePremium} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-4 rounded-2xl uppercase tracking-wider text-sm shadow-xl">🚀 Activar Membresía Premium</button>
-              </div>
-            )}
-
-            {activeTab === 'admin' && currentUser.role === 'admin' && (
-              <div className={`max-w-4xl mx-auto ${cardBg} rounded-3xl p-6 space-y-6 border`}>
-                <h2 className="text-2xl font-black text-amber-500">🛡️ Panel de Administración</h2>
-                <p className="text-xs">Reportes totales: {reportsList.length}</p>
+                <button type="button" onClick={handleUpgradeToPremium} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-4 rounded-2xl uppercase tracking-wider text-sm shadow-xl">🚀 Activar Membresía Premium</button>
               </div>
             )}
 
