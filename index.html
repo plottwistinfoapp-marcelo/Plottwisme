@@ -45,8 +45,8 @@
         bio: 'Devoto del cine de autor y la ciencia ficción dura. Creador de Plottwisme.',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
         photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
-        topMovies: ['Dune: Parte 2', 'Blade Runner 2049'],
-        favoriteGenres: ['Sci-Fi', 'Thriller', 'Drama'],
+        socialLinks: { twitter: '@marbuttice', radio: 'Frecuencia Cine (Misiones)', tv: '' },
+        receivedLikes: 14,
         affinity: 100
       },
       {
@@ -59,15 +59,15 @@
         location: 'Posadas, Misiones',
         distanceKm: 85.0,
         role: 'general',
-        roleLabel: 'Cinéfila Pro',
+        roleLabel: 'Cinéfila Pro & Crítica',
         isPremium: false,
         isCritic: true,
         verified: true,
         bio: 'Directora de cortos amateur y crítica de cine asiático.',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
         photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80'],
-        topMovies: ['Parasite', 'Perfect Blue'],
-        favoriteGenres: ['Psicológico', 'Autor'],
+        socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' },
+        receivedLikes: 29,
         affinity: 93
       },
       {
@@ -78,7 +78,7 @@
         sex: 'Femenino',
         lookingFor: 'Cita / Pareja',
         location: 'Corrientes Capital',
-        distanceKm: 180.0, // Fuera del estándar de 100km, requiere Premium
+        distanceKm: 180.0,
         role: 'general',
         roleLabel: 'Cinéfila Pro',
         isPremium: false,
@@ -87,8 +87,8 @@
         bio: 'Amante del terror clásico y festivales independientes.',
         avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80',
         photos: ['https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80'],
-        topMovies: ['El Resplandor', 'Hereditary'],
-        favoriteGenres: ['Terror', 'Indie'],
+        socialLinks: { twitter: '', radio: '', tv: '' },
+        receivedLikes: 8,
         affinity: 88
       }
     ];
@@ -123,16 +123,27 @@
         rating: '8.8',
         poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
         synopsis: 'La fantástica evolución de Bella Baxter, una joven revivida por un científico brillante.'
+      }
+    ];
+
+    const INITIAL_REVIEWS = [
+      {
+        id: 'r1',
+        author: 'Elena Montero',
+        movieTitle: 'Dune: Parte Dos',
+        rating: 10,
+        content: 'Villeneuve logra una de las obras maestras de la ciencia ficción moderna. El diseño de sonido y la fotografía en IMAX son monumentales.',
+        mediaOutlet: 'Columnista Radio LT3 / Canal 12 Misiones',
+        date: '2026-06-10'
       },
       {
-        id: 'm4',
-        title: 'Anatomía de una Caída',
-        director: 'Justine Triet',
-        genre: 'Suspenso / Drama Judicial',
-        duration: '152 min',
-        rating: '8.9',
-        poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80',
-        synopsis: 'Una mujer es sospechosa de la muerte de su esposo, con su hijo ciego como único testigo.'
+        id: 'r2',
+        author: 'Marcelo Buttice',
+        movieTitle: 'Oppenheimer',
+        rating: 9.5,
+        content: 'Una tensión insoportable construida magistralmente a través del montaje y la música. Nolan en su máxima expresión intelectual.',
+        mediaOutlet: 'Frecuencia Cine (Misiones)',
+        date: '2026-05-20'
       }
     ];
 
@@ -146,7 +157,6 @@
         }
       });
 
-      // Estado para controlar la pantalla de bienvenida post-registro
       const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
       const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -172,21 +182,8 @@
 
       const [activeTab, setActiveTab] = useState('radar');
       const [currentIndex, setCurrentIndex] = useState(0);
-
       const [userCity, setUserCity] = useState('Oberá, Misiones');
       const [selectedMovieTheaters, setSelectedMovieTheaters] = useState(null);
-
-      const [reportModalUser, setReportModalUser] = useState(null);
-      const [reportReason, setReportReason] = useState('Foto falsa o inapropiada');
-
-      const [reportsList, setReportsList] = useState(() => {
-        try {
-          const saved = localStorage.getItem('plottwist_all_reports');
-          return saved ? JSON.parse(saved) : [];
-        } catch (e) {
-          return [];
-        }
-      });
 
       const [usersList, setUsersList] = useState(() => {
         try {
@@ -197,33 +194,57 @@
         }
       });
 
-      // Geolocalización automática al iniciar sesión
+      const [reviewsList, setReviewsList] = useState(() => {
+        try {
+          const saved = localStorage.getItem('plottwist_all_reviews');
+          return saved ? JSON.parse(saved) : INITIAL_REVIEWS;
+        } catch (e) {
+          return INITIAL_REVIEWS;
+        }
+      });
+
+      // Estados para formulario de nuevo crítico / reseña
+      const [newReviewMovie, setNewReviewMovie] = useState('');
+      const [newReviewRating, setNewReviewRating] = useState(10);
+      const [newReviewText, setNewReviewText] = useState('');
+
+      // Estados para edición de perfil y fotos
+      const [editBio, setEditBio] = useState(currentUser?.bio || '');
+      const [editAvatar, setEditAvatar] = useState(currentUser?.avatar || '');
+      const [editRadio, setEditRadio] = useState(currentUser?.socialLinks?.radio || '');
+      const [editTv, setEditTv] = useState(currentUser?.socialLinks?.tv || '');
+      const [editTwitter, setEditTwitter] = useState(currentUser?.socialLinks?.twitter || '');
+
+      useEffect(() => {
+        if (currentUser) {
+          setEditBio(currentUser.bio || '');
+          setEditAvatar(currentUser.avatar || '');
+          setEditRadio(currentUser.socialLinks?.radio || '');
+          setEditTv(currentUser.socialLinks?.tv || '');
+          setEditTwitter(currentUser.socialLinks?.twitter || '');
+        }
+      }, [currentUser]);
+
       useEffect(() => {
         if (currentUser && navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
-            (position) => {
-              // Geolocalización exitosa (simulamos lectura de coordenadas aproximadas a ciudad local o Misiones)
-              setUserCity('Oberá, Misiones'); 
-            },
-            () => {
-              // Fallback si el usuario deniega el GPS
-              setUserCity('Oberá, Misiones');
-            }
+            () => { setUserCity('Oberá, Misiones'); },
+            () => { setUserCity('Oberá, Misiones'); }
           );
         }
       }, [currentUser]);
 
       useEffect(() => {
-        try {
-          localStorage.setItem('plottwist_dark_mode', JSON.stringify(isDarkMode));
-        } catch (e) {}
+        try { localStorage.setItem('plottwist_dark_mode', JSON.stringify(isDarkMode)); } catch (e) {}
       }, [isDarkMode]);
 
       useEffect(() => {
-        try {
-          localStorage.setItem('plottwist_all_users', JSON.stringify(usersList));
-        } catch (e) {}
+        try { localStorage.setItem('plottwist_all_users', JSON.stringify(usersList)); } catch (e) {}
       }, [usersList]);
+
+      useEffect(() => {
+        try { localStorage.setItem('plottwist_all_reviews', JSON.stringify(reviewsList)); } catch (e) {}
+      }, [reviewsList]);
 
       useEffect(() => {
         try {
@@ -237,17 +258,21 @@
 
       const dynamicBillboard = useMemo(() => {
         const cityName = userCity.trim() || 'Oberá';
+        const isObera = cityName.toLowerCase().includes('oberá');
+
         return BASE_MOVIES.map(movie => ({
           ...movie,
-          theaters: [
-            { name: `Cine Center ${cityName.split(',')[0]}`, distance: '1.4 km', showtimes: ['17:00', '19:30', '22:15'] },
-            { name: `Multiplex ${cityName.split(',')[0]}`, distance: '4.8 km', showtimes: ['16:15', '18:45', '21:30'] },
-            { name: `Cinemark Hoyts (${cityName.split(',')[0]})`, distance: '9.2 km', showtimes: ['14:30', '18:00', '21:00'] }
+          theaters: isObera ? [
+            { name: 'Cine Teatro Oberá (Espacio INCAA)', distance: '0.8 km', showtimes: ['18:00', '21:00'] },
+            { name: 'Casa del Bicentenario (Oberá)', distance: '2.1 km', showtimes: ['19:30'] },
+            { name: 'Ciclo de Cine Independiente Misionero', distance: '1.5 km', showtimes: ['22:00'] }
+          ] : [
+            { name: `Cine Solar / Espacio Cultural (${cityName})`, distance: '1.2 km', showtimes: ['17:30', '20:00'] },
+            { name: `Auditorio Municipal de ${cityName}`, distance: '3.5 km', showtimes: ['19:00', '21:30'] }
           ]
         }));
       }, [userCity]);
 
-      // FILTRO ESTRICTO DE DISTANCIA: 100km estándar o 500km si es Premium
       const maxDistance = currentUser?.isPremium ? 500 : 100;
       const filteredCandidates = useMemo(() => {
         return usersList.filter(u => u.email !== currentUser?.email && u.distanceKm <= maxDistance);
@@ -284,28 +309,79 @@
           distanceKm: 45.0,
           role: regEmail === 'marbuttice@gmail.com' ? 'admin' : 'general',
           roleLabel: regEmail === 'marbuttice@gmail.com' ? 'Administrador General' : 'Cinéfilo Pro',
-          isPremium: false, // Nueva cuenta comienza como Estándar
-          isCritic: false,
+          isPremium: false,
+          isCritic: regEmail === 'marbuttice@gmail.com', // Admin nace crítico, otros pueden solicitarlo
           verified: true,
           bio: regBio || 'Apasionado del cine.',
           avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80',
           photos: ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80'],
-          topMovies: ['Interstellar', 'Parasite'],
-          favoriteGenres: ['Drama', 'Sci-Fi'],
+          socialLinks: { twitter: '', radio: '', tv: '' },
+          receivedLikes: 0,
           affinity: 90
         };
         setUsersList([...usersList, newUser]);
         setCurrentUser(newUser);
-        setShowWelcomeModal(true); // Activa el modal de bienvenida y oferta premium
+        setShowWelcomeModal(true);
       };
 
       const handleUpgradeToPremium = () => {
-        const updated = { ...currentUser, isPremium: true, roleLabel: 'Cinéfilo Premium ⭐' };
+        const updated = { ...currentUser, isPremium: true, roleLabel: currentUser.isCritic ? 'Crítico & Premium ⭐' : 'Cinéfilo Premium ⭐' };
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === currentUser.email ? updated : u));
         setShowWelcomeModal(false);
         alert('🎉 ¡Bienvenido a Plottwisme Premium! Tu radar se ha ampliado a 500 km.');
         setActiveTab('radar');
+      };
+
+      const handleLikeCandidate = () => {
+        if (!currentCandidate) return;
+        // Dar like al candidato incrementando sus likes en la lista global
+        const updatedList = usersList.map(u => {
+          if (u.email === currentCandidate.email) {
+            return { ...u, receivedLikes: (u.receivedLikes || 0) + 1 };
+          }
+          return u;
+        });
+        setUsersList(updatedList);
+        alert(`🍿 ¡Le diste Me Gusta a ${currentCandidate.name}! Se ha registrado tu interacción.`);
+        setCurrentIndex(prev => prev + 1);
+      };
+
+      const handleSaveProfile = (e) => {
+        e.preventDefault();
+        const updated = {
+          ...currentUser,
+          bio: editBio,
+          avatar: editAvatar,
+          photos: [editAvatar],
+          socialLinks: {
+            radio: editRadio,
+            tv: editTv,
+            twitter: editTwitter
+          }
+        };
+        setCurrentUser(updated);
+        setUsersList(usersList.map(u => u.email === currentUser.email ? updated : u));
+        alert('✅ ¡Perfil y enlaces multimedia actualizados con éxito!');
+      };
+
+      const handlePublishReview = (e) => {
+        e.preventDefault();
+        if (!newReviewMovie || !newReviewText) return;
+        const outletStr = [currentUser.socialLinks?.radio, currentUser.socialLinks?.tv].filter(Boolean).join(' / ') || currentUser.roleLabel;
+        const newRev = {
+          id: 'r_' + Date.now(),
+          author: currentUser.name,
+          movieTitle: newReviewMovie,
+          rating: Number(newReviewRating),
+          content: newReviewText,
+          mediaOutlet: outletStr,
+          date: new Date().toISOString().split('T')[0]
+        };
+        setReviewsList([newRev, ...reviewsList]);
+        setNewReviewMovie('');
+        setNewReviewText('');
+        alert('📝 ¡Reseña publicada con éxito en el Panel de Críticos!');
       };
 
       const bgApp = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900';
@@ -378,7 +454,6 @@
 
       return (
         <div className={`flex flex-col min-h-screen ${bgApp} transition-colors`}>
-          {/* MODAL DE BIENVENIDA Y OFERTA PREMIUM POST-REGISTRO */}
           {showWelcomeModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
               <div className={`${cardBg} rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-amber-500/40 text-center animate-pulse`}>
@@ -418,7 +493,6 @@
                 <button type="button" onClick={() => setCurrentUser(null)} className="sm:hidden text-xs text-rose-500 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/30">Salir</button>
               </div>
 
-              {/* Geolocalización / Ciudad detectada */}
               <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full sm:w-auto justify-center">
                 <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ubicación GPS:</span>
                 <input type="text" value={userCity} onChange={(e) => setUserCity(e.target.value)} className={`bg-transparent border-0 px-1 py-0.5 font-bold w-44 focus:outline-none ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`} title="Puedes editar tu ubicación si lo deseas" />
@@ -427,131 +501,4 @@
               <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                 <nav className={`flex items-center gap-1 p-1 rounded-2xl border overflow-x-auto ${navBg}`}>
                   <button type="button" onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>🎯 Radar</button>
-                  <button type="button" onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>🎬 Cartelera</button>
-                  {!currentUser.isPremium && <button type="button" onClick={() => setActiveTab('premium')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'premium' ? 'bg-amber-500 text-slate-950' : 'text-amber-500 animate-pulse'}`}>⭐ Premium</button>}
-                  {currentUser.role === 'admin' && <button type="button" onClick={() => setActiveTab('admin')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'admin' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>🛡️ Admin</button>}
-                  <button type="button" onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>👤 Perfil</button>
-                </nav>
-
-                <button type="button" onClick={() => setIsDarkMode(!isDarkMode)} className={`p-2 rounded-xl border text-xs font-bold transition-all ${isDarkMode ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-slate-200 border-slate-300 text-amber-700'}`} title="Cambiar Tema Claro/Oscuro">
-                  {isDarkMode ? '☀️ Claro' : '🌙 Oscuro'}
-                </button>
-
-                <button type="button" onClick={() => setCurrentUser(null)} className="hidden sm:block text-xs text-rose-500 hover:text-rose-600 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/30">Salir</button>
-              </div>
-            </div>
-          </header>
-
-          <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
-            {activeTab === 'radar' && (
-              <div className="flex flex-col items-center">
-                <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center space-y-1">
-                  <p>🎯 Radar activo en <b>{userCity}</b> (Radio: <b>{currentUser.isPremium ? '500 km' : '100 km'}</b>)</p>
-                </div>
-
-                {currentCandidate ? (
-                  <div className={`w-full max-w-md ${cardBg} rounded-3xl overflow-hidden shadow-2xl relative border`}>
-                    <div className="relative h-96 w-full bg-slate-900">
-                      <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
-                        <p className="text-xs text-amber-300">📍 {currentCandidate.location} • A {currentCandidate.distanceKm} km</p>
-                      </div>
-                    </div>
-                    <div className="p-6 space-y-4">
-                      <p className={`text-xs italic ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>"{currentCandidate.bio}"</p>
-                      <div className="flex justify-center gap-6 pt-4 border-t border-slate-700">
-                        <button type="button" onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
-                        <button type="button" onClick={() => { alert(`¡Match enviado a ${currentCandidate.name}!`); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black">🍿</button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-20 space-y-4 max-w-md">
-                    <h3 className="text-xl font-bold">No hay más perfiles en tu radio de {maxDistance} km.</h3>
-                    {!currentUser.isPremium && (
-                      <button type="button" onClick={() => setActiveTab('premium')} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider">⭐ Ampliar a 500 km (Premium)</button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'cinema' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-black">🎬 Cartelera de Cines en {userCity}</h2>
-                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Salas y horarios detectados para tu ubicación actual.</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {dynamicBillboard.map(m => (
-                    <div key={m.id} className={`${cardBg} rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 border shadow-xl`}>
-                      <div className="space-y-3">
-                        <div className="relative h-64 rounded-2xl overflow-hidden bg-slate-900">
-                          <img src={m.poster} alt={m.title} className="w-full h-full object-cover" />
-                          <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md">★ {m.rating}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre}</span>
-                          <h3 className="text-base font-black">{m.title}</h3>
-                          <p className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dir. {m.director} • {m.duration}</p>
-                        </div>
-                      </div>
-                      <button type="button" onClick={() => setSelectedMovieTheaters(m)} className="w-full bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-500 font-bold py-2.5 rounded-xl text-xs transition-all border border-amber-500/40">📍 Dónde ver y Cines</button>
-                    </div>
-                  ))}
-                </div>
-
-                {selectedMovieTheaters && (
-                  <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className={`${cardBg} rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border`}>
-                      <h3 className="text-base font-black">Salas para: {selectedMovieTheaters.title}</h3>
-                      <div className="space-y-3">
-                        {selectedMovieTheaters.theaters.map((t, idx) => (
-                          <div key={idx} className={`p-3 rounded-2xl border space-y-1 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-300'}`}>
-                            <div className="flex justify-between text-xs font-bold">
-                              <span>🗺️ {t.name}</span>
-                              <span className="text-amber-500">{t.distance}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <button type="button" onClick={() => setSelectedMovieTheaters(null)} className="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs">Cerrar</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'premium' && (
-              <div className={`max-w-xl mx-auto ${cardBg} border-amber-500/30 rounded-3xl p-8 space-y-6 shadow-2xl text-center border`}>
-                <div className="w-16 h-16 bg-amber-500 text-slate-950 rounded-3xl mx-auto flex items-center justify-center text-3xl font-black">⭐</div>
-                <h2 className="text-2xl font-black text-amber-500 font-brand">Plottwisme Premium</h2>
-                <div className={`p-6 rounded-2xl border text-left space-y-3 text-xs ${inputBg}`}>
-                  <p>✓ <b>Radar ampliado a 500 km</b> (Ideal para conectar con otras ciudades y provincias).</p>
-                  <p>✓ <b>Insignia Dorada VIP</b> en tu perfil cinéfilo.</p>
-                </div>
-                <button type="button" onClick={handleUpgradeToPremium} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-4 rounded-2xl uppercase tracking-wider text-sm shadow-xl">🚀 Activar Membresía Premium</button>
-              </div>
-            )}
-
-            {activeTab === 'profile' && (
-              <div className={`max-w-xl mx-auto ${cardBg} rounded-3xl p-6 space-y-6 border`}>
-                <h2 className="text-xl font-black">👤 Mi Perfil Cinéfilo</h2>
-                <div className="space-y-4 text-xs">
-                  <textarea rows="3" defaultValue={currentUser.bio} className={`w-full ${inputBg} rounded-xl p-3 border`} />
-                  <button type="button" onClick={() => alert('Guardado')} className="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl">Guardar</button>
-                </div>
-              </div>
-            )}
-          </main>
-        </div>
-      );
-    }
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
-</body>
-</html>
+                  <button type="button" onClick
