@@ -21,7 +21,7 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
   </style>
 </head>
-<body class="antialiased selection:bg-amber-500 selection:text-slate-950">
+<body class="antialiased bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
   <div id="root"></div>
 
   <script type="text/babel">
@@ -44,10 +44,8 @@
         verified: true,
         bio: 'Devoto del cine de autor y la ciencia ficción dura. Creador de Plottwisme.',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-        photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
-        socialLinks: { twitter: '@marbuttice', radio: 'Frecuencia Cine (Misiones)', tv: '' },
-        receivedLikes: 14,
-        affinity: 100
+        socialLinks: { twitter: '@marbuttice', radio: 'Frecuencia Cine (Misiones)', tv: 'Canal 12 Misiones' },
+        receivedLikes: 14
       },
       {
         id: 'u2',
@@ -65,31 +63,8 @@
         verified: true,
         bio: 'Directora de cortos amateur y crítica de cine asiático.',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
-        photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80'],
         socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' },
-        receivedLikes: 29,
-        affinity: 93
-      },
-      {
-        id: 'u3',
-        name: 'Camila Valenzuela',
-        email: 'camila@gmail.com',
-        age: 28,
-        sex: 'Femenino',
-        lookingFor: 'Cita / Pareja',
-        location: 'Corrientes Capital',
-        distanceKm: 180.0,
-        role: 'general',
-        roleLabel: 'Cinéfila Pro',
-        isPremium: false,
-        isCritic: false,
-        verified: true,
-        bio: 'Amante del terror clásico y festivales independientes.',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80',
-        photos: ['https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80'],
-        socialLinks: { twitter: '', radio: '', tv: '' },
-        receivedLikes: 8,
-        affinity: 88
+        receivedLikes: 29
       }
     ];
 
@@ -142,7 +117,7 @@
         movieTitle: 'Oppenheimer',
         rating: 9.5,
         content: 'Una tensión insoportable construida magistralmente a través del montaje y la música. Nolan en su máxima expresión intelectual.',
-        mediaOutlet: 'Frecuencia Cine (Misiones)',
+        mediaOutlet: 'Frecuencia Cine / Canal 12 Misiones',
         date: '2026-05-20'
       }
     ];
@@ -158,16 +133,6 @@
       });
 
       const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-
-      const [isDarkMode, setIsDarkMode] = useState(() => {
-        try {
-          const saved = localStorage.getItem('plottwist_dark_mode');
-          return saved !== null ? JSON.parse(saved) : true;
-        } catch (e) {
-          return true;
-        }
-      });
-
       const [authMode, setAuthMode] = useState('login');
       const [loginEmail, setLoginEmail] = useState('');
       const [loginPassword, setLoginPassword] = useState('');
@@ -203,12 +168,10 @@
         }
       });
 
-      // Estados para formulario de nuevo crítico / reseña
       const [newReviewMovie, setNewReviewMovie] = useState('');
       const [newReviewRating, setNewReviewRating] = useState(10);
       const [newReviewText, setNewReviewText] = useState('');
 
-      // Estados para edición de perfil y fotos
       const [editBio, setEditBio] = useState(currentUser?.bio || '');
       const [editAvatar, setEditAvatar] = useState(currentUser?.avatar || '');
       const [editRadio, setEditRadio] = useState(currentUser?.socialLinks?.radio || '');
@@ -224,19 +187,6 @@
           setEditTwitter(currentUser.socialLinks?.twitter || '');
         }
       }, [currentUser]);
-
-      useEffect(() => {
-        if (currentUser && navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            () => { setUserCity('Oberá, Misiones'); },
-            () => { setUserCity('Oberá, Misiones'); }
-          );
-        }
-      }, [currentUser]);
-
-      useEffect(() => {
-        try { localStorage.setItem('plottwist_dark_mode', JSON.stringify(isDarkMode)); } catch (e) {}
-      }, [isDarkMode]);
 
       useEffect(() => {
         try { localStorage.setItem('plottwist_all_users', JSON.stringify(usersList)); } catch (e) {}
@@ -256,20 +206,42 @@
         } catch (e) {}
       }, [currentUser]);
 
+      // Generador dinámico de salas basado estrictamente en la ciudad actual escrita por el usuario
       const dynamicBillboard = useMemo(() => {
-        const cityName = userCity.trim() || 'Oberá';
-        const isObera = cityName.toLowerCase().includes('oberá');
+        const cityClean = (userCity || 'Oberá').trim();
+        const cityLower = cityClean.toLowerCase();
 
-        return BASE_MOVIES.map(movie => ({
-          ...movie,
-          theaters: isObera ? [
+        let customTheaters = [];
+
+        if (cityLower.includes('oberá') || cityLower.includes('obera')) {
+          customTheaters = [
             { name: 'Cine Teatro Oberá (Espacio INCAA)', distance: '0.8 km', showtimes: ['18:00', '21:00'] },
             { name: 'Casa del Bicentenario (Oberá)', distance: '2.1 km', showtimes: ['19:30'] },
             { name: 'Ciclo de Cine Independiente Misionero', distance: '1.5 km', showtimes: ['22:00'] }
-          ] : [
-            { name: `Cine Solar / Espacio Cultural (${cityName})`, distance: '1.2 km', showtimes: ['17:30', '20:00'] },
-            { name: `Auditorio Municipal de ${cityName}`, distance: '3.5 km', showtimes: ['19:00', '21:30'] }
-          ]
+          ];
+        } else if (cityLower.includes('posadas')) {
+          customTheaters = [
+            { name: 'Cine Sunstar (Plaza Mayor Posadas)', distance: '2.4 km', showtimes: ['17:00', '19:45', '22:30'] },
+            { name: 'Centro Cultural Vicente Cidade', distance: '1.1 km', showtimes: ['19:00', '21:30'] }
+          ];
+        } else if (cityLower.includes('buenos aires') || cityLower.includes('caba')) {
+          customTheaters = [
+            { name: 'Gaumont (Espacio INCAA - CABA)', distance: '1.5 km', showtimes: ['14:00', '16:30', '19:00', '21:30'] },
+            { name: 'Multiplex Belgrano', distance: '3.2 km', showtimes: ['15:00', '18:00', '21:00'] },
+            { name: 'Sala Leopoldo Lugones (Teatro San Martín)', distance: '2.0 km', showtimes: ['20:00'] }
+          ];
+        } else {
+          // Si el usuario ingresa cualquier otra ciudad del mundo o país, genera salas coherentes y personalizadas
+          customTheaters = [
+            { name: `Cine Municipal / Cultural de ${cityClean}`, distance: '1.2 km', showtimes: ['17:30', '20:15'] },
+            { name: `Complejo Cinematográfico Multiplex (${cityClean})`, distance: '3.5 km', showtimes: ['16:00', '19:00', '22:00'] },
+            { name: `Espacio Alternativo de Cine Independiente`, distance: '2.8 km', showtimes: ['21:00'] }
+          ];
+        }
+
+        return BASE_MOVIES.map(movie => ({
+          ...movie,
+          theaters: customTheaters
         }));
       }, [userCity]);
 
@@ -294,7 +266,7 @@
       const handleRegister = (e) => {
         e.preventDefault();
         if (Number(regAge) < 18) {
-          alert('Error de verificación: Plottwisme es exclusivamente para mayores de 18 años.');
+          alert('Error: Plottwisme es exclusivamente para mayores de 18 años.');
           return;
         }
         const newUser = {
@@ -305,19 +277,17 @@
           age: Number(regAge),
           sex: regSex,
           lookingFor: regLookingFor,
-          location: 'Oberá, Misiones',
-          distanceKm: 45.0,
+          location: userCity,
+          distanceKm: 2.0,
           role: regEmail === 'marbuttice@gmail.com' ? 'admin' : 'general',
           roleLabel: regEmail === 'marbuttice@gmail.com' ? 'Administrador General' : 'Cinéfilo Pro',
           isPremium: false,
-          isCritic: regEmail === 'marbuttice@gmail.com', // Admin nace crítico, otros pueden solicitarlo
+          isCritic: regEmail === 'marbuttice@gmail.com',
           verified: true,
           bio: regBio || 'Apasionado del cine.',
           avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80',
-          photos: ['https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80'],
           socialLinks: { twitter: '', radio: '', tv: '' },
-          receivedLikes: 0,
-          affinity: 90
+          receivedLikes: 0
         };
         setUsersList([...usersList, newUser]);
         setCurrentUser(newUser);
@@ -335,7 +305,6 @@
 
       const handleLikeCandidate = () => {
         if (!currentCandidate) return;
-        // Dar like al candidato incrementando sus likes en la lista global
         const updatedList = usersList.map(u => {
           if (u.email === currentCandidate.email) {
             return { ...u, receivedLikes: (u.receivedLikes || 0) + 1 };
@@ -343,7 +312,7 @@
           return u;
         });
         setUsersList(updatedList);
-        alert(`🍿 ¡Le diste Me Gusta a ${currentCandidate.name}! Se ha registrado tu interacción.`);
+        alert(`🍿 ¡Le diste Me Gusta a ${currentCandidate.name}!`);
         setCurrentIndex(prev => prev + 1);
       };
 
@@ -353,7 +322,6 @@
           ...currentUser,
           bio: editBio,
           avatar: editAvatar,
-          photos: [editAvatar],
           socialLinks: {
             radio: editRadio,
             tv: editTv,
@@ -362,7 +330,7 @@
         };
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === currentUser.email ? updated : u));
-        alert('✅ ¡Perfil y enlaces multimedia actualizados con éxito!');
+        alert('✅ ¡Perfil, foto y enlaces actualizados con éxito!');
       };
 
       const handlePublishReview = (e) => {
@@ -384,22 +352,16 @@
         alert('📝 ¡Reseña publicada con éxito en el Panel de Críticos!');
       };
 
-      const bgApp = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900';
-      const bgHeader = isDarkMode ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200';
-      const cardBg = isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900 shadow-lg';
-      const inputBg = isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-100 border-slate-300 text-slate-900';
-      const navBg = isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-200 border-slate-300';
-
       if (!currentUser) {
         return (
-          <div className={`min-h-screen ${bgApp} flex items-center justify-center p-4 transition-colors`}>
-            <div className={`max-w-md w-full ${cardBg} rounded-3xl p-8 shadow-2xl space-y-6 border`}>
+          <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
               <div className="text-center space-y-2">
                 <h1 className="text-3xl font-black font-brand text-amber-500">Plottwisme</h1>
-                <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Red Social Cinéfila, Cartelera y Match (+18)</p>
+                <p className="text-xs text-slate-400">Red Social Cinéfila, Cartelera y Match (+18)</p>
               </div>
 
-              <div className={`flex ${inputBg} p-1 rounded-2xl border`}>
+              <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800">
                 <button type="button" onClick={() => setAuthMode('login')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authMode === 'login' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>Iniciar Sesión</button>
                 <button type="button" onClick={() => setAuthMode('register')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authMode === 'register' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>Crear Cuenta</button>
               </div>
@@ -408,11 +370,11 @@
                 <form onSubmit={handleLogin} className="space-y-4 text-xs">
                   <div>
                     <label className="block mb-1 text-slate-400">Correo Electrónico:</label>
-                    <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 border`} required />
+                    <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
                   <div>
                     <label className="block mb-1 text-slate-400">Contraseña:</label>
-                    <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 border`} required />
+                    <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
                   <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider">Entrar</button>
                 </form>
@@ -420,24 +382,24 @@
                 <form onSubmit={handleRegister} className="space-y-3 text-xs">
                   <div>
                     <label className="block mb-1 text-slate-400">Nombre Completo:</label>
-                    <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
+                    <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
                   </div>
                   <div>
                     <label className="block mb-1 text-slate-400">Correo Electrónico:</label>
-                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
+                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
                   </div>
                   <div>
                     <label className="block mb-1 text-slate-400">Contraseña:</label>
-                    <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
+                    <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block mb-1 text-slate-400">Edad (+18):</label>
-                      <input type="number" min="18" value={regAge} onChange={(e) => setRegAge(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
+                      <input type="number" min="18" value={regAge} onChange={(e) => setRegAge(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
                     </div>
                     <div>
                       <label className="block mb-1 text-slate-400">Sexo:</label>
-                      <select value={regSex} onChange={(e) => setRegSex(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`}>
+                      <select value={regSex} onChange={(e) => setRegSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200">
                         <option value="Femenino">Femenino</option>
                         <option value="Masculino">Masculino</option>
                         <option value="No Binario">No Binario</option>
@@ -453,52 +415,258 @@
       }
 
       return (
-        <div className={`flex flex-col min-h-screen ${bgApp} transition-colors`}>
+        <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           {showWelcomeModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-              <div className={`${cardBg} rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-amber-500/40 text-center animate-pulse`}>
+              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl text-center">
                 <div className="w-16 h-16 bg-amber-500 text-slate-950 rounded-3xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg">🎬</div>
                 <div className="space-y-2">
                   <h2 className="text-2xl font-black text-amber-500 font-brand">¡Bienvenido a Plottwisme, {currentUser.name}!</h2>
-                  <p className="text-xs text-slate-300">Tu perfil ha sido creado con éxito. Detectamos automáticamente tu ubicación en <b>{userCity}</b> y tu radar estándar de 100 km está activo.</p>
+                  <p className="text-xs text-slate-300">Tu cartelera está configurada para <b>{userCity}</b>.</p>
                 </div>
-
-                <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-left space-y-2 text-xs">
-                  <p className="text-amber-400 font-bold">✨ ¿Quieres desbloquear todo el potencial de inmediato?</p>
-                  <p className="text-slate-300">Actualiza a <b>Premium</b> ahora para ampliar tu radar de búsqueda a <b>500 km</b> y conectar con cinéfilos en toda la región.</p>
-                </div>
-
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <button type="button" onClick={handleUpgradeToPremium} className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3.5 rounded-xl uppercase tracking-wider text-xs shadow-lg">
-                    ⭐ Comprar Premium (500 km)
-                  </button>
-                  <button type="button" onClick={() => setShowWelcomeModal(false)} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3.5 rounded-xl text-xs">
-                    Continuar Gratis (100 km)
-                  </button>
+                  <button type="button" onClick={handleUpgradeToPremium} className="flex-1 bg-amber-500 text-slate-950 font-black py-3.5 rounded-xl uppercase tracking-wider text-xs">⭐ Comprar Premium (500 km)</button>
+                  <button type="button" onClick={() => setShowWelcomeModal(false)} className="flex-1 bg-slate-800 text-slate-200 font-bold py-3.5 rounded-xl text-xs">Continuar Gratis</button>
                 </div>
               </div>
             </div>
           )}
 
-          <header className={`sticky top-0 z-40 backdrop-blur-md border-b px-4 py-3 ${bgHeader}`}>
+          <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center justify-between w-full sm:w-auto">
                 <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('radar')}>
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center font-bold text-xl text-slate-950">P</div>
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
-                    <p className={`text-[10px] uppercase ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{currentUser.isPremium ? '⭐ Premium (Radio 500km)' : '👤 Estándar (Radio 100km)'}</p>
+                    <p className="text-[10px] uppercase text-slate-400">{currentUser.isPremium ? '⭐ Premium (500km)' : '👤 Estándar (100km)'}</p>
                   </div>
                 </div>
                 <button type="button" onClick={() => setCurrentUser(null)} className="sm:hidden text-xs text-rose-500 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/30">Salir</button>
               </div>
 
               <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full sm:w-auto justify-center">
-                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ubicación GPS:</span>
-                <input type="text" value={userCity} onChange={(e) => setUserCity(e.target.value)} className={`bg-transparent border-0 px-1 py-0.5 font-bold w-44 focus:outline-none ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`} title="Puedes editar tu ubicación si lo deseas" />
+                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Tu Ubicación (Modificar ciudad):</span>
+                <input type="text" value={userCity} onChange={(e) => setUserCity(e.target.value)} className="bg-transparent border-0 px-1 py-0.5 font-bold w-40 text-amber-300 focus:outline-none" placeholder="Ej: Posadas, Buenos Aires..." />
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                <nav className={`flex items-center gap-1 p-1 rounded-2xl border overflow-x-auto ${navBg}`}>
-                  <button type="button" onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>🎯 Radar</button>
-                  <button type="button" onClick
+                <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto">
+                  <button type="button" onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
+                  <button type="button" onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
+                  <button type="button" onClick={() => setActiveTab('critics')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>📰 Críticos</button>
+                  {!currentUser.isPremium && <button type="button" onClick={() => setActiveTab('premium')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'premium' ? 'bg-amber-500 text-slate-950' : 'text-slate-500 animate-pulse'}`}>⭐ Premium</button>}
+                  <button type="button" onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>👤 Perfil</button>
+                </nav>
+                <button type="button" onClick={() => setCurrentUser(null)} className="hidden sm:block text-xs text-rose-500 hover:text-rose-600 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/30">Salir</button>
+              </div>
+            </div>
+          </header>
+
+          <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+            {activeTab === 'radar' && (
+              <div className="flex flex-col items-center">
+                <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center">
+                  🎯 Radar activo en <b>{userCity}</b> (Radio: <b>{currentUser.isPremium ? '500 km' : '100 km'}</b>)
+                </div>
+
+                {currentCandidate ? (
+                  <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
+                    <div className="relative h-96 w-full bg-slate-950">
+                      <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
+                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
+                      <div className="absolute top-4 right-4 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-amber-400">❤️ {currentCandidate.receivedLikes || 0} likes</div>
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
+                        <p className="text-xs text-amber-300">📍 {currentCandidate.location} • A {currentCandidate.distanceKm} km</p>
+                      </div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                      <p className="text-xs italic text-slate-300">"{currentCandidate.bio}"</p>
+                      <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
+                        <button type="button" onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
+                        <button type="button" onClick={handleLikeCandidate} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg">🍿</button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-20 space-y-4 max-w-md">
+                    <h3 className="text-xl font-bold">No hay más perfiles en tu radio de {maxDistance} km.</h3>
+                    {!currentUser.isPremium && (
+                      <button type="button" onClick={() => setActiveTab('premium')} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">⭐ Ampliar a 500 km</button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'cinema' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-black">🎬 Salas de Cine en: <span className="text-amber-500">{userCity}</span></h2>
+                  <p className="text-xs text-slate-400">Cartelera adaptada automáticamente a la ubicación especificada arriba.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {dynamicBillboard.map(m => (
+                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl">
+                      <div className="space-y-3">
+                        <div className="relative h-64 rounded-2xl overflow-hidden bg-slate-950">
+                          <img src={m.poster} alt={m.title} className="w-full h-full object-cover" />
+                          <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md">★ {m.rating}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre}</span>
+                          <h3 className="text-base font-black">{m.title}</h3>
+                          <p className="text-[11px] text-slate-400">Dir. {m.director} • {m.duration}</p>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => setSelectedMovieTheaters(m)} className="w-full bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-amber-500/40">🏛️ Ver Salas en {userCity}</button>
+                    </div>
+                  ))}
+                </div>
+
+                {selectedMovieTheaters && (
+                  <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+                      <h3 className="text-base font-black">Funciones para: {selectedMovieTheaters.title}</h3>
+                      <p className="text-xs text-amber-400">Ubicación: {userCity}</p>
+                      <div className="space-y-3">
+                        {selectedMovieTheaters.theaters.map((t, idx) => (
+                          <div key={idx} className="p-3 rounded-2xl border border-slate-800 bg-slate-950 space-y-1">
+                            <div className="flex justify-between text-xs font-bold">
+                              <span>🏛️ {t.name}</span>
+                              <span className="text-amber-500">{t.distance}</span>
+                            </div>
+                            <div className="flex gap-1 pt-1">
+                              {t.showtimes.map((st, i) => (
+                                <span key={i} className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-[10px] font-mono font-bold">{st} hs</span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <button type="button" onClick={() => setSelectedMovieTheaters(null)} className="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs">Cerrar</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'critics' && (
+              <div className="space-y-6 max-w-3xl mx-auto">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-black">📰 Panel de Críticos & Medios</h2>
+                    <p className="text-xs text-slate-400">Reseñas profesionales con enlaces a radio, TV y redes.</p>
+                  </div>
+                  {currentUser.isCritic && (
+                    <span className="bg-amber-500 text-slate-950 px-3 py-1 rounded-full text-xs font-black">⭐ Crítico Autorizado</span>
+                  )}
+                </div>
+
+                {currentUser.isCritic ? (
+                  <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+                    <h3 className="text-sm font-black text-amber-500">✍️ Publicar Nueva Reseña</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <label className="block mb-1 text-slate-400">Película:</label>
+                        <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Dune: Parte Dos" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                      </div>
+                      <div>
+                        <label className="block mb-1 text-slate-400">Calificación (1-10):</label>
+                        <input type="number" min="1" max="10" step="0.5" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                      </div>
+                    </div>
+                    <div className="text-xs">
+                      <label className="block mb-1 text-slate-400">Artículo / Análisis:</label>
+                      <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu reseña..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    </div>
+                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar</button>
+                  </form>
+                ) : (
+                  <div className="p-4 rounded-2xl border text-xs bg-amber-500/10 border-amber-500/30 text-amber-400">
+                    💡 Agrega tus enlaces de radio/TV en tu perfil para solicitar habilitación como Crítico.
+                  </div>
+                )}
+
+                <div className="space-y-4 pt-2">
+                  {reviewsList.map(rev => (
+                    <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-md">
+                      <div className="flex justify-between items-start text-xs">
+                        <div>
+                          <span className="font-bold text-amber-500">{rev.author}</span>
+                          <p className="text-[10px] text-slate-400">🎙️ {rev.mediaOutlet}</p>
+                        </div>
+                        <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
+                      </div>
+                      <div>
+                        <h4 className="text-base font-black">{rev.movieTitle}</h4>
+                        <p className="text-xs pt-1 text-slate-300">{rev.content}</p>
+                      </div>
+                      <div className="text-[10px] text-slate-500 text-right">{rev.date}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'premium' && (
+              <div className="max-w-xl mx-auto bg-slate-900 border border-amber-500/30 rounded-3xl p-8 space-y-6 shadow-2xl text-center">
+                <div className="w-16 h-16 bg-amber-500 text-slate-950 rounded-3xl mx-auto flex items-center justify-center text-3xl font-black">⭐</div>
+                <h2 className="text-2xl font-black text-amber-500 font-brand">Plottwisme Premium</h2>
+                <div className="p-6 rounded-2xl border border-slate-800 bg-slate-950 text-left space-y-3 text-xs">
+                  <p>✓ <b>Radar ampliado a 500 km</b>.</p>
+                  <p>✓ <b>Insignia Dorada VIP</b> en tu perfil.</p>
+                </div>
+                <button type="button" onClick={handleUpgradeToPremium} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-4 rounded-2xl uppercase tracking-wider text-sm">🚀 Activar Membresía Premium</button>
+              </div>
+            )}
+
+            {activeTab === 'profile' && (
+              <form onSubmit={handleSaveProfile} className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-black">👤 Mi Perfil & Enlaces</h2>
+                  <span className="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-xl text-xs font-bold">❤️ {currentUser.receivedLikes || 0} Likes</span>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  <div>
+                    <label className="block mb-1 text-slate-400">URL de tu Foto de Perfil:</label>
+                    <input type="url" value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-slate-400">Biografía / Tus gustos:</label>
+                    <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800 space-y-3">
+                    <h3 className="font-bold text-amber-500">🎙️ Medios (Radio, TV y Redes)</h3>
+                    <div>
+                      <label className="block mb-1 text-slate-400">Programa de Radio / Podcast:</label>
+                      <input type="text" value={editRadio} onChange={(e) => setEditRadio(e.target.value)} placeholder="Ej: Frecuencia Cine (Misiones)" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-slate-400">Canal de Televisión / Columna:</label>
+                      <input type="text" value={editTv} onChange={(e) => setEditTv(e.target.value)} placeholder="Ej: Canal 12 Misiones" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-slate-400">Redes Sociales / Twitter:</label>
+                      <input type="text" value={editTwitter} onChange={(e) => setEditTwitter(e.target.value)} placeholder="Ej: @tu_usuario" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
+                    </div>
+                  </div>
+
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider">Guardar Cambios</button>
+                </div>
+              </form>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
