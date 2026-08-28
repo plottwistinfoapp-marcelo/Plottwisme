@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración de Cuenta y Viajero</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f9; max-width: 500px; margin: auto; }
+        .card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { padding: 12px; width: 100%; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-travel { background-color: #28a745; }
+        .btn-delete { background-color: #ff4d4d; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h3>Modo Viajero (Geolocalizador)</h3>
+    <p style="font-size: 14px; color: #666;">Actívalo para adaptar la interacción y las recomendaciones de la app a la ciudad donde estés viajando.</p>
+    <button class="btn-travel" onclick="detectarUbicacion()">📍 Usar mi ubicación actual para este viaje</button>
+    <p id="status-viaje" style="margin-top: 10px; font-size: 14px; color: #333;"></p>
+</div>
+
+<div class="card" style="border: 1px solid #ff4d4d;">
+    <h3 style="color: #ff4d4d;">Zona de Privacidad</h3>
+    <p style="font-size: 14px; color: #666;">Opción para cumplir con las políticas de Google Play y eliminar tus datos de forma definitiva si lo deseas.</p>
+    <button class="btn-delete" onclick="eliminarCuenta()">Eliminar mi cuenta y datos</button>
+</div>
+
+<script>
+  function detectarUbicacion() {
+    const status = document.getElementById("status-viaje");
+    if (!navigator.geolocation) {
+      status.innerText = "Tu navegador no soporta geolocalización.";
+      return;
+    }
+    status.innerText = "Buscando ubicación...";
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        status.innerText = `¡Ubicación detectada con éxito! (Lat: ${pos.coords.latitude.toFixed(2)}, Lon: ${pos.coords.longitude.toFixed(2)})`;
+      },
+      () => {
+        status.innerText = "No se pudo obtener la ubicación. Revisa los permisos de tu celular.";
+      }
+    );
+  }
+
+  function eliminarCuenta() {
+    if (confirm("¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.")) {
+      alert("Solicitud de eliminación procesada.");
+      window.location.href = "/";
+    }
+  }
+</script>
+
+</body>
+</html>
