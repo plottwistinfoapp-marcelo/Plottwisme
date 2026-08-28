@@ -1,17 +1,4 @@
 {
-  "cleanUrls": false,
-  "routes": [
-    { "src": "/(.*)", "dest": "/$1" }
-  ],
-  "headers": [
-    {
-      "source": "/.well-known/assetlinks.json",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/json"
-        }
-      ]
-    }
-  ]
+  "cleanUrls": true,
+  "trailingSlash": false
 }
