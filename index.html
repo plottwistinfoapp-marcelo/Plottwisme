@@ -19,12 +19,9 @@
     .font-brand { font-family: 'Outfit', sans-serif; }
     .font-mono { font-family: 'JetBrains+Mono', monospace; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #090d16; }
-    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-amber-500 selection:text-slate-950">
+<body class="antialiased selection:bg-amber-500 selection:text-slate-950">
   <div id="root"></div>
 
   <script type="text/babel">
@@ -49,13 +46,11 @@
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
         photos: [
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop&q=80'
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80'
         ],
         topMovies: ['Dune: Parte 2', 'Blade Runner 2049', 'Oppenheimer'],
         favoriteGenres: ['Sci-Fi', 'Thriller', 'Drama'],
-        affinity: 100,
-        socialLinks: { twitter: '@marbuttice', letterboxd: 'marbuttice' }
+        affinity: 100
       },
       {
         id: 'u2',
@@ -65,7 +60,7 @@
         sex: 'Femenino',
         lookingFor: 'Amigos Cinéfilos',
         location: 'Posadas, Misiones',
-        distanceKm: 3.8,
+        distanceKm: 85.0,
         role: 'critic',
         roleLabel: 'Crítica Certificada',
         isPremium: false,
@@ -73,18 +68,35 @@
         verified: true,
         bio: 'Directora de cortos amateur y crítica de cine asiático y europeo.',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
-        photos: [
-          'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&auto=format&fit=crop&q=80'
-        ],
+        photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80'],
         topMovies: ['Parasite', 'Perfect Blue'],
         favoriteGenres: ['Psicológico', 'Autor'],
-        affinity: 93,
-        socialLinks: { letterboxd: 'elenamovies', instagram: '@elena_cine' }
+        affinity: 93
+      },
+      {
+        id: 'u3',
+        name: 'Camila Valenzuela',
+        email: 'camila@gmail.com',
+        age: 28,
+        sex: 'Femenino',
+        lookingFor: 'Cita / Pareja',
+        location: 'Corrientes Capital',
+        distanceKm: 180.0,
+        role: 'general',
+        roleLabel: 'Cinéfila Pro',
+        isPremium: false,
+        isCritic: false,
+        verified: true,
+        bio: 'Amante de las películas de terror clásico y festivales de cine independiente.',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80',
+        photos: ['https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80'],
+        topMovies: ['El Resplandor', 'Hereditary'],
+        favoriteGenres: ['Terror', 'Indie'],
+        affinity: 88
       }
     ];
 
-    const INITIAL_BILLBOARD = [
+    const BASE_MOVIES = [
       {
         id: 'm1',
         title: 'Dune: Parte Dos',
@@ -93,12 +105,7 @@
         duration: '166 min',
         rating: '9.4',
         poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80',
-        synopsis: 'Paul Atreides se une a Chani y a los Fremen buscando venganza contra los conspiradores.',
-        theaters: [
-          { name: 'Cine Center Oberá', distance: '1.2 km', showtimes: ['17:30', '20:15', '22:45'] },
-          { name: 'Atlas Cinemas Posadas', distance: '85 km', showtimes: ['16:00', '19:00', '21:30'] },
-          { name: 'Hoyts Abasto (CABA)', distance: '940 km', showtimes: ['14:00', '18:15', '21:00'] }
-        ]
+        synopsis: 'Paul Atreides se une a Chani y a los Fremen buscando venganza contra los conspiradores.'
       },
       {
         id: 'm2',
@@ -108,11 +115,7 @@
         duration: '180 min',
         rating: '9.1',
         poster: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80',
-        synopsis: 'La historia del físico J. Robert Oppenheimer y su rol en el desarrollo de la bomba atómica.',
-        theaters: [
-          { name: 'Cine Sunstar Posadas', distance: '88 km', showtimes: ['18:00', '21:15'] },
-          { name: 'Village Recoleta', distance: '945 km', showtimes: ['15:30', '19:00', '22:30'] }
-        ]
+        synopsis: 'La historia del físico J. Robert Oppenheimer y su rol en el desarrollo de la bomba atómica.'
       },
       {
         id: 'm3',
@@ -122,11 +125,7 @@
         duration: '141 min',
         rating: '8.8',
         poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
-        synopsis: 'La fantástica evolución de Bella Baxter, una joven revivida por un científico brillante.',
-        theaters: [
-          { name: 'Cine Select Centro', distance: '4.5 km', showtimes: ['19:30', '22:00'] },
-          { name: 'Atlas Cines', distance: '92 km', showtimes: ['17:00', '20:30'] }
-        ]
+        synopsis: 'La fantástica evolución de Bella Baxter, una joven revivida por un científico brillante.'
       },
       {
         id: 'm4',
@@ -136,37 +135,7 @@
         duration: '152 min',
         rating: '8.9',
         poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80',
-        synopsis: 'Una mujer es sospechosa de la muerte de su esposo, con su hijo ciego como único testigo.',
-        theaters: [
-          { name: 'Cine Arte Auditorium', distance: '3.1 km', showtimes: ['18:15', '21:00'] }
-        ]
-      },
-      {
-        id: 'm5',
-        title: 'Interstellar',
-        director: 'Christopher Nolan',
-        genre: 'Ciencia Ficción / Aventura',
-        duration: '169 min',
-        rating: '9.3',
-        poster: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=600&auto=format&fit=crop&q=80',
-        synopsis: 'Un grupo de astronautas viaja a través de un agujero de gusano en busca de un nuevo hogar para la humanidad.',
-        theaters: [
-          { name: 'Cine Center Oberá', distance: '1.2 km', showtimes: ['17:00', '20:30'] },
-          { name: 'Atlas Cinemas Posadas', distance: '85 km', showtimes: ['18:30', '21:45'] }
-        ]
-      },
-      {
-        id: 'm6',
-        title: 'Parasite',
-        director: 'Bong Joon-ho',
-        genre: 'Suspenso / Comedia Negra',
-        duration: '132 min',
-        rating: '9.0',
-        poster: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80',
-        synopsis: 'Toda la familia de Ki-taek está desempleada y se interesa mucho por los acaudalados Park.',
-        theaters: [
-          { name: 'Cine Sunstar Posadas', distance: '88 km', showtimes: ['19:00', '22:00'] }
-        ]
+        synopsis: 'Una mujer es sospechosa de la muerte de su esposo, con su hijo ciego como único testigo.'
       }
     ];
 
@@ -177,6 +146,16 @@
           return saved ? JSON.parse(saved) : null;
         } catch (e) {
           return null;
+        }
+      });
+
+      // Estado para el Modo Claro / Oscuro
+      const [isDarkMode, setIsDarkMode] = useState(() => {
+        try {
+          const saved = localStorage.getItem('plottwist_dark_mode');
+          return saved !== null ? JSON.parse(saved) : true;
+        } catch (e) {
+          return true;
         }
       });
 
@@ -195,15 +174,13 @@
       const [activeTab, setActiveTab] = useState('radar');
       const [currentIndex, setCurrentIndex] = useState(0);
 
-      const [adminGlobalCity, setAdminGlobalCity] = useState('Oberá, Misiones, Argentina');
+      const [adminGlobalCity, setAdminGlobalCity] = useState('Oberá, Misiones');
       const [selectedMovieTheaters, setSelectedMovieTheaters] = useState(null);
 
-      // Modal de Reporte para usuarios
       const [reportModalUser, setReportModalUser] = useState(null);
       const [reportReason, setReportReason] = useState('Foto falsa o inapropiada');
       const [reportDetails, setReportDetails] = useState('');
 
-      // Lista de reportes recibidos por el administrador
       const [reportsList, setReportsList] = useState(() => {
         try {
           const saved = localStorage.getItem('plottwist_all_reports');
@@ -221,6 +198,12 @@
           return INITIAL_USERS;
         }
       });
+
+      useEffect(() => {
+        try {
+          localStorage.setItem('plottwist_dark_mode', JSON.stringify(isDarkMode));
+        } catch (e) {}
+      }, [isDarkMode]);
 
       useEffect(() => {
         try {
@@ -243,6 +226,18 @@
           }
         } catch (e) {}
       }, [currentUser]);
+
+      const dynamicBillboard = useMemo(() => {
+        const cityName = adminGlobalCity.trim() || 'Oberá, Misiones';
+        return BASE_MOVIES.map(movie => ({
+          ...movie,
+          theaters: [
+            { name: `Cine Center ${cityName.split(',')[0]}`, distance: '1.4 km', showtimes: ['17:00', '19:30', '22:15'] },
+            { name: `Multiplex ${cityName.split(',')[0]}`, distance: '4.8 km', showtimes: ['16:15', '18:45', '21:30'] },
+            { name: `Cinemark Hoyts (${cityName.split(',')[0]})`, distance: '9.2 km', showtimes: ['14:30', '18:00', '21:00'] }
+          ]
+        }));
+      }, [adminGlobalCity]);
 
       const maxDistance = currentUser?.isPremium ? 500 : 100;
       const filteredCandidates = useMemo(() => {
@@ -276,8 +271,8 @@
           age: Number(regAge),
           sex: regSex,
           lookingFor: regLookingFor,
-          location: 'Ubicación GPS Activa',
-          distanceKm: 2.0,
+          location: 'Oberá, Misiones',
+          distanceKm: 45.0,
           role: regEmail === 'marbuttice@gmail.com' ? 'admin' : 'general',
           roleLabel: regEmail === 'marbuttice@gmail.com' ? 'Administrador General' : 'Cinéfilo Pro',
           isPremium: regEmail === 'marbuttice@gmail.com',
@@ -292,6 +287,14 @@
         };
         setUsersList([...usersList, newUser]);
         setCurrentUser(newUser);
+        setActiveTab('radar');
+      };
+
+      const handleSubscribePremium = () => {
+        const updated = { ...currentUser, isPremium: true, roleLabel: currentUser.role === 'admin' ? 'Administrador General' : 'Cinéfilo Premium ⭐' };
+        setCurrentUser(updated);
+        setUsersList(usersList.map(u => u.email === currentUser.email ? updated : u));
+        alert('🎉 ¡Felicitaciones! Ya eres miembro Premium. Tu radar se ha ampliado a 500 km.');
         setActiveTab('radar');
       };
 
@@ -316,103 +319,73 @@
           date: new Date().toLocaleDateString()
         };
         setReportsList([newReport, ...reportsList]);
-        alert('Reporte enviado correctamente al Administrador (Marcelo Buttice). Gracias por cuidar la comunidad.');
+        alert('Reporte enviado correctamente al Administrador.');
         setReportModalUser(null);
         setReportDetails('');
       };
 
+      // Clases dinámicas según el tema
+      const bgApp = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900';
+      const bgHeader = isDarkMode ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200';
+      const cardBg = isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900 shadow-lg';
+      const inputBg = isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-100 border-slate-300 text-slate-900';
+      const navBg = isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-200 border-slate-300';
+
       if (!currentUser) {
         return (
-          <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
+          <div className={`min-h-screen ${bgApp} flex items-center justify-center p-4 transition-colors`}>
+            <div className={`max-w-md w-full ${cardBg} rounded-3xl p-8 shadow-2xl space-y-6 border`}>
               <div className="text-center space-y-2">
-                <h1 className="text-3xl font-black font-brand text-amber-400">Plottwisme</h1>
-                <p className="text-xs text-slate-400">Red Social Cinéfila, Cartelera y Match (+18)</p>
+                <h1 className="text-3xl font-black font-brand text-amber-500">Plottwisme</h1>
+                <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Red Social Cinéfila, Cartelera y Match (+18)</p>
               </div>
 
-              <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setAuthMode('login')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authMode === 'login' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}
-                >
-                  Iniciar Sesión
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAuthMode('register')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authMode === 'register' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}
-                >
-                  Crear Cuenta
-                </button>
+              <div className={`flex ${inputBg} p-1 rounded-2xl border`}>
+                <button type="button" onClick={() => setAuthMode('login')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authMode === 'login' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Iniciar Sesión</button>
+                <button type="button" onClick={() => setAuthMode('register')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${authMode === 'register' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Crear Cuenta</button>
               </div>
 
               {authMode === 'login' ? (
                 <form onSubmit={handleLogin} className="space-y-4 text-xs">
                   <div>
-                    <label className="block text-slate-400 mb-1">Correo Electrónico:</label>
-                    <input
-                      type="email"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200"
-                      required
-                    />
+                    <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Correo Electrónico:</label>
+                    <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 border`} required />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1">Contraseña:</label>
-                    <input
-                      type="password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200"
-                      required
-                    />
+                    <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Contraseña:</label>
+                    <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 border`} required />
                   </div>
-                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider">
-                    Entrar con Contraseña
-                  </button>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider">Entrar</button>
                 </form>
               ) : (
                 <form onSubmit={handleRegister} className="space-y-3 text-xs">
                   <div>
-                    <label className="block text-slate-400 mb-1">Nombre Completo:</label>
-                    <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                    <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Nombre Completo:</label>
+                    <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1">Correo Electrónico:</label>
-                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                    <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Correo Electrónico:</label>
+                    <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1">Contraseña:</label>
-                    <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                    <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Contraseña:</label>
+                    <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-slate-400 mb-1">Edad (+18 obligatoria):</label>
-                      <input type="number" min="18" value={regAge} onChange={(e) => setRegAge(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                      <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Edad (+18):</label>
+                      <input type="number" min="18" value={regAge} onChange={(e) => setRegAge(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`} required />
                     </div>
                     <div>
-                      <label className="block text-slate-400 mb-1">Género / Sexo:</label>
-                      <select value={regSex} onChange={(e) => setRegSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200">
+                      <label className={`block mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Sexo:</label>
+                      <select value={regSex} onChange={(e) => setRegSex(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5 border`}>
                         <option value="Femenino">Femenino</option>
                         <option value="Masculino">Masculino</option>
                         <option value="No Binario">No Binario</option>
-                        <option value="Otro">Otro</option>
                       </select>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-slate-400 mb-1">¿Qué buscas en Plottwisme?</label>
-                    <select value={regLookingFor} onChange={(e) => setRegLookingFor(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200">
-                      <option value="Amigos Cinéfilos">Amigos Cinéfilos para ir al cine</option>
-                      <option value="Cita / Pareja">Pareja / Cita romántica</option>
-                      <option value="Cita / Pareja & Amigos Cinéfilos">Ambos</option>
-                    </select>
-                  </div>
-                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider mt-2">
-                    Registrarse (+18)
-                  </button>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider mt-2">Registrarse (+18)</button>
                 </form>
               )}
             </div>
@@ -421,48 +394,40 @@
       }
 
       return (
-        <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
-          <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
+        <div className={`flex flex-col min-h-screen ${bgApp} transition-colors`}>
+          <header className={`sticky top-0 z-40 backdrop-blur-md border-b px-4 py-3 ${bgHeader}`}>
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center justify-between w-full sm:w-auto">
                 <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('radar')}>
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center font-bold text-xl text-slate-950">P</div>
                   <div>
-                    <h1 className="text-xl font-black font-brand text-amber-400">Plottwisme</h1>
-                    <p className="text-[10px] text-slate-400 uppercase">{currentUser.role === 'admin' ? '👑 Admin Panel' : currentUser.isPremium ? '⭐ Plan Premium (500km)' : '👤 Plan Estándar (100km)'}</p>
+                    <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
+                    <p className={`text-[10px] uppercase ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{currentUser.isPremium ? '⭐ Premium (500km)' : '👤 Estándar (100km)'}</p>
                   </div>
                 </div>
-
-                <button type="button" onClick={() => setCurrentUser(null)} className="sm:hidden text-xs text-rose-400 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/30">
-                  Salir
-                </button>
+                <button type="button" onClick={() => setCurrentUser(null)} className="sm:hidden text-xs text-rose-500 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/30">Salir</button>
               </div>
 
-              {currentUser.role === 'admin' && (
-                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full sm:w-auto justify-center">
-                  <span className="text-amber-400 font-bold whitespace-nowrap">🌍 Ver Ciudad:</span>
-                  <input
-                    type="text"
-                    value={adminGlobalCity}
-                    onChange={(e) => setAdminGlobalCity(e.target.value)}
-                    placeholder="Ej. Buenos Aires, Tokio, París..."
-                    className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-slate-200 w-44"
-                  />
-                </div>
-              )}
+              <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full sm:w-auto justify-center">
+                <span className="text-amber-500 font-bold whitespace-nowrap">🌍 Ciudad Activa:</span>
+                <input type="text" value={adminGlobalCity} onChange={(e) => setAdminGlobalCity(e.target.value)} className={`bg-transparent border-0 px-1 py-0.5 font-bold w-48 focus:outline-none ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`} />
+              </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                <nav className="flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-slate-800 overflow-x-auto">
-                  <button type="button" onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>🎯 Radar</button>
-                  <button type="button" onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>🎬 Cartelera</button>
-                  {currentUser.isCritic && <button type="button" onClick={() => setActiveTab('critic')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'critic' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>✍️ Panel Críticos</button>}
-                  {currentUser.role === 'admin' && <button type="button" onClick={() => setActiveTab('admin')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'admin' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>🛡️ Admin {reportsList.length > 0 && `(${reportsList.length})`}</button>}
-                  <button type="button" onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>👤 Perfil</button>
+                <nav className={`flex items-center gap-1 p-1 rounded-2xl border overflow-x-auto ${navBg}`}>
+                  <button type="button" onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>🎯 Radar</button>
+                  <button type="button" onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>🎬 Cartelera</button>
+                  {!currentUser.isPremium && <button type="button" onClick={() => setActiveTab('premium')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'premium' ? 'bg-amber-500 text-slate-950' : 'text-amber-500 animate-pulse'}`}>⭐ Premium</button>}
+                  {currentUser.role === 'admin' && <button type="button" onClick={() => setActiveTab('admin')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'admin' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>🛡️ Admin</button>}
+                  <button type="button" onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>👤 Perfil</button>
                 </nav>
 
-                <button type="button" onClick={() => setCurrentUser(null)} className="hidden sm:block text-xs text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/30">
-                  Cerrar Sesión
+                {/* Botón de Modo Claro / Oscuro */}
+                <button type="button" onClick={() => setIsDarkMode(!isDarkMode)} className={`p-2 rounded-xl border text-xs font-bold transition-all ${isDarkMode ? 'bg-slate-900 border-slate-700 text-amber-400 hover:bg-slate-800' : 'bg-slate-200 border-slate-300 text-amber-700 hover:bg-slate-300'}`} title="Cambiar Tema Claro/Oscuro">
+                  {isDarkMode ? '☀️ Claro' : '🌙 Oscuro'}
                 </button>
+
+                <button type="button" onClick={() => setCurrentUser(null)} className="hidden sm:block text-xs text-rose-500 hover:text-rose-600 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/30">Salir</button>
               </div>
             </div>
           </header>
@@ -470,73 +435,38 @@
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center">
-                {currentUser.role === 'admin' && (
-                  <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-300 text-center">
-                    👑 Modo Administrador Activo: Viendo radar y perfiles en tiempo real para <b>{adminGlobalCity}</b>.
-                  </div>
-                )}
-                {currentCandidate ? (
-                  <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
-                    <button
-                      type="button"
-                      onClick={() => setReportModalUser(currentCandidate)}
-                      className="absolute top-4 right-4 z-10 bg-slate-950/80 hover:bg-rose-600 text-rose-400 hover:text-white px-3 py-1.5 rounded-full text-xs font-bold border border-rose-500/30 transition-all flex items-center gap-1"
-                    >
-                      🚨 Reportar
-                    </button>
+                <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center space-y-1">
+                  <p>🎯 Radio activo: <b>{currentUser.isPremium ? '500 km (Plan Premium)' : '100 km (Plan Estándar)'}</b></p>
+                </div>
 
-                    <div className="relative h-96 w-full bg-slate-950">
+                {currentCandidate ? (
+                  <div className={`w-full max-w-md ${cardBg} rounded-3xl overflow-hidden shadow-2xl relative border`}>
+                    <button type="button" onClick={() => setReportModalUser(currentCandidate)} className="absolute top-4 right-4 z-10 bg-slate-950/80 hover:bg-rose-600 text-rose-400 hover:text-white px-3 py-1.5 rounded-full text-xs font-bold border border-rose-500/30 transition-all">🚨 Reportar</button>
+                    <div className="relative h-96 w-full bg-slate-900">
                       <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
                       <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
                       <div className="absolute bottom-4 left-4 right-4">
                         <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
-                        <p className="text-xs text-amber-300">📍 {currentUser.role === 'admin' ? adminGlobalCity : currentCandidate.location} • A {currentCandidate.distanceKm} km</p>
+                        <p className="text-xs text-amber-300">📍 {currentCandidate.location} • A {currentCandidate.distanceKm} km</p>
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
-                      <p className="text-xs text-slate-300 italic">"{currentCandidate.bio}"</p>
-                      <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
+                      <p className={`text-xs italic ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>"{currentCandidate.bio}"</p>
+                      <div className="flex justify-center gap-6 pt-4 border-t border-slate-700">
                         <button type="button" onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
                         <button type="button" onClick={() => { alert(`¡Match enviado a ${currentCandidate.name}!`); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black">🍿</button>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-20">
-                    <h3 className="text-xl font-bold mb-2">No hay más perfiles en tu radio ({maxDistance} km).</h3>
-                    <p className="text-xs text-slate-400 mb-4">{!currentUser.isPremium ? '¡Actualiza a Premium para buscar hasta a 500 km!' : ''}</p>
-                    <button type="button" onClick={() => setCurrentIndex(0)} className="bg-amber-500 text-slate-950 px-6 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
-                  </div>
-                )}
-
-                {/* Modal de Reporte */}
-                {reportModalUser && (
-                  <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <form onSubmit={submitReport} className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-black text-rose-400">🚨 Reportar a {reportModalUser.name}</h3>
-                        <button type="button" onClick={() => setReportModalUser(null)} className="text-slate-400 hover:text-white font-bold">✕</button>
+                  <div className="text-center py-20 space-y-4 max-w-md">
+                    <h3 className="text-xl font-bold">No hay más perfiles en tu radio de {maxDistance} km.</h3>
+                    {!currentUser.isPremium && (
+                      <div className={`${cardBg} p-6 rounded-3xl space-y-3 border`}>
+                        <p className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>Tu plan actual está limitado a 100 km.</p>
+                        <button type="button" onClick={() => setActiveTab('premium')} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider">⭐ Ampliar a 500 km (Premium)</button>
                       </div>
-                      <p className="text-slate-300">Este reporte será enviado directamente al administrador general (Marcelo Buttice) para su revisión inmediata.</p>
-                      <div>
-                        <label className="block text-slate-400 mb-1">Motivo del reporte:</label>
-                        <select value={reportReason} onChange={(e) => setReportReason(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200">
-                          <option value="Foto falsa o inapropiada">Foto falsa o inapropiada</option>
-                          <option value="Perfil falso / Suplantación">Perfil falso / Suplantación</option>
-                          <option value="Acoso o comportamiento ofensivo">Acoso o comportamiento ofensivo</option>
-                          <option value="Menor de edad (+18 obligatorio)">Menor de edad (+18 obligatorio)</option>
-                          <option value="Otro motivo">Otro motivo</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-slate-400 mb-1">Detalles adicionales (Opcional):</label>
-                        <textarea rows="3" value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} placeholder="Describe brevemente por qué reportas este perfil..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200"></textarea>
-                      </div>
-                      <div className="flex gap-2 pt-2">
-                        <button type="button" onClick={() => setReportModalUser(null)} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl">Cancelar</button>
-                        <button type="submit" className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl">Enviar Reporte</button>
-                      </div>
-                    </form>
+                    )}
                   </div>
                 )}
               </div>
@@ -544,216 +474,82 @@
 
             {activeTab === 'cinema' && (
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div>
-                    <h2 className="text-2xl font-black text-white">🎬 Cartelera de Estrenos y Películas</h2>
-                    <p className="text-xs text-slate-400">Explora la cartelera ampliada y descubre los cines disponibles en cada función.</p>
-                  </div>
-                  {currentUser.role === 'admin' && (
-                    <span className="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-500/30">
-                      🌍 Ubicación activa: {adminGlobalCity}
-                    </span>
-                  )}
+                <div>
+                  <h2 className="text-2xl font-black">🎬 Cartelera en {adminGlobalCity}</h2>
+                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Haz clic en cualquier cine para abrir su ubicación exacta en Google Maps.</p>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {INITIAL_BILLBOARD.map(m => (
-                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl">
+                  {dynamicBillboard.map(m => (
+                    <div key={m.id} className={`${cardBg} rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 border shadow-xl`}>
                       <div className="space-y-3">
-                        <div className="relative h-64 rounded-2xl overflow-hidden bg-slate-950">
+                        <div className="relative h-64 rounded-2xl overflow-hidden bg-slate-900">
                           <img src={m.poster} alt={m.title} className="w-full h-full object-cover" />
                           <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md">★ {m.rating}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold text-rose-400 uppercase">{m.genre}</span>
-                          <h3 className="text-base font-black text-white">{m.title}</h3>
-                          <p className="text-[11px] text-slate-400">Dir. {m.director} • {m.duration}</p>
+                          <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre}</span>
+                          <h3 className="text-base font-black">{m.title}</h3>
+                          <p className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dir. {m.director} • {m.duration}</p>
                         </div>
-                        <p className="text-xs text-slate-300 line-clamp-2">{m.synopsis}</p>
+                        <p className={`text-xs line-clamp-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{m.synopsis}</p>
                       </div>
-
-                      <button 
-                        type="button"
-                        onClick={() => setSelectedMovieTheaters(m)}
-                        className="w-full bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-amber-500/40"
-                      >
-                        Dónde ver
-                      </button>
+                      <button type="button" onClick={() => setSelectedMovieTheaters(m)} className="w-full bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-500 font-bold py-2.5 rounded-xl text-xs transition-all border border-amber-500/40">📍 Dónde ver y Cines</button>
                     </div>
                   ))}
                 </div>
 
                 {selectedMovieTheaters && (
                   <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+                    <div className={`${cardBg} rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border`}>
                       <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-black text-white">Salas y Cines: {selectedMovieTheaters.title}</h3>
-                        <button type="button" onClick={() => setSelectedMovieTheaters(null)} className="text-slate-400 hover:text-white font-bold">✕</button>
+                        <h3 className="text-base font-black">Salas para: {selectedMovieTheaters.title}</h3>
+                        <button type="button" onClick={() => setSelectedMovieTheaters(null)} className="font-bold">✕</button>
                       </div>
-                      <p className="text-xs text-slate-400">Opciones disponibles para ver la película:</p>
                       <div className="space-y-3 max-h-60 overflow-y-auto">
-                        {selectedMovieTheaters.theaters.map((t, idx) => (
-                          <div key={idx} className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2">
-                            <div className="flex justify-between text-xs font-bold text-white">
-                              <span>🎬 {t.name}</span>
-                              <span className="text-amber-400">{t.distance}</span>
-                            </div>
-                            <div className="flex flex-wrap gap-1.5">
-                              {t.showtimes.map((st, sidx) => (
-                                <span key={sidx} className="bg-amber-500/10 border border-amber-500/30 text-amber-300 px-2 py-1 rounded-lg text-[10px] font-mono font-bold">
-                                  {st}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
+                        {selectedMovieTheaters.theaters.map((t, idx) => {
+                          const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.name + ' ' + adminGlobalCity)}`;
+                          return (
+                            <a key={idx} href={mapsUrl} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-2xl border transition-all space-y-2 ${isDarkMode ? 'bg-slate-950 border-slate-800 hover:border-amber-500' : 'bg-slate-100 border-slate-300 hover:border-amber-500'}`}>
+                              <div className="flex justify-between text-xs font-bold">
+                                <span>🗺️ {t.name}</span>
+                                <span className="text-amber-500">{t.distance}</span>
+                              </div>
+                            </a>
+                          );
+                        })}
                       </div>
-                      <button type="button" onClick={() => setSelectedMovieTheaters(null)} className="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs">
-                        Cerrar
-                      </button>
+                      <button type="button" onClick={() => setSelectedMovieTheaters(null)} className="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs">Cerrar</button>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {activeTab === 'critic' && currentUser.isCritic && (
-              <div className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-                <h2 className="text-xl font-black text-white">✍️ Panel de Críticos</h2>
-                <p className="text-xs text-slate-400">Comparte tus redes sociales y recomendaciones destacadas con la comunidad.</p>
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <label className="block text-slate-400 mb-1">Enlace Letterboxd / Redes:</label>
-                    <input type="text" defaultValue={currentUser.socialLinks?.letterboxd || ''} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
-                  </div>
-                  <button type="button" onClick={() => alert('¡Redes de crítico actualizadas!')} className="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl">Guardar Recomendaciones</button>
+            {activeTab === 'premium' && (
+              <div className={`max-w-xl mx-auto ${cardBg} border-amber-500/30 rounded-3xl p-8 space-y-6 shadow-2xl text-center border`}>
+                <div className="w-16 h-16 bg-amber-500 text-slate-950 rounded-3xl mx-auto flex items-center justify-center text-3xl font-black">⭐</div>
+                <h2 className="text-2xl font-black text-amber-500 font-brand">Súmate a Plottwisme Premium</h2>
+                <div className={`p-6 rounded-2xl border text-left space-y-3 text-xs ${inputBg}`}>
+                  <p>✓ <b>Radar ampliado a 500 km</b></p>
+                  <p>✓ <b>Insignia Dorada VIP</b></p>
                 </div>
+                <button type="button" onClick={handleSubscribePremium} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-4 rounded-2xl uppercase tracking-wider text-sm shadow-xl">🚀 Activar Membresía Premium</button>
               </div>
             )}
 
             {activeTab === 'admin' && currentUser.role === 'admin' && (
-              <div className="max-w-4xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
-                <div>
-                  <h2 className="text-2xl font-black text-amber-400">🛡️ Panel de Administración (Marcelo Buttice)</h2>
-                  <p className="text-xs text-slate-400">Controla roles, revisa reportes de la comunidad y modera las fotos de perfil.</p>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Sección de Reportes Recibidos */}
-                  <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2">🚨 Reportes Recibidos de Usuarios ({reportsList.length})</h3>
-                  {reportsList.length === 0 ? (
-                    <p className="text-xs text-slate-400 bg-slate-950 p-4 rounded-2xl border border-slate-800">No hay reportes de infracciones en este momento.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {reportsList.map(rep => (
-                        <div key={rep.id} className="bg-slate-950 p-4 rounded-2xl border border-rose-500/30 space-y-2 text-xs">
-                          <div className="flex justify-between items-center">
-                            <span className="font-bold text-rose-400">Motivo: {rep.reason}</span>
-                            <span className="text-[10px] text-slate-400">{rep.date}</span>
-                          </div>
-                          <p className="text-slate-300"><b>Perfil reportado:</b> {rep.targetName} ({rep.targetEmail})</p>
-                          <p className="text-slate-300"><b>Reportado por:</b> {rep.reporterName} ({rep.reporterEmail})</p>
-                          <p className="text-slate-400 italic"><b>Detalles:</b> "{rep.details}"</p>
-                          <div className="flex justify-end pt-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (confirm(`¿Marcar este reporte como resuelto y eliminarlo?`)) {
-                                  setReportsList(reportsList.filter(r => r.id !== rep.id));
-                                }
-                              }}
-                              className="bg-emerald-500/20 hover:bg-emerald-600 text-emerald-300 hover:text-white font-bold px-3 py-1.5 rounded-xl transition-all"
-                            >
-                              ✓ Resolver / Descartar Reporte
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 pt-4">👥 Gestión de Usuarios y Roles</h3>
-                  <div className="space-y-3">
-                    {usersList.map(u => (
-                      <div key={u.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                        <div>
-                          <h4 className="text-xs font-bold text-white">{u.name} ({u.email})</h4>
-                          <p className="text-[10px] text-amber-400">Rol: {u.roleLabel} • Premium: {u.isPremium ? 'Sí' : 'No'} • Crítico: {u.isCritic ? 'Sí' : 'No'}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <button type="button" onClick={() => {
-                            setUsersList(usersList.map(x => x.id === u.id ? {...x, isPremium: !x.isPremium} : x));
-                          }} className="bg-amber-500/20 text-amber-300 text-[10px] px-3 py-1.5 rounded-xl font-bold">
-                            {u.isPremium ? 'Quitar Premium' : 'Dar Premium'}
-                          </button>
-                          <button type="button" onClick={() => {
-                            setUsersList(usersList.map(x => x.id === u.id ? {...x, isCritic: !x.isCritic, roleLabel: !x.isCritic ? 'Crítico Certificado' : 'Cinéfilo Pro'} : x));
-                          }} className="bg-indigo-500/20 text-indigo-300 text-[10px] px-3 py-1.5 rounded-xl font-bold">
-                            {u.isCritic ? 'Quitar Insignia' : 'Dar Insignia Crítico'}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 pt-4">🖼️ Supervisión y Eliminación de Fotos de Perfiles</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {usersList.flatMap(u => (u.photos || []).map((photoUrl, pIdx) => ({ user: u, photoUrl, pIdx }))).map((item, idx) => (
-                      <div key={idx} className="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2">
-                        <div className="relative h-48 rounded-xl overflow-hidden bg-slate-900">
-                          <img src={item.photoUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
-                          <span className="absolute bottom-2 left-2 bg-slate-950/80 text-[10px] text-white px-2 py-0.5 rounded-md">
-                            {item.user.name}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`¿Estás seguro de eliminar esta foto del usuario ${item.user.name}?`)) {
-                              setUsersList(usersList.map(u => {
-                                if (u.email === item.user.email) {
-                                  const newPhotos = (u.photos || []).filter((_, i) => i !== item.pIdx);
-                                  return { ...u, photos: newPhotos, avatar: newPhotos[0] || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80' };
-                                }
-                                return u;
-                              }));
-                            }
-                          }}
-                          className="w-full bg-rose-500/20 hover:bg-rose-600 text-rose-400 hover:text-white font-bold py-1.5 rounded-xl text-xs transition-all"
-                        >
-                          🗑️ Eliminar Foto
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <div className={`max-w-4xl mx-auto ${cardBg} rounded-3xl p-6 space-y-6 border`}>
+                <h2 className="text-2xl font-black text-amber-500">🛡️ Panel de Administración</h2>
+                <p className="text-xs">Reportes totales: {reportsList.length}</p>
               </div>
             )}
 
             {activeTab === 'profile' && (
-              <div className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
-                <h2 className="text-xl font-black text-white">👤 Mi Perfil Cinéfilo</h2>
+              <div className={`max-w-xl mx-auto ${cardBg} rounded-3xl p-6 space-y-6 border`}>
+                <h2 className="text-xl font-black">👤 Mi Perfil Cinéfilo</h2>
                 <div className="space-y-4 text-xs">
-                  <div>
-                    <label className="block text-slate-400 mb-1 font-bold">Biografía:</label>
-                    <textarea rows="3" defaultValue={currentUser.bio} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200"></textarea>
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 mb-1 font-bold">Mis Fotos de Perfil:</label>
-                    <div className="grid grid-cols-3 gap-2 mb-2">
-                      {(currentUser.photos || []).map((ph, i) => (
-                        <div key={i} className="relative h-24 rounded-xl overflow-hidden bg-slate-950 border border-slate-800">
-                          <img src={ph} alt="Foto" className="w-full h-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="pt-4 border-t border-slate-800 flex justify-between">
-                    <button type="button" onClick={() => alert('Perfil guardado correctamente.')} className="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl">Guardar Cambios</button>
-                    <button type="button" onClick={handleDeleteAccount} className="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white font-bold px-4 py-2.5 rounded-xl transition-all">
-                      Eliminar Cuenta
-                    </button>
-                  </div>
+                  <textarea rows="3" defaultValue={currentUser.bio} className={`w-full ${inputBg} rounded-xl p-3 border`} />
+                  <button type="button" onClick={() => alert('Guardado')} className="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl">Guardar</button>
                 </div>
               </div>
             )}
