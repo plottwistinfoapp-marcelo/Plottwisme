@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administrador</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f9; }
+        .admin-card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+
+<div id="admin-panel" style="display:none;">
+    <h2>Panel de Administración Global</h2>
+    
+    <!-- 1. Sección de Certificaciones y Premium -->
+    <div class="admin-card">
+        <h3>Gestión de Usuarios (Críticos y Premium)</h3>
+        <input type="email" id="target-email" placeholder="Correo del usuario">
+        <select id="user-role-action">
+            <option value="certify-critic">Certificar como Crítico</option>
+            <option value="give-premium">Dar acceso Premium</option>
+            <option value="remove-premium">Quitar Premium</option>
+        </select>
+        <button onclick="updateUserPrivileges()">Aplicar Cambios</button>
+    </div>
+
+    <!-- 2. Ver cualquier ciudad del mundo -->
+    <div class="admin-card">
+        <h3>Explorador Global de Ciudades</h3>
+        <input type="text" id="global-city-search" placeholder="Ej: Tokio, Paris, Buenos Aires">
+        <button onclick="exploreGlobalCity()">Ver Ciudad</button>
+        <div id="city-view-results" style="margin-top: 10px; font-weight: bold;"></div>
+    </div>
+
+    <!-- 3. Atributos Globales -->
+    <div class="admin-card">
+        <h3>Configuración Global (Todo el mundo)</h3>
+        <label>
+            <input type="checkbox" id="global-feature-toggle"> Activar atributo/función global
+        </label>
+        <button onclick="saveGlobalAttributes()">Guardar para Todo el Mundo</button>
+    </div>
+</div>
+
+<!-- Scripts de Firebase (Asegúrate de usar la versión que ya usa tu app) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // IMPORTANTE: Aquí debes poner la misma configuración de Firebase que usa tu aplicación
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_AUTH_DOMAIN",
+    projectId: "TU_PROJECT_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+ onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        if (user.email === "marbuttice@gmail.com") {
+            document.getElementById("admin-panel").style.display = "block";
+        } else {
+            alert("Acceso denegado. No eres el administrador.");
+            window.location.href = "/";
+        }
+    } else {
+        window.location.href = "/login.html";
+    }
+});
+    
+    }
+  });
+
+  window.updateUserPrivileges = function() {
+    const email = document.getElementById("target-email").value;
+    const action = document.getElementById("user-role-action").value;
+    alert(`Acción ${action} aplicada con éxito a ${email}`);
+  }
+
+  window.exploreGlobalCity = function() {
+    const city = document.getElementById("global-city-search").value;
+    document.getElementById("city-view-results").innerHTML = `Mostrando datos globales para: ${city}`;
+  }
+
+  window.saveGlobalAttributes = async function() {
+    const globalState = document.getElementById("global-feature-toggle").checked;
+    try {
+      await setDoc(doc(db, "config", "globalSettings"), { activeGlobalAttribute: globalState }, { merge: true });
+      alert("Atributos globales actualizados para todo el mundo.");
+    } catch (e) {
+      alert("Error al guardar: " + e.message);
+    }
+  }
+</script>
+
+</body>
+</html>
