@@ -49,7 +49,8 @@
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
         photos: [
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80'
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop&q=80'
         ],
         topMovies: ['Dune: Parte 2', 'Blade Runner 2049', 'Oppenheimer'],
         favoriteGenres: ['Sci-Fi', 'Thriller', 'Drama'],
@@ -72,7 +73,10 @@
         verified: true,
         bio: 'Directora de cortos amateur y crítica de cine asiático y europeo.',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
-        photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80'],
+        photos: [
+          'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&auto=format&fit=crop&q=80'
+        ],
         topMovies: ['Parasite', 'Perfect Blue'],
         favoriteGenres: ['Psicológico', 'Autor'],
         affinity: 93,
@@ -85,14 +89,57 @@
         id: 'm1',
         title: 'Dune: Parte Dos',
         director: 'Denis Villeneuve',
-        genre: 'Ciencia Ficción',
+        genre: 'Ciencia Ficción / Épica',
         duration: '166 min',
         rating: '9.4',
         poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80',
-        theater: 'Cine Center • Oberá',
-        distance: '1.2 km',
-        showtimes: ['17:30', '20:15', '22:45'],
-        synopsis: 'Paul Atreides se une a Chani y a los Fremen buscando venganza.'
+        synopsis: 'Paul Atreides se une a Chani y a los Fremen buscando venganza contra los conspiradores.',
+        theaters: [
+          { name: 'Cine Center Oberá', distance: '1.2 km', showtimes: ['17:30', '20:15', '22:45'] },
+          { name: 'Atlas Cinemas Posadas', distance: '85 km', showtimes: ['16:00', '19:00', '21:30'] },
+          { name: 'Hoyts Abasto (CABA)', distance: '940 km', showtimes: ['14:00', '18:15', '21:00'] }
+        ]
+      },
+      {
+        id: 'm2',
+        title: 'Oppenheimer',
+        director: 'Christopher Nolan',
+        genre: 'Drama / Biografía',
+        duration: '180 min',
+        rating: '9.1',
+        poster: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80',
+        synopsis: 'La historia del físico J. Robert Oppenheimer y su rol en el desarrollo de la bomba atómica.',
+        theaters: [
+          { name: 'Cine Sunstar Posadas', distance: '88 km', showtimes: ['18:00', '21:15'] },
+          { name: 'Village Recoleta', distance: '945 km', showtimes: ['15:30', '19:00', '22:30'] }
+        ]
+      },
+      {
+        id: 'm3',
+        title: 'Pobres Criaturas',
+        director: 'Yorgos Lanthimos',
+        genre: 'Comedia Negra / Fantasía',
+        duration: '141 min',
+        rating: '8.8',
+        poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
+        synopsis: 'La fantástica evolución de Bella Baxter, una joven revivida por un científico brillante.',
+        theaters: [
+          { name: 'Cine Select Centro', distance: '4.5 km', showtimes: ['19:30', '22:00'] },
+          { name: 'Atlas Cines', distance: '92 km', showtimes: ['17:00', '20:30'] }
+        ]
+      },
+      {
+        id: 'm4',
+        title: 'Anatomía de una Caída',
+        director: 'Justine Triet',
+        genre: 'Suspenso / Drama Judicial',
+        duration: '152 min',
+        rating: '8.9',
+        poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80',
+        synopsis: 'Una mujer es sospechosa de la muerte de su esposo, con su hijo ciego como único testigo.',
+        theaters: [
+          { name: 'Cine Arte Auditorium', distance: '3.1 km', showtimes: ['18:15', '21:00'] }
+        ]
       }
     ];
 
@@ -117,9 +164,8 @@
       const [activeTab, setActiveTab] = useState('radar');
       const [currentIndex, setCurrentIndex] = useState(0);
 
-      // Estado para simular la ubicación en tiempo real elegida por el Administrador
       const [adminGlobalCity, setAdminGlobalCity] = useState('Oberá, Misiones, Argentina');
-      const [customCityInput, setCustomCityInput] = useState('');
+      const [selectedMovieTheaters, setSelectedMovieTheaters] = useState(null); // Modal para "Dónde ver"
 
       const [usersList, setUsersList] = useState(() => {
         const saved = localStorage.getItem('plottwist_all_users');
@@ -311,166 +357,10 @@
                 </button>
               </div>
 
-              {/* Selector Global de Ubicación en Tiempo Real (Solo Administrador) */}
               {currentUser.role === 'admin' && (
                 <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full sm:w-auto justify-center">
                   <span className="text-amber-400 font-bold whitespace-nowrap">🌍 Ver Ciudad:</span>
                   <input
                     type="text"
                     value={adminGlobalCity}
-                    onChange={(e) => setAdminGlobalCity(e.target.value)}
-                    placeholder="Ej. Buenos Aires, Tokio, París..."
-                    className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-slate-200 w-44"
-                  />
-                  <span className="text-[10px] text-amber-300 font-mono hidden md:inline">({adminGlobalCity})</span>
-                </div>
-              )}
-
-              <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                <nav className="flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-slate-800 overflow-x-auto">
-                  <button onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>🎯 Radar</button>
-                  <button onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>🎬 Cartelera</button>
-                  {currentUser.isCritic && <button onClick={() => setActiveTab('critic')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'critic' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>✍️ Panel Críticos</button>}
-                  {currentUser.role === 'admin' && <button onClick={() => setActiveTab('admin')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'admin' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>🛡️ Admin</button>}
-                  <button onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>👤 Perfil</button>
-                </nav>
-
-                <button onClick={() => setCurrentUser(null)} className="hidden sm:block text-xs text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/30">
-                  Cerrar Sesión
-                </button>
-              </div>
-            </div>
-          </header>
-
-          <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
-            {activeTab === 'radar' && (
-              <div className="flex flex-col items-center">
-                {currentUser.role === 'admin' && (
-                  <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-300 text-center">
-                    👑 Modo Administrador Activo: Viendo radar y perfiles geolocalizados en tiempo real para <b>{adminGlobalCity}</b>.
-                  </div>
-                )}
-                {currentCandidate ? (
-                  <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-                    <div className="relative h-96 w-full bg-slate-950">
-                      <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
-                        <p className="text-xs text-amber-300">📍 {currentUser.role === 'admin' ? adminGlobalCity : currentCandidate.location} • A {currentCandidate.distanceKm} km</p>
-                      </div>
-                    </div>
-                    <div className="p-6 space-y-4">
-                      <p className="text-xs text-slate-300 italic">"{currentCandidate.bio}"</p>
-                      <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
-                        <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
-                        <button onClick={() => { alert(`¡Match enviado a ${currentCandidate.name}!`); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black">🍿</button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-20">
-                    <h3 className="text-xl font-bold mb-2">No hay más perfiles en tu radio ({maxDistance} km).</h3>
-                    <p className="text-xs text-slate-400 mb-4">{!currentUser.isPremium ? '¡Actualiza a Premium para buscar hasta a 500 km!' : ''}</p>
-                    <button onClick={() => setCurrentIndex(0)} className="bg-amber-500 text-slate-950 px-6 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'cinema' && (
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <h2 className="text-2xl font-black text-white">🎬 Cartelera y Salas en {currentUser.role === 'admin' ? adminGlobalCity : 'tu zona'}</h2>
-                  {currentUser.role === 'admin' && (
-                    <span className="bg-amber-500/20 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold border border-amber-500/30">
-                      🌍 Buscando cines en tiempo real en: {adminGlobalCity}
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {INITIAL_BILLBOARD.map(m => (
-                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-5 space-y-3">
-                      <img src={m.poster} alt={m.title} className="w-full h-48 object-cover rounded-2xl" />
-                      <h3 className="text-lg font-bold text-white">{m.title}</h3>
-                      <p className="text-xs text-slate-400">{m.theater} • {m.distance}</p>
-                      <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.theater + ' ' + (currentUser.role === 'admin' ? adminGlobalCity : ''))}`} target="_blank" rel="noopener noreferrer" className="block text-center bg-amber-500 text-slate-950 font-bold py-2 rounded-xl text-xs">
-                        Ver ubicación en Google Maps ({currentUser.role === 'admin' ? adminGlobalCity : 'Local'})
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'critic' && currentUser.isCritic && (
-              <div className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-                <h2 className="text-xl font-black text-white">✍️ Panel de Críticos</h2>
-                <p className="text-xs text-slate-400">Comparte tus redes sociales y recomendaciones destacadas con la comunidad.</p>
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <label className="block text-slate-400 mb-1">Enlace Letterboxd / Redes:</label>
-                    <input type="text" defaultValue={currentUser.socialLinks?.letterboxd || ''} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
-                  </div>
-                  <button onClick={() => alert('¡Redes de crítico actualizadas!')} className="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl">Guardar Recomendaciones</button>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'admin' && currentUser.role === 'admin' && (
-              <div className="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
-                <h2 className="text-2xl font-black text-amber-400">🛡️ Panel de Administración (Marcelo Buttice)</h2>
-                <p className="text-xs text-slate-400">Gestiona los privilegios Premium (500km), las insignias de Crítico y supervisa cualquier ciudad del mundo en tiempo real.</p>
-                <div className="space-y-3">
-                  {usersList.map(u => (
-                    <div key={u.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
-                      <div>
-                        <h4 className="text-xs font-bold text-white">{u.name} ({u.email})</h4>
-                        <p className="text-[10px] text-amber-400">Rol: {u.roleLabel} • Premium: {u.isPremium ? 'Sí' : 'No'} • Crítico: {u.isCritic ? 'Sí' : 'No'}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => {
-                          setUsersList(usersList.map(x => x.id === u.id ? {...x, isPremium: !x.isPremium} : x));
-                        }} className="bg-amber-500/20 text-amber-300 text-[10px] px-3 py-1.5 rounded-xl font-bold">
-                          {u.isPremium ? 'Quitar Premium' : 'Dar Premium'}
-                        </button>
-                        <button onClick={() => {
-                          setUsersList(usersList.map(x => x.id === u.id ? {...x, isCritic: !x.isCritic, roleLabel: !x.isCritic ? 'Crítico Certificado' : 'Cinéfilo Pro'} : x));
-                        }} className="bg-indigo-500/20 text-indigo-300 text-[10px] px-3 py-1.5 rounded-xl font-bold">
-                          {u.isCritic ? 'Quitar Insignia' : 'Dar Insignia Crítico'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'profile' && (
-              <div className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
-                <h2 className="text-xl font-black text-white">👤 Mi Perfil Cinéfilo</h2>
-                <div className="space-y-4 text-xs">
-                  <div>
-                    <label className="block text-slate-400 mb-1 font-bold">Biografía:</label>
-                    <textarea rows="3" defaultValue={currentUser.bio} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200"></textarea>
-                  </div>
-                  <div className="pt-4 border-t border-slate-800 flex justify-between">
-                    <button onClick={() => alert('Perfil guardado.')} className="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl">Guardar Cambios</button>
-                    <button onClick={handleDeleteAccount} className="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white font-bold px-4 py-2.5 rounded-xl transition-all">
-                      Eliminar Cuenta
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </main>
-        </div>
-      );
-    }
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
-</body>
-</html>
+                    onChange={(e) => setAdminGlobal
