@@ -82,6 +82,34 @@
       }
     ];
 
+    const INITIAL_FORUM_TOPICS = [
+      {
+        id: 'f1',
+        title: '¿Cuál es el mejor Plot Twist de la historia del cine?',
+        category: 'Debates Clásicos',
+        author: 'Marcelo Buttice',
+        date: '2026-08-30',
+        repliesCount: 3,
+        content: 'Abran debate: entre El Sexto Sentido, Club de la Pelea y Los Sospechosos de Siempre... ¿cuál les causó más impacto la primera vez en la sala?',
+        comments: [
+          { id: 'c1', author: 'Elena Montero', date: '2026-08-30', text: '¡Sin dudas Los Sospechosos de Siempre! Kaiser Soze cambió el cine de los 90.' },
+          { id: 'c2', author: 'Marcelo Buttice', date: '2026-08-31', text: 'Coincido con Elena, la escena de la taza rompiéndose es magistral.' }
+        ]
+      },
+      {
+        id: 'f2',
+        title: 'Teorías y simbolismos en el cine de Tarkovsky y Kubrick',
+        category: 'Cine de Autor',
+        author: 'Elena Montero',
+        date: '2026-08-28',
+        repliesCount: 1,
+        content: 'Analicemos la similitud en el manejo del tiempo entre 2001: Odisea del Espacio y Stalker.',
+        comments: [
+          { id: 'c3', author: 'Marcelo Buttice', date: '2026-08-29', text: 'El uso del silencio en ambas obras crea un ritmo hipnótico único.' }
+        ]
+      }
+    ];
+
     const COUNTRY_CODES = [
       { code: 'AR', name: 'Argentina 🇦🇷' },
       { code: 'US', name: 'Estados Unidos 🇺🇸' },
@@ -113,6 +141,17 @@
       const [usersList, setUsersList] = useState(INITIAL_USERS);
       const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
 
+      // ESTADOS DEL FORO
+      const [forumTopics, setForumTopics] = useState(INITIAL_FORUM_TOPICS);
+      const [selectedCategory, setSelectedCategory] = useState('Todas');
+      const [activeTopic, setActiveTopic] = useState(null);
+      const [showNewTopicModal, setShowNewTopicModal] = useState(false);
+
+      const [newTopicTitle, setNewTopicTitle] = useState('');
+      const [newTopicCategory, setNewTopicCategory] = useState('Cine de Autor');
+      const [newTopicContent, setNewTopicContent] = useState('');
+      const [newCommentText, setNewCommentText] = useState('');
+
       const [newReviewMovie, setNewReviewMovie] = useState('');
       const [newReviewRating, setNewReviewRating] = useState(10);
       const [newReviewText, setNewReviewText] = useState('');
@@ -128,12 +167,11 @@
         return found ? found.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
       };
 
-      // Apertura de Google forzando tema oscuro mediante el parámetro &cs=2
       const openGoogleEngine = (customQueryFormat = 'cartelera de cines en {city} {country}') => {
         const cleanCity = userCity.trim();
         const country = getCountryName();
         const query = customQueryFormat.replace('{city}', cleanCity).replace('{country}', country);
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2`, '_blank');
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=es`, '_blank');
       };
 
       const maxDistance = currentUser.isPremium ? 500 : 100;
@@ -185,14 +223,63 @@
         alert('📝 ¡Reseña publicada!');
       };
 
+      // FORO: CREAR HILO
+      const handleCreateTopic = (e) => {
+        e.preventDefault();
+        if (!newTopicTitle || !newTopicContent) return;
+        const newTopic = {
+          id: 'f_' + Date.now(),
+          title: newTopicTitle,
+          category: newTopicCategory,
+          author: currentUser.name,
+          date: new Date().toISOString().split('T')[0],
+          repliesCount: 0,
+          content: newTopicContent,
+          comments: []
+        };
+        setForumTopics([newTopic, ...forumTopics]);
+        setNewTopicTitle('');
+        setNewTopicContent('');
+        setShowNewTopicModal(false);
+        alert('💬 ¡Debate creado con éxito!');
+      };
+
+      // FORO: COMENTAR HILO
+      const handleAddComment = (e) => {
+        e.preventDefault();
+        if (!newCommentText || !activeTopic) return;
+        const comment = {
+          id: 'c_' + Date.now(),
+          author: currentUser.name,
+          date: new Date().toISOString().split('T')[0],
+          text: newCommentText
+        };
+        const updatedTopics = forumTopics.map(t => {
+          if (t.id === activeTopic.id) {
+            const updatedComments = [...t.comments, comment];
+            const updatedT = { ...t, comments: updatedComments, repliesCount: updatedComments.length };
+            setActiveTopic(updatedT);
+            return updatedT;
+          }
+          return t;
+        });
+        setForumTopics(updatedTopics);
+        setNewCommentText('');
+      };
+
+      const filteredTopics = useMemo(() => {
+        if (selectedCategory === 'Todas') return forumTopics;
+        return forumTopics.filter(t => t.category === selectedCategory);
+      }, [forumTopics, selectedCategory]);
+
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
-          {/* HEADER DE NAVEGACIÓN Y GEOLOCALIZACIÓN */}
+          {/* HEADER DE NAVEGACIÓN */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
               
-              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('cinema')}>
+              <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }}>
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center font-bold text-xl text-slate-950">P</div>
                 <div>
                   <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
@@ -227,17 +314,18 @@
 
               {/* PESTAÑAS */}
               <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto max-w-full">
-                <button onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera Real</button>
-                <button onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
-                <button onClick={() => setActiveTab('critics')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>📰 Críticos</button>
-                <button onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>👤 Mi Perfil</button>
+                <button onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera Real</button>
+                <button onClick={() => { setActiveTab('forums'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>💬 Foros</button>
+                <button onClick={() => { setActiveTab('radar'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
+                <button onClick={() => { setActiveTab('critics'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>📰 Críticos</button>
+                <button onClick={() => { setActiveTab('profile'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>👤 Mi Perfil</button>
                 
                 <button onClick={() => setShowSubscriptionModal(true)} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600 hover:text-white transition-all whitespace-nowrap">
                   💳 Planes
                 </button>
 
                 {currentUser.role === 'admin' && (
-                  <button onClick={() => setActiveTab('admin')} className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/50'}`}>
+                  <button onClick={() => { setActiveTab('admin'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/50'}`}>
                     🛡️ Admin
                   </button>
                 )}
@@ -252,8 +340,6 @@
             {/* TAB: CARTELERA REAL */}
             {activeTab === 'cinema' && (
               <div className="space-y-8">
-                
-                {/* HERO PRINCIPAL */}
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/30 p-8 shadow-2xl">
                   <div className="max-w-2xl space-y-4">
                     <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-3 py-1 rounded-md uppercase tracking-wider">
@@ -277,7 +363,6 @@
                   </div>
                 </div>
 
-                {/* ACCESOS DIRECTOS POR CATEGORÍA */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-black text-white flex items-center gap-2">
                     <span>⚡ Buscador Directo por Categoría en</span>
@@ -303,6 +388,119 @@
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* TAB: FOROS CINÉFILOS */}
+            {activeTab === 'forums' && (
+              <div className="space-y-6 max-w-4xl mx-auto">
+                
+                {/* SI HAY UN HILO SELECCIONADO: DETALLE Y COMENTARIOS */}
+                {activeTopic ? (
+                  <div className="space-y-6">
+                    <button 
+                      onClick={() => setActiveTopic(null)} 
+                      className="bg-slate-900 border border-slate-800 text-amber-400 hover:text-amber-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all"
+                    >
+                      <span>← Volver a los debates</span>
+                    </button>
+
+                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                        <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase">
+                          {activeTopic.category}
+                        </span>
+                        <span className="text-xs text-slate-400">Por <b>{activeTopic.author}</b> • {activeTopic.date}</span>
+                      </div>
+                      <h2 className="text-2xl font-black text-white">{activeTopic.title}</h2>
+                      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{activeTopic.content}</p>
+                    </div>
+
+                    {/* SECCIÓN RESPUESTAS */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-black text-amber-500">💬 Respuestas y Debate ({activeTopic.comments.length})</h3>
+
+                      {activeTopic.comments.map(c => (
+                        <div key={c.id} className="bg-slate-900/80 border border-slate-800/80 p-4 rounded-2xl space-y-2">
+                          <div className="flex justify-between items-center text-xs text-slate-400">
+                            <span className="font-bold text-white">{c.author}</span>
+                            <span>{c.date}</span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed">{c.text}</p>
+                        </div>
+                      ))}
+
+                      {/* FORMULARIO RESPONDER */}
+                      <form onSubmit={handleAddComment} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+                        <textarea 
+                          rows="3" 
+                          value={newCommentText} 
+                          onChange={(e) => setNewCommentText(e.target.value)} 
+                          placeholder="Escribe tu opinión en este debate..." 
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500" 
+                          required 
+                        />
+                        <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all">
+                          Publicar Respuesta
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                ) : (
+                  /* VISTA PRINCIPAL DEL FORO */
+                  <div className="space-y-6">
+                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+                      <div>
+                        <h2 className="text-2xl font-black text-white">💬 Foros de Discusión Cinéfila</h2>
+                        <p className="text-xs text-slate-400 mt-1">Intercambiá opiniones, teorías y recomendaciones con la comunidad.</p>
+                      </div>
+                      <button 
+                        onClick={() => setShowNewTopicModal(true)} 
+                        className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs transition-all shadow-lg shadow-amber-500/20 whitespace-nowrap"
+                      >
+                        ✍️ Crear Nuevo Debate
+                      </button>
+                    </div>
+
+                    {/* FILTROS POR CATEGORÍA */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 text-xs">
+                      {['Todas', 'Cine de Autor', 'Debates Clásicos', 'Teorías & Spoilers', 'Estrenos'].map(cat => (
+                        <button 
+                          key={cat} 
+                          onClick={() => setSelectedCategory(cat)} 
+                          className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'}`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* LISTA DE HILOS */}
+                    <div className="space-y-4">
+                      {filteredTopics.map(topic => (
+                        <div 
+                          key={topic.id} 
+                          onClick={() => setActiveTopic(topic)} 
+                          className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all hover:-translate-y-0.5 shadow-md space-y-3 group"
+                        >
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                              {topic.category}
+                            </span>
+                            <span className="text-slate-500 text-[10px]">{topic.date}</span>
+                          </div>
+                          <h3 className="text-base font-bold text-white group-hover:text-amber-400 transition-colors">
+                            {topic.title}
+                          </h3>
+                          <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800/80">
+                            <span>Por <b>{topic.author}</b></span>
+                            <span className="text-amber-500 font-bold">💬 {topic.repliesCount} respuestas</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
               </div>
             )}
@@ -447,18 +645,74 @@
                     <p className="text-2xl font-black text-white mt-1">{usersList.length}</p>
                   </div>
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <p className="text-xs text-slate-400">Reseñas Publicadas</p>
-                    <p className="text-2xl font-black text-white mt-1">{reviewsList.length}</p>
+                    <p className="text-xs text-slate-400">Hilos en Foros</p>
+                    <p className="text-2xl font-black text-white mt-1">{forumTopics.length}</p>
                   </div>
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
                     <p className="text-xs text-slate-400">Estado del Sistema</p>
-                    <p className="text-sm font-black text-emerald-400 mt-1">Modo Oscuro Sincronizado 🌙</p>
+                    <p className="text-sm font-black text-emerald-400 mt-1">Sincronizado 🌙</p>
                   </div>
                 </div>
               </div>
             )}
 
           </main>
+
+          {/* MODAL CREAR DEBATE EN FORO */}
+          {showNewTopicModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <h3 className="text-lg font-black text-white">💬 Nuevo Debate Cinéfilo</h3>
+                  <button onClick={() => setShowNewTopicModal(false)} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
+                </div>
+
+                <form onSubmit={handleCreateTopic} className="space-y-4 text-xs">
+                  <div>
+                    <label className="block mb-1 text-slate-400 font-bold">Título del Debate:</label>
+                    <input 
+                      type="text" 
+                      value={newTopicTitle} 
+                      onChange={(e) => setNewTopicTitle(e.target.value)} 
+                      placeholder="Ej: ¿Qué opinan del final de X película?" 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500" 
+                      required 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-slate-400 font-bold">Categoría:</label>
+                    <select 
+                      value={newTopicCategory} 
+                      onChange={(e) => setNewTopicCategory(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                    >
+                      <option value="Cine de Autor">Cine de Autor</option>
+                      <option value="Debates Clásicos">Debates Clásicos</option>
+                      <option value="Teorías & Spoilers">Teorías & Spoilers</option>
+                      <option value="Estrenos">Estrenos</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-slate-400 font-bold">Contenido / Pregunta:</label>
+                    <textarea 
+                      rows="4" 
+                      value={newTopicContent} 
+                      onChange={(e) => setNewTopicContent(e.target.value)} 
+                      placeholder="Desarrolla tu punto de vista para iniciar el debate..." 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500" 
+                      required 
+                    />
+                  </div>
+
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
+                    Publicar Debate
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
 
           {/* MODAL SUSCRIPCIONES */}
           {showSubscriptionModal && (
