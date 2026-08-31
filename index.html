@@ -84,38 +84,6 @@
         poster_path: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80",
         vote_average: "7.9",
         genre: "Romance / Comedia"
-      },
-      {
-        id: 103,
-        title: "Noche del Demonio: Están entre nosotros",
-        overview: "La saga de terror regresa con nuevos misterios y sucesos sobrenaturales e intensos.",
-        poster_path: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80",
-        vote_average: "8.1",
-        genre: "Terror / Suspenso"
-      },
-      {
-        id: 104,
-        title: "Coyote vs. Acme",
-        overview: "Una divertida e ingeniosa comedia que combina animación y acción en vivo.",
-        poster_path: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80",
-        vote_average: "8.3",
-        genre: "Comedia / Familiar"
-      },
-      {
-        id: 105,
-        title: "The Dog Stars",
-        overview: "Relato de ciencia ficción y supervivencia en un mundo postapocalíptico desolado.",
-        poster_path: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80",
-        vote_average: "8.5",
-        genre: "Ciencia Ficción / Drama"
-      },
-      {
-        id: 106,
-        title: "Avatar: Fuego y Cenizas",
-        overview: "La épica travesía en Pandora continúa con nuevas regiones y clanes desconocidos.",
-        poster_path: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80",
-        vote_average: "9.1",
-        genre: "Ciencia Ficción / Aventura"
       }
     ];
 
@@ -132,10 +100,10 @@
     ];
 
     const COUNTRY_CODES = [
+      { code: 'US', name: 'Estados Unidos 🇺🇸' },
       { code: 'AR', name: 'Argentina 🇦🇷' },
       { code: 'ES', name: 'España 🇪🇸' },
       { code: 'MX', name: 'México 🇲🇽' },
-      { code: 'US', name: 'Estados Unidos 🇺🇸' },
       { code: 'CL', name: 'Chile 🇨🇱' },
       { code: 'CO', name: 'Colombia 🇨🇴' },
       { code: 'PY', name: 'Paraguay 🇵🇾' },
@@ -143,15 +111,23 @@
       { code: 'BR', name: 'Brasil 🇧🇷' }
     ];
 
+    const LANGUAGES = [
+      { code: 'es-ES', label: 'Español 🇦🇷/🇲🇽/🇪🇸' },
+      { code: 'en-US', label: 'English 🇺🇸/🇬🇧' },
+      { code: 'pt-BR', label: 'Português 🇧🇷' }
+    ];
+
     function App() {
       const [currentUser, setCurrentUser] = useState(() => INITIAL_USERS[0]);
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
 
-      const [userCity, setUserCity] = useState('posadas');
-      const [userCountryCode, setUserCountryCode] = useState('AR');
+      const [userCity, setUserCity] = useState('Austin, Texas');
+      const [userCountryCode, setUserCountryCode] = useState('US');
+      const [userLanguage, setUserLanguage] = useState('es-ES');
 
-      const [moviesList, setMoviesList] = useState(FEATURED_MOVIES);
+      const [moviesList, setMoviesList] = useState([]);
+      const [isLoading, setIsLoading] = useState(true);
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
       const [usersList, setUsersList] = useState(INITIAL_USERS);
@@ -167,13 +143,15 @@
       const [editTv, setEditTv] = useState(currentUser.socialLinks.tv);
       const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks.twitter);
 
-      // Carga dinámica optimizada con bypass de caché para cambio de país
+      // Carga dinámica separando Región (País) de Idioma preferido del usuario
       useEffect(() => {
         const fetchMovies = async () => {
+          setIsLoading(true);
           setMoviesList([]); 
+
           try {
             const res = await fetch(
-              `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=es-ES&region=${userCountryCode}&page=1&_t=${Date.now()}`
+              `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&region=${userCountryCode}&page=1&_t=${Date.now()}`
             );
             const data = await res.json();
 
@@ -181,24 +159,29 @@
               const formatted = data.results.slice(0, 9).map(m => ({
                 id: m.id,
                 title: m.title || m.original_title,
-                overview: m.overview || 'Consulta horarios y funciones disponibles en tu ciudad.',
+                overview: m.overview || (userLanguage.startsWith('es') 
+                  ? 'Consulta horarios y funciones en tu ciudad.' 
+                  : 'Check showtimes and schedules in your city.'),
                 poster_path: m.poster_path 
                   ? `https://image.tmdb.org/t/p/w500${m.poster_path}` 
-                  : FEATURED_MOVIES[0].poster_path,
+                  : 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80',
                 vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0',
-                genre: 'En Cartelera'
+                genre: userLanguage.startsWith('es') ? 'En Cartelera' : 'Now Playing'
               }));
               setMoviesList(formatted);
             } else {
-              setMoviesList(FEATURED_MOVIES);
+              setMoviesList([]);
             }
           } catch (err) {
-            setMoviesList(FEATURED_MOVIES);
+            console.error("Error al consultar TMDb:", err);
+            setMoviesList([]);
+          } finally {
+            setIsLoading(false);
           }
         };
 
         fetchMovies();
-      }, [userCountryCode]);
+      }, [userCountryCode, userLanguage]);
 
       const openCitySchedule = (movieTitle = '') => {
         const cleanCity = userCity.trim().toLowerCase();
@@ -260,7 +243,7 @@
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
-          {/* HEADER CON SELECCIÓN DE CIUDAD Y PAÍS */}
+          {/* HEADER CON SELECCIÓN DE CIUDAD, PAÍS E IDIOMA */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
               
@@ -272,17 +255,20 @@
                 </div>
               </div>
 
-              {/* BARRA DE UBICACIÓN Y REGIONALIZACIÓN */}
+              {/* BARRA DE CONFIGURACIÓN REGIONAL */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ubicación:</span>
                 <input 
                   type="text" 
                   value={userCity} 
                   onChange={(e) => setUserCity(e.target.value)} 
-                  className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs" 
+                  className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-32 text-amber-300 focus:outline-none capitalize text-xs" 
                   placeholder="Ciudad..." 
                 />
+                
                 <span className="text-slate-600">|</span>
+                
+                {/* Selector de País (Región de Cines) */}
                 <select 
                   value={userCountryCode} 
                   onChange={(e) => setUserCountryCode(e.target.value)}
@@ -290,6 +276,20 @@
                 >
                   {COUNTRY_CODES.map(c => (
                     <option key={c.code} value={c.code}>{c.name}</option>
+                  ))}
+                </select>
+
+                <span className="text-slate-600">|</span>
+
+                {/* Selector de Idioma de la App */}
+                <span className="text-amber-500 font-bold whitespace-nowrap">🗣️ Idioma:</span>
+                <select 
+                  value={userLanguage} 
+                  onChange={(e) => setUserLanguage(e.target.value)}
+                  className="bg-slate-900 text-amber-300 font-bold rounded-lg px-2 py-1 text-xs border border-amber-500/30 focus:outline-none cursor-pointer"
+                >
+                  {LANGUAGES.map(l => (
+                    <option key={l.code} value={l.code}>{l.label}</option>
                   ))}
                 </select>
               </div>
@@ -323,22 +323,30 @@
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-black text-amber-400">🏛️ Cartelera de Cines en <span className="capitalize text-white">{userCity}</span></h2>
-                    <p className="text-xs text-slate-300 mt-1">Selecciona cualquier título para ver la marquesina de horarios y funciones en Google.</p>
+                    <h2 className="text-lg font-black text-amber-400">
+                      🏛️ Estrenos en {COUNTRY_CODES.find(c => c.code === userCountryCode)?.name || userCountryCode}
+                    </h2>
+                    <p className="text-xs text-slate-300 mt-1">
+                      Películas disponibles en el país. Hacé clic en cualquier opción para ver salas y horarios exactos en <b className="capitalize text-white">{userCity}</b>.
+                    </p>
                   </div>
                   <button 
                     onClick={() => openCitySchedule()} 
                     className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs whitespace-nowrap transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2"
                   >
-                    <span>Ver Todas en {userCity} (Google)</span>
+                    <span>Ver Funciones en {userCity} (Google)</span>
                     <span>↗</span>
                   </button>
                 </div>
 
                 {/* GRILLA DE PELÍCULAS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {moviesList.length > 0 ? (
-                    moviesList.map(m => (
+                {isLoading ? (
+                  <div className="text-center py-20 text-amber-400 font-bold text-sm">
+                    ⏳ Sincronizando la cartelera oficial de {userCountryCode}...
+                  </div>
+                ) : moviesList.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {moviesList.map(m => (
                       <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-amber-500/50 transition-all">
                         <div className="space-y-3">
                           <div className="relative h-72 rounded-2xl overflow-hidden bg-slate-950 cursor-pointer" onClick={() => openCitySchedule(m.title)}>
@@ -348,7 +356,7 @@
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre || 'Cine'}</span>
+                            <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre}</span>
                             <h3 className="text-base font-black text-white cursor-pointer hover:text-amber-400 transition-colors" onClick={() => openCitySchedule(m.title)}>
                               {m.title}
                             </h3>
@@ -360,17 +368,20 @@
                           onClick={() => openCitySchedule(m.title)} 
                           className="w-full bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-slate-700 flex items-center justify-center gap-2"
                         >
-                          <span>Funciones en {userCity}</span>
+                          <span>Horarios en {userCity}</span>
                           <span>↗</span>
                         </button>
                       </div>
-                    ))
-                  ) : (
-                    <div className="col-span-full text-center py-12 text-slate-400 text-sm">
-                      ⏳ Cargando cartelera actualizada...
-                    </div>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16 bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                    <p className="text-slate-400 text-sm">No se encontraron estrenos activos registrados para este país en este momento.</p>
+                    <button onClick={() => openCitySchedule()} className="mt-4 bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">
+                      Buscar cartelera directa de {userCity} en Google
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
