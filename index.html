@@ -72,21 +72,54 @@
       }
     ];
 
+    // BASE DE 6 PELÍCULAS ACTUALES EN CARTELERA (Garantiza 6 afiches siempre)
     const FEATURED_MOVIES = [
       {
         id: 101,
-        title: "Dune: Part Two",
-        overview: "Consulta horarios y funciones disponibles en los cines de tu ciudad.",
+        title: "Dune: Parte Dos",
+        overview: "Paul Atreides se une a Chani y a los Fremen mientras busca venganza contra los conspiradores que destruyeron a su familia.",
         poster_path: "https://image.tmdb.org/t/p/w500/1pdfLPoL3VFi3C3R2FiA35i5L35.jpg",
         vote_average: "8.5",
         genre: "En Cartelera"
       },
       {
         id: 102,
-        title: "Inside Out 2",
-        overview: "Consulta horarios y funciones disponibles en los cines de tu ciudad.",
+        title: "Intensa-Mente 2",
+        overview: "Sigue a Riley en su adolescencia mientras nuevas emociones entran en su centro de control.",
         poster_path: "https://image.tmdb.org/t/p/w500/vpnP9RSu3P93A431S135p49a9a3.jpg",
         vote_average: "8.1",
+        genre: "En Cartelera"
+      },
+      {
+        id: 103,
+        title: "Gladiador II",
+        overview: "Años después de presenciar la muerte de Máximo, Lucius debe entrar al Coliseo tras ser conquistado su hogar.",
+        poster_path: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80",
+        vote_average: "7.8",
+        genre: "En Cartelera"
+      },
+      {
+        id: 104,
+        title: "Deadpool & Wolverine",
+        overview: "Wolverine se recupera de sus heridas cuando se cruza con el bocazas Deadpool para derrotar a un enemigo común.",
+        poster_path: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=600&auto=format&fit=crop&q=80",
+        vote_average: "8.3",
+        genre: "En Cartelera"
+      },
+      {
+        id: 105,
+        title: "Wicked",
+        overview: "La historia no contada de las brujas de Oz centrada en Elphaba y Glinda antes de la llegada de Dorothy.",
+        poster_path: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&auto=format&fit=crop&q=80",
+        vote_average: "7.9",
+        genre: "En Cartelera"
+      },
+      {
+        id: 106,
+        title: "Joker: Folie à Deux",
+        overview: "Arthur Fleck está institucionalizado en Arkham a la espera de juicio por sus crímenes como Joker.",
+        poster_path: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=600&auto=format&fit=crop&q=80",
+        vote_average: "7.2",
         genre: "En Cartelera"
       }
     ];
@@ -95,9 +128,9 @@
       {
         id: 'r1',
         author: 'Elena Montero',
-        movieTitle: 'Spider-Man: Brand New Day',
+        movieTitle: 'Dune: Parte Dos',
         rating: 9,
-        content: 'Una propuesta visualmente impactante y con gran ritmo narrativo.',
+        content: 'Una propuesta visualmente impactante y con un ritmo narrativo magistral.',
         mediaOutlet: 'Columnista Radio LT3 / Canal 12 Misiones',
         date: '2026-08-31'
       }
@@ -130,8 +163,8 @@
       const [userCountryCode, setUserCountryCode] = useState('AR');
       const [userLanguage, setUserLanguage] = useState('es-ES');
 
-      const [moviesList, setMoviesList] = useState([]);
-      const [isLoading, setIsLoading] = useState(true);
+      const [moviesList, setMoviesList] = useState(FEATURED_MOVIES);
+      const [isLoading, setIsLoading] = useState(false);
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
       const [usersList, setUsersList] = useState(INITIAL_USERS);
@@ -147,20 +180,19 @@
       const [editTv, setEditTv] = useState(currentUser.socialLinks?.tv || '');
       const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks?.twitter || '');
 
-      // Búsqueda Inteligente en Cascada (3 Fallbacks)
+      // Consulta a la API de TMDb con Fallback a 6 Películas
       useEffect(() => {
         const fetchMovies = async () => {
           setIsLoading(true);
-          setMoviesList([]); 
 
           try {
-            // Nivel 1: Intentar buscar estrenos del país específico
+            // Intento 1: Cartelera por país seleccionado
             let res = await fetch(
               `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&region=${userCountryCode}&page=1`
             );
             let data = await res.json();
 
-            // Nivel 2: Si el país no tiene datos cargados, buscar cartelera global
+            // Intento 2: Cartelera Global si el país está vacío
             if (!data.results || data.results.length === 0) {
               res = await fetch(
                 `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&page=1`
@@ -168,7 +200,7 @@
               data = await res.json();
             }
 
-            // Nivel 3: Si aún está vacío, traer películas populares
+            // Intento 3: Películas Populares si la cartelera está vacía
             if (!data.results || data.results.length === 0) {
               res = await fetch(
                 `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_KEY}&language=${userLanguage}&page=1`
@@ -176,25 +208,23 @@
               data = await res.json();
             }
 
-            if (data.results && data.results.length > 0) {
-              const formatted = data.results.slice(0, 9).map(m => ({
+            if (data.results && data.results.length >= 6) {
+              const formatted = data.results.slice(0, 6).map(m => ({
                 id: m.id,
-                title: m.title || m.original_title || 'Sin Título',
-                overview: m.overview || (userLanguage.startsWith('es') 
-                  ? 'Consulta horarios y funciones en tu ciudad.' 
-                  : 'Check showtimes and schedules in your city.'),
+                title: m.title || m.original_title || 'Estreno',
+                overview: m.overview || 'Consulta funciones y horarios disponibles en tu cine local.',
                 poster_path: m.poster_path 
                   ? `https://image.tmdb.org/t/p/w500${m.poster_path}` 
                   : 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80',
                 vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0',
-                genre: userLanguage.startsWith('es') ? 'En Cartelera' : 'Now Playing'
+                genre: 'En Cartelera'
               }));
               setMoviesList(formatted);
             } else {
               setMoviesList(FEATURED_MOVIES);
             }
           } catch (err) {
-            console.error("Error al consultar TMDb:", err);
+            console.warn("Usando catálogo de respaldo de 6 películas:", err);
             setMoviesList(FEATURED_MOVIES);
           } finally {
             setIsLoading(false);
@@ -353,12 +383,12 @@
                     onClick={() => openCitySchedule()} 
                     className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs whitespace-nowrap transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2"
                   >
-                    <span>Ver Funciones en {userCity} (Google)</span>
+                    <span>Buscar Cartelera Directa de {userCity} en Google</span>
                     <span>↗</span>
                   </button>
                 </div>
 
-                {/* GRILLA DE AFICHES */}
+                {/* GRILLA DE 6 AFICHES */}
                 {isLoading ? (
                   <div className="text-center py-20 text-amber-400 font-bold text-sm">
                     ⏳ Sincronizando la cartelera oficial...
@@ -368,7 +398,7 @@
                     {moviesList.map(m => (
                       <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-amber-500/50 transition-all">
                         <div className="space-y-3">
-                          <div className="relative h-72 rounded-2xl overflow-hidden bg-slate-950 cursor-pointer" onClick={() => openCitySchedule(m.title)}>
+                          <div className="relative h-80 rounded-2xl overflow-hidden bg-slate-950 cursor-pointer" onClick={() => openCitySchedule(m.title)}>
                             <img src={m.poster_path} alt={m.title} className="w-full h-full object-cover hover:scale-105 transition-all duration-300" />
                             <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md shadow">
                               ★ {m.vote_average}
