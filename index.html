@@ -67,6 +67,25 @@
         bio: 'Directora de cortos amateur y crítica de cine asiático y de autor.',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
         socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' }
+      },
+      {
+        id: 'u3',
+        name: 'Carlos Ruiz',
+        email: 'carlos@gmail.com',
+        password: '123',
+        age: 30,
+        sex: 'Masculino',
+        lookingFor: 'Cita',
+        location: 'Asunción, Paraguay',
+        distanceKm: 150.0,
+        role: 'general',
+        roleLabel: 'Cinéfilo Estándar',
+        isPremium: false,
+        isCritic: false,
+        verified: false,
+        bio: 'Buscando con quién maratonear películas de terror.',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop&q=80',
+        socialLinks: {}
       }
     ];
 
@@ -124,12 +143,13 @@
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
 
-      const [userCity, setUserCity] = useState('Quilmes');
+      // Inicia en blanco para no asumir una ubicación
+      const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
 
       // MODALES
       const [showAuthModal, setShowAuthModal] = useState(false);
-      const [authMode, setAuthMode] = useState('signup'); // 'signup' o 'login'
+      const [authMode, setAuthMode] = useState('signup');
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
       // ESTADOS DE REGISTRO / LOGIN
@@ -143,7 +163,6 @@
       // ESTADOS DE RESEÑAS Y FORO
       const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
       const [forumTopics, setForumTopics] = useState(INITIAL_FORUM_TOPICS);
-      const [selectedCategory, setSelectedCategory] = useState('Todas');
       const [activeTopic, setActiveTopic] = useState(null);
       const [showNewTopicModal, setShowNewTopicModal] = useState(false);
 
@@ -171,7 +190,7 @@
         }
       }, [currentUser]);
 
-      // SEGURIDAD: SI NO ES ADMIN Y ESTA EN PESTAÑA ADMIN, REDIRIGIR
+      // SEGURIDAD: REDIRIGIR SI NO ES ADMIN
       useEffect(() => {
         if (activeTab === 'admin' && currentUser?.role !== 'admin') {
           setActiveTab('cinema');
@@ -184,25 +203,48 @@
       };
 
       const openGoogleEngine = (customQueryFormat = 'cartelera de cines en {city} {country}') => {
+        if (!userCity) {
+            alert('⚠️ Por favor, detecta tu ubicación o ingresa una ciudad primero.');
+            return;
+        }
         const cleanCity = userCity.trim();
         const country = getCountryName();
         const query = customQueryFormat.replace('{city}', cleanCity).replace('{country}', country);
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=es`, '_blank');
       };
 
-      // DETECTAR UBICACIÓN GPS
+      // DETECTAR UBICACIÓN GPS REAL CON OPENSTREETMAP API
       const handleDetectLocation = () => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
-            (position) => {
-              // Simulamos la detección existosa de una ciudad cercana
-              setUserCity('Ubicación Detectada'); 
-              alert('📍 Ubicación detectada y actualizada correctamente.');
+            async (position) => {
+              try {
+                const { latitude, longitude } = position.coords;
+                // API gratuita Nominatim de OpenStreetMap para geocodificación inversa
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+                const data = await response.json();
+                
+                // Extraer la mejor coincidencia de ciudad
+                const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Ubicación Detectada';
+                const countryCode = data.address.country_code ? data.address.country_code.toUpperCase() : 'AR';
+                
+                setUserCity(city);
+                
+                // Si el país detectado está en nuestra lista, lo seleccionamos
+                if (COUNTRY_CODES.some(c => c.code === countryCode)) {
+                  setUserCountryCode(countryCode);
+                }
+                
+                alert(`📍 Ubicación detectada con éxito: ${city}`);
+              } catch (error) {
+                console.error("Error al obtener la ciudad:", error);
+                alert('⚠️ Tenemos tus coordenadas, pero hubo un error al leer el nombre de la ciudad. Intenta escribirla manualmente si eres administrador.');
+              }
             }, 
-            () => alert('❌ Por favor, permite el acceso a la ubicación en tu navegador.')
+            () => alert('❌ Debes permitir el acceso a la ubicación en tu navegador para ver cines cercanos.')
           );
         } else {
-          alert('❌ Geolocalización no soportada en este navegador.');
+          alert('❌ Tu navegador no soporta geolocalización.');
         }
       };
 
@@ -225,12 +267,12 @@
         }
       };
 
-      // MANEJO DE REGISTRO E INICIO DE SESIÓN
+      // REGISTRO E INICIO DE SESIÓN
       const handleAuthSubmit = (e) => {
         e.preventDefault();
         
         if (authMode === 'signup') {
-          // Validación de Edad (Solo +18)
+          // Validación +18
           if (Number(authAge) < 18) {
             alert('🚫 Acceso denegado: Debes ser mayor de 18 años para registrarte en Plottwisme.');
             return;
@@ -249,9 +291,9 @@
             age: Number(authAge),
             sex: authSex,
             lookingFor: authLookingFor,
-            location: `${userCity}, ${getCountryName()}`,
-            distanceKm: 5.0,
-            role: 'general', // SIEMPRE GENERAL POR DEFECTO
+            location: `${userCity || 'Ciudad Desconocida'}, ${getCountryName()}`,
+            distanceKm: 5.0, // Simulado cercano al registro
+            role: 'general',
             roleLabel: 'Cinéfilo Estándar',
             isPremium: false,
             isCritic: false,
@@ -283,6 +325,7 @@
         alert('Sesión cerrada.');
       };
 
+      // LÓGICA DE RADAR Y DISTANCIAS
       const maxDistance = currentUser?.isPremium ? 500 : 100;
       const filteredCandidates = useMemo(() => {
         return usersList.filter(u => u.email !== currentUser?.email && u.distanceKm <= maxDistance);
@@ -394,7 +437,6 @@
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
-          {/* HEADER */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
               
@@ -408,13 +450,14 @@
                 </div>
               </div>
 
-              {/* CONTROLES UBICACIÓN (Limitado a admin para editar, general para ver) */}
+              {/* CONTROLES UBICACIÓN */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad:</span>
                 <input 
                   type="text" 
                   value={userCity} 
                   onChange={(e) => setUserCity(e.target.value)} 
+                  placeholder="Sin Detectar"
                   disabled={currentUser?.role !== 'admin'}
                   className={`bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs ${currentUser?.role !== 'admin' ? 'opacity-70 cursor-not-allowed' : ''}`} 
                 />
@@ -433,7 +476,6 @@
                   ))}
                 </select>
 
-                {/* BOTON DETECTAR (Visible si NO eres admin para actualizar tu zona) */}
                 {currentUser?.role !== 'admin' && (
                   <button onClick={handleDetectLocation} className="ml-2 bg-amber-500/20 hover:bg-amber-500/40 px-2 py-1 rounded-lg text-lg" title="Detectar mi ubicación automática">
                     📍
@@ -441,7 +483,6 @@
                 )}
               </div>
 
-              {/* PESTAÑAS Y SESIÓN */}
               <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto max-w-full">
                 <button onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
                 <button onClick={() => { setActiveTab('forums'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>💬 Foros</button>
@@ -452,7 +493,6 @@
                   <button onClick={() => { setActiveTab('profile'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>👤 Perfil</button>
                 )}
 
-                {/* SOLO VISIBLE SI ES ADMINISTRADOR */}
                 {currentUser?.role === 'admin' && (
                   <button onClick={() => { setActiveTab('admin'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/50'}`}>
                     🛡️ Admin
@@ -469,14 +509,11 @@
                   </button>
                 )}
               </nav>
-
             </div>
           </header>
 
-          {/* CONTENIDO PRINCIPAL */}
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
             
-            {/* CARTELERA */}
             {activeTab === 'cinema' && (
               <div className="space-y-8">
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/30 p-8 shadow-2xl">
@@ -485,7 +522,7 @@
                       Motor Oficial Geolocalizado
                     </span>
                     <h2 className="text-3xl font-black text-white leading-tight">
-                      Cartelera en Tiempo Real para <span className="text-amber-400 capitalize">{userCity}</span>
+                      Cartelera en Tiempo Real para <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
                     </h2>
                     <p className="text-sm text-slate-300 leading-relaxed">
                       Accede instantáneamente al panel interactivo oficial de Google con las películas, complejos, horarios y salas disponibles hoy en tu ciudad en modo oscuro.
@@ -495,7 +532,7 @@
                         onClick={() => openGoogleEngine()} 
                         className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
                       >
-                        <span>🏛️ Abrir Cartelera Completa de {userCity}</span>
+                        <span>🏛️ Abrir Cartelera Completa {userCity ? `de ${userCity}` : ''}</span>
                         <span>↗</span>
                       </button>
                     </div>
@@ -505,7 +542,7 @@
                 <div className="space-y-4">
                   <h3 className="text-lg font-black text-white flex items-center gap-2">
                     <span>⚡ Buscador Directo por Categoría en</span>
-                    <span className="text-amber-400 capitalize">{userCity}</span>
+                    <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -530,7 +567,6 @@
               </div>
             )}
 
-            {/* FOROS */}
             {activeTab === 'forums' && (
               <div className="space-y-6 max-w-4xl mx-auto">
                 {activeTopic ? (
@@ -603,7 +639,6 @@
               </div>
             )}
 
-            {/* RADAR */}
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center">
                 {currentCandidate ? (
@@ -634,7 +669,6 @@
               </div>
             )}
 
-            {/* CRÍTICOS */}
             {activeTab === 'critics' && (
               <div className="space-y-6 max-w-3xl mx-auto">
                 <h2 className="text-2xl font-black">📰 Panel de Críticos & Medios</h2>
@@ -676,7 +710,6 @@
               </div>
             )}
 
-            {/* PERFIL */}
             {activeTab === 'profile' && currentUser && (
               <form onSubmit={handleSaveProfile} className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-4">
@@ -703,7 +736,6 @@
               </form>
             )}
 
-            {/* PANEL ADMIN ACTUALIZADO CON MODERACIÓN VISUAL */}
             {activeTab === 'admin' && currentUser?.role === 'admin' && (
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -767,7 +799,6 @@
 
           </main>
 
-          {/* MODAL AUTENTICACIÓN (CREAR CUENTA / INICIAR SESIÓN) */}
           {showAuthModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
@@ -787,7 +818,7 @@
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block mb-1 text-slate-400 font-bold">Edad:</label>
+                          <label className="block mb-1 text-slate-400 font-bold">Edad (+18):</label>
                           <input type="number" min="18" max="99" value={authAge} onChange={(e) => setAuthAge(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                         </div>
                         <div>
@@ -828,7 +859,6 @@
             </div>
           )}
 
-          {/* MODAL FORO */}
           {showNewTopicModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
