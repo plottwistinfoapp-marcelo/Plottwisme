@@ -72,55 +72,49 @@
       }
     ];
 
-    // BASE DE 6 PELÍCULAS ACTUALES EN CARTELERA (Garantiza 6 afiches siempre)
-    const FEATURED_MOVIES = [
+    // Películas de Respaldo por si falla la conexión de red
+    const FALLBACK_MOVIES = [
       {
         id: 101,
         title: "Dune: Parte Dos",
-        overview: "Paul Atreides se une a Chani y a los Fremen mientras busca venganza contra los conspiradores que destruyeron a su familia.",
+        overview: "Paul Atreides se une a Chani y a los Fremen mientras busca venganza contra los conspiradores.",
         poster_path: "https://image.tmdb.org/t/p/w500/1pdfLPoL3VFi3C3R2FiA35i5L35.jpg",
-        vote_average: "8.5",
-        genre: "En Cartelera"
+        vote_average: "8.5"
       },
       {
         id: 102,
         title: "Intensa-Mente 2",
         overview: "Sigue a Riley en su adolescencia mientras nuevas emociones entran en su centro de control.",
         poster_path: "https://image.tmdb.org/t/p/w500/vpnP9RSu3P93A431S135p49a9a3.jpg",
-        vote_average: "8.1",
-        genre: "En Cartelera"
+        vote_average: "8.1"
       },
       {
         id: 103,
-        title: "Gladiador II",
-        overview: "Años después de presenciar la muerte de Máximo, Lucius debe entrar al Coliseo tras ser conquistado su hogar.",
-        poster_path: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80",
-        vote_average: "7.8",
-        genre: "En Cartelera"
+        title: "Deadpool & Wolverine",
+        overview: "Wolverine se recupera cuando se cruza con el bocazas Deadpool para derrotar a un enemigo común.",
+        poster_path: "https://image.tmdb.org/t/p/w500/8cdWjv1fS3I0S932iA9L3R82G2d.jpg",
+        vote_average: "8.3"
       },
       {
         id: 104,
-        title: "Deadpool & Wolverine",
-        overview: "Wolverine se recupera de sus heridas cuando se cruza con el bocazas Deadpool para derrotar a un enemigo común.",
-        poster_path: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=600&auto=format&fit=crop&q=80",
-        vote_average: "8.3",
-        genre: "En Cartelera"
+        title: "Gladiador II",
+        overview: "Años después de presenciar la muerte de Máximo, Lucius debe entrar al Coliseo.",
+        poster_path: "https://image.tmdb.org/t/p/w500/2cxhvwyEwRlysAmRH4iodkvo0z5.jpg",
+        vote_average: "7.8"
       },
       {
         id: 105,
         title: "Wicked",
-        overview: "La historia no contada de las brujas de Oz centrada en Elphaba y Glinda antes de la llegada de Dorothy.",
-        poster_path: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&auto=format&fit=crop&q=80",
-        vote_average: "7.9",
-        genre: "En Cartelera"
+        overview: "La historia no contada de las brujas de Oz centrada en Elphaba y Glinda.",
+        poster_path: "https://image.tmdb.org/t/p/w500/2vP29R9m30Jp9aXG9dE77C68P3d.jpg",
+        vote_average: "7.9"
       },
       {
         id: 106,
-        title: "Joker: Folie à Deux",
-        overview: "Arthur Fleck está institucionalizado en Arkham a la espera de juicio por sus crímenes como Joker.",
-        poster_path: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=600&auto=format&fit=crop&q=80",
-        vote_average: "7.2",
-        genre: "En Cartelera"
+        title: "Alien: Romulus",
+        overview: "Un grupo de jóvenes colonizadores espaciales se encuentra cara a cara con la forma de vida más aterradora del universo.",
+        poster_path: "https://image.tmdb.org/t/p/w500/b3A83e2098dF55a1M0v46X3p78Y.jpg",
+        vote_average: "7.4"
       }
     ];
 
@@ -163,7 +157,7 @@
       const [userCountryCode, setUserCountryCode] = useState('AR');
       const [userLanguage, setUserLanguage] = useState('es-ES');
 
-      const [moviesList, setMoviesList] = useState(FEATURED_MOVIES);
+      const [moviesList, setMoviesList] = useState(FALLBACK_MOVIES);
       const [isLoading, setIsLoading] = useState(false);
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
@@ -180,65 +174,60 @@
       const [editTv, setEditTv] = useState(currentUser.socialLinks?.tv || '');
       const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks?.twitter || '');
 
-      // Consulta a la API de TMDb con Fallback a 6 Películas
+      // Obtener Afiches de TMDb sin bloqueo regional para evitar pantallas vacías
       useEffect(() => {
         const fetchMovies = async () => {
           setIsLoading(true);
-
           try {
-            // Intento 1: Cartelera por país seleccionado
-            let res = await fetch(
-              `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&region=${userCountryCode}&page=1`
+            const res = await fetch(
+              `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&page=1`
             );
-            let data = await res.json();
+            const data = await res.json();
 
-            // Intento 2: Cartelera Global si el país está vacío
-            if (!data.results || data.results.length === 0) {
-              res = await fetch(
-                `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&page=1`
-              );
-              data = await res.json();
-            }
+            if (data.results && data.results.length > 0) {
+              const validMovies = data.results
+                .filter(m => m.poster_path) // Asegurar que tenga afiche
+                .slice(0, 6)
+                .map(m => ({
+                  id: m.id,
+                  title: m.title || m.original_title,
+                  overview: m.overview || 'Consulta horarios y funciones disponibles en tu cine local.',
+                  poster_path: `https://image.tmdb.org/t/p/w500${m.poster_path}`,
+                  vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0'
+                }));
 
-            // Intento 3: Películas Populares si la cartelera está vacía
-            if (!data.results || data.results.length === 0) {
-              res = await fetch(
-                `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_KEY}&language=${userLanguage}&page=1`
-              );
-              data = await res.json();
-            }
-
-            if (data.results && data.results.length >= 6) {
-              const formatted = data.results.slice(0, 6).map(m => ({
-                id: m.id,
-                title: m.title || m.original_title || 'Estreno',
-                overview: m.overview || 'Consulta funciones y horarios disponibles en tu cine local.',
-                poster_path: m.poster_path 
-                  ? `https://image.tmdb.org/t/p/w500${m.poster_path}` 
-                  : 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80',
-                vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0',
-                genre: 'En Cartelera'
-              }));
-              setMoviesList(formatted);
+              if (validMovies.length >= 4) {
+                setMoviesList(validMovies);
+              } else {
+                setMoviesList(FALLBACK_MOVIES);
+              }
             } else {
-              setMoviesList(FEATURED_MOVIES);
+              setMoviesList(FALLBACK_MOVIES);
             }
           } catch (err) {
-            console.warn("Usando catálogo de respaldo de 6 películas:", err);
-            setMoviesList(FEATURED_MOVIES);
+            console.warn("Usando catálogo de respaldo:", err);
+            setMoviesList(FALLBACK_MOVIES);
           } finally {
             setIsLoading(false);
           }
         };
 
         fetchMovies();
-      }, [userCountryCode, userLanguage]);
+      }, [userLanguage]);
 
-      const openCitySchedule = (movieTitle = '') => {
-        const cleanCity = userCity.trim().toLowerCase();
-        const query = movieTitle 
-          ? `cartelera cine ${movieTitle} en ${cleanCity}` 
-          : `cartelera de cines en ${cleanCity}`;
+      // Función de Búsqueda de Cartelera Real en Google por Ciudad y País
+      const openGoogleCinema = (movieTitle = '') => {
+        const selectedCountryObj = COUNTRY_CODES.find(c => c.code === userCountryCode);
+        const countryName = selectedCountryObj ? selectedCountryObj.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
+        const city = userCity.trim();
+
+        let query = '';
+        if (movieTitle) {
+          query = `cartelera cines ${movieTitle} ${city} ${countryName}`;
+        } else {
+          query = `cines y horarios peliculas ${city} ${countryName}`;
+        }
+
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
       };
 
@@ -306,19 +295,20 @@
                 </div>
               </div>
 
-              {/* BARRA DE CONFIGURACIÓN REGIONAL E IDIOMA */}
+              {/* BARRA DE CONFIGURACIÓN DE CIUDAD Y PAÍS */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
-                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ubicación:</span>
+                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad:</span>
                 <input 
                   type="text" 
                   value={userCity} 
                   onChange={(e) => setUserCity(e.target.value)} 
                   className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs" 
-                  placeholder="Ciudad..." 
+                  placeholder="Ej: Quilmes, Oberá..." 
                 />
                 
                 <span className="text-slate-600">|</span>
                 
+                <span className="text-amber-500 font-bold whitespace-nowrap">🌎 País:</span>
                 <select 
                   value={userCountryCode} 
                   onChange={(e) => setUserCountryCode(e.target.value)}
@@ -331,7 +321,6 @@
 
                 <span className="text-slate-600">|</span>
 
-                <span className="text-amber-500 font-bold whitespace-nowrap">🗣️ Idioma:</span>
                 <select 
                   value={userLanguage} 
                   onChange={(e) => setUserLanguage(e.target.value)}
@@ -370,54 +359,71 @@
             {/* CARTELERA DE CINE */}
             {activeTab === 'cinema' && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                
+                {/* BANNER PRINCIPAL DE BÚSQUEDA DE CINES */}
+                <div className="bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-900 border border-amber-500/40 p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl">
                   <div>
-                    <h2 className="text-lg font-black text-amber-400">
-                      🏛️ Estrenos en {COUNTRY_CODES.find(c => c.code === userCountryCode)?.name || userCountryCode}
+                    <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-md uppercase tracking-wider">
+                      Motor de Cartelera Local
+                    </span>
+                    <h2 className="text-xl font-black text-white mt-2">
+                      🍿 Cines en <span className="text-amber-400 capitalize">{userCity}</span> ({COUNTRY_CODES.find(c => c.code === userCountryCode)?.name})
                     </h2>
                     <p className="text-xs text-slate-300 mt-1">
-                      Películas en cartelera. Consulta funciones y salas exactas en <b className="capitalize text-white">{userCity}</b>.
+                      Haz clic en cualquier película o usa el botón para abrir los horarios exactos en los cines de tu zona.
                     </p>
                   </div>
-                  <button 
-                    onClick={() => openCitySchedule()} 
-                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs whitespace-nowrap transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2"
-                  >
-                    <span>Buscar Cartelera Directa de {userCity} en Google</span>
-                    <span>↗</span>
-                  </button>
+
+                  <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                    <button 
+                      onClick={() => openGoogleCinema()} 
+                      className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl text-xs whitespace-nowrap transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                    >
+                      <span>🔍 Ver Cines & Horarios en {userCity}</span>
+                      <span>↗</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* GRILLA DE 6 AFICHES */}
                 {isLoading ? (
                   <div className="text-center py-20 text-amber-400 font-bold text-sm">
-                    ⏳ Sincronizando la cartelera oficial...
+                    ⏳ Sincronizando afiches oficiales...
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {moviesList.map(m => (
-                      <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-amber-500/50 transition-all">
+                      <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-amber-500/50 transition-all group">
                         <div className="space-y-3">
-                          <div className="relative h-80 rounded-2xl overflow-hidden bg-slate-950 cursor-pointer" onClick={() => openCitySchedule(m.title)}>
-                            <img src={m.poster_path} alt={m.title} className="w-full h-full object-cover hover:scale-105 transition-all duration-300" />
+                          <div 
+                            className="relative h-80 rounded-2xl overflow-hidden bg-slate-950 cursor-pointer"
+                            onClick={() => openGoogleCinema(m.title)}
+                          >
+                            <img src={m.poster_path} alt={m.title} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                              <span className="text-xs font-bold text-amber-300">🔍 Buscar salas para esta película en {userCity} ↗</span>
+                            </div>
                             <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md shadow">
                               ★ {m.vote_average}
                             </span>
                           </div>
+
                           <div>
-                            <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre}</span>
-                            <h3 className="text-base font-black text-white cursor-pointer hover:text-amber-400 transition-colors" onClick={() => openCitySchedule(m.title)}>
+                            <h3 
+                              className="text-base font-black text-white cursor-pointer hover:text-amber-400 transition-colors"
+                              onClick={() => openGoogleCinema(m.title)}
+                            >
                               {m.title}
                             </h3>
-                            <p className="text-xs text-slate-400 line-clamp-3 pt-1">{m.overview}</p>
+                            <p className="text-xs text-slate-400 line-clamp-2 pt-1">{m.overview}</p>
                           </div>
                         </div>
 
                         <button 
-                          onClick={() => openCitySchedule(m.title)} 
-                          className="w-full bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-slate-700 flex items-center justify-center gap-2"
+                          onClick={() => openGoogleCinema(m.title)} 
+                          className="w-full bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-slate-700/80 flex items-center justify-center gap-2 shadow-md"
                         >
-                          <span>Horarios en {userCity}</span>
+                          <span>🎟️ Horarios en {userCity}</span>
                           <span>↗</span>
                         </button>
                       </div>
