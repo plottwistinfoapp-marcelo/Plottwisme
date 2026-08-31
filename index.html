@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plottwisme - Red Social Cinéfila & Cartelera Real</title>
+  <title>Plottwisme - Red Social Cinéfila & Cartelera Global</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -68,15 +68,55 @@
       }
     ];
 
-    // Respaldo actualizado sin títulos viejos
-    const RECENT_MOVIES_FALLBACK = [
+    // Grilla diversa de opciones principales de cartelera
+    const FEATURED_MOVIES = [
       {
-        id: 1,
-        title: "Cartelera General de Cine",
-        overview: "Consulta los horarios, salas y funciones disponibles hoy en tu ciudad.",
-        poster_path: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&auto=format&fit=crop&q=80",
-        vote_average: "9.0",
-        genre: "Estrenos Semanales"
+        id: 101,
+        title: "Spider-Man: Brand New Day",
+        overview: "Nuevas aventuras y enfrentamientos épicos en la gran pantalla. Consulta salas y horarios disponibles.",
+        poster_path: "https://images.unsplash.com/photo-1635863138275-d9b33299680b?w=600&auto=format&fit=crop&q=80",
+        vote_average: "8.8",
+        genre: "Acción / Aventura"
+      },
+      {
+        id: 102,
+        title: "Yo, Narciso",
+        overview: "Una mirada profunda al drama psicológico y las relaciones contemporáneas.",
+        poster_path: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80",
+        vote_average: "7.9",
+        genre: "Romance / Comedia"
+      },
+      {
+        id: 103,
+        title: "Noche del Demonio: Están entre nosotros",
+        overview: "La saga de terror regresa con nuevos misterios y sucesos sobrenaturales e intensos.",
+        poster_path: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80",
+        vote_average: "8.1",
+        genre: "Terror / Suspenso"
+      },
+      {
+        id: 104,
+        title: "Coyote vs. Acme",
+        overview: "Una divertida e ingeniosa comedia que combina animación y acción en vivo.",
+        poster_path: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80",
+        vote_average: "8.3",
+        genre: "Comedia / Familiar"
+      },
+      {
+        id: 105,
+        title: "The Dog Stars",
+        overview: "Relato de ciencia ficción y supervivencia en un mundo postapocalíptico desolado.",
+        poster_path: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80",
+        vote_average: "8.5",
+        genre: "Ciencia Ficción / Drama"
+      },
+      {
+        id: 106,
+        title: "Avatar: Fuego y Cenizas",
+        overview: "La épica travesía en Pandora continúa con nuevas regiones y clanes desconocidos.",
+        poster_path: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80",
+        vote_average: "9.1",
+        genre: "Ciencia Ficción / Aventura"
       }
     ];
 
@@ -84,9 +124,9 @@
       {
         id: 'r1',
         author: 'Elena Montero',
-        movieTitle: 'Cine de Autor & Estrenos',
+        movieTitle: 'Spider-Man: Brand New Day',
         rating: 9,
-        content: 'Análisis y recomendaciones de las salas locales.',
+        content: 'Una propuesta visualmente impactante y con gran ritmo narrativo.',
         mediaOutlet: 'Columnista Radio LT3 / Canal 12 Misiones',
         date: '2026-08-31'
       }
@@ -112,7 +152,7 @@
       const [userCity, setUserCity] = useState('posadas');
       const [userCountryCode, setUserCountryCode] = useState('AR');
 
-      const [moviesList, setMoviesList] = useState(RECENT_MOVIES_FALLBACK);
+      const [moviesList, setMoviesList] = useState(FEATURED_MOVIES);
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
       const [usersList, setUsersList] = useState(INITIAL_USERS);
@@ -128,7 +168,7 @@
       const [editTv, setEditTv] = useState(currentUser.socialLinks.tv);
       const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks.twitter);
 
-      // Carga automática desde TMDb
+      // Carga dinámica desde la API de TMDb si hay conexión activa
       useEffect(() => {
         const fetchMovies = async () => {
           try {
@@ -138,21 +178,21 @@
               const formatted = data.results.slice(0, 9).map(m => ({
                 id: m.id,
                 title: m.title || m.original_title,
-                overview: m.overview || 'Sin descripción disponible.',
-                poster_path: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : RECENT_MOVIES_FALLBACK[0].poster_path,
+                overview: m.overview || 'Consulta horarios y funciones disponibles en tu ciudad.',
+                poster_path: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : FEATURED_MOVIES[0].poster_path,
                 vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0',
                 genre: 'En Cartelera'
               }));
               setMoviesList(formatted);
             }
           } catch (err) {
-            console.log("Usando redirección directa a Google");
+            setMoviesList(FEATURED_MOVIES);
           }
         };
         fetchMovies();
       }, [userCountryCode]);
 
-      // Redirección directa al formato exacto de Google (Panel 'Películas que se proyectan')
+      // Redirección directa al buscador con los parámetros que abren la marquesina de Google
       const openCitySchedule = (movieTitle = '') => {
         const cleanCity = userCity.trim().toLowerCase();
         const query = movieTitle 
@@ -213,7 +253,7 @@
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
-          {/* HEADER CON UBICACIÓN */}
+          {/* HEADER CON SELECCIÓN DE CIUDAD */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
               
@@ -247,7 +287,7 @@
                 </select>
               </div>
 
-              {/* NAVEGACIÓN COMPLETA */}
+              {/* BARRA DE NAVEGACIÓN */}
               <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto max-w-full">
                 <button onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
                 <button onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
@@ -271,45 +311,48 @@
           {/* CONTENIDO PRINCIPAL */}
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
             
-            {/* TAB 1: CARTELERA CON REDIRECCIÓN DIRECTA A GOOGLE */}
+            {/* TAB 1: CARTELERA CON GRILLA COMPLETA */}
             {activeTab === 'cinema' && (
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-black text-amber-400">🏛️ Cartelera Real en <span className="capitalize text-white">{userCity}</span></h2>
-                    <p className="text-xs text-slate-300 mt-1">Abre el panel interactivo directo de Google con las funciones de hoy en tu ciudad.</p>
+                    <h2 className="text-lg font-black text-amber-400">🏛️ Cartelera de Cines en <span className="capitalize text-white">{userCity}</span></h2>
+                    <p className="text-xs text-slate-300 mt-1">Hacé clic en cualquier película o en el botón general para abrir las funciones de hoy en Google.</p>
                   </div>
                   <button 
                     onClick={() => openCitySchedule()} 
                     className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs whitespace-nowrap transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2"
                   >
-                    <span>Ver Cartelera de Cines en {userCity}</span>
+                    <span>Ver Todas en {userCity} (Google)</span>
                     <span>↗</span>
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* GRILLA CON MÚLTIPLES OPCIONES EN PANTALLA */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {moviesList.map(m => (
-                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-slate-700 transition-all">
+                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-amber-500/50 transition-all">
                       <div className="space-y-3">
-                        <div className="relative h-72 rounded-2xl overflow-hidden bg-slate-950">
-                          <img src={m.poster_path} alt={m.title} className="w-full h-full object-cover" />
+                        <div className="relative h-72 rounded-2xl overflow-hidden bg-slate-950 cursor-pointer" onClick={() => openCitySchedule(m.title)}>
+                          <img src={m.poster_path} alt={m.title} className="w-full h-full object-cover hover:scale-105 transition-all duration-300" />
                           <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md shadow">
                             ★ {m.vote_average}
                           </span>
                         </div>
                         <div>
                           <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre || 'Cine'}</span>
-                          <h3 className="text-base font-black text-white">{m.title}</h3>
+                          <h3 className="text-base font-black text-white cursor-pointer hover:text-amber-400 transition-colors" onClick={() => openCitySchedule(m.title)}>
+                            {m.title}
+                          </h3>
                           <p className="text-xs text-slate-400 line-clamp-3 pt-1">{m.overview}</p>
                         </div>
                       </div>
 
                       <button 
-                        onClick={() => openCitySchedule(m.title === "Cartelera General de Cine" ? '' : m.title)} 
+                        onClick={() => openCitySchedule(m.title)} 
                         className="w-full bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-slate-700 flex items-center justify-center gap-2"
                       >
-                        <span>Buscar Funciones en Google ({userCity})</span>
+                        <span>Funciones en {userCity}</span>
                         <span>↗</span>
                       </button>
                     </div>
