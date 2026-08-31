@@ -21,7 +21,7 @@
 </head>
 <body class="antialiased bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
   <div id="root">
-    <div className="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
+    <div class="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
       ⏳ Cargando Plottwisme...
     </div>
   </div>
@@ -72,6 +72,25 @@
       }
     ];
 
+    const FEATURED_MOVIES = [
+      {
+        id: 101,
+        title: "Dune: Part Two",
+        overview: "Consulta horarios y funciones disponibles en los cines de tu ciudad.",
+        poster_path: "https://image.tmdb.org/t/p/w500/1pdfLPoL3VFi3C3R2FiA35i5L35.jpg",
+        vote_average: "8.5",
+        genre: "En Cartelera"
+      },
+      {
+        id: 102,
+        title: "Inside Out 2",
+        overview: "Consulta horarios y funciones disponibles en los cines de tu ciudad.",
+        poster_path: "https://image.tmdb.org/t/p/w500/vpnP9RSu3P93A431S135p49a9a3.jpg",
+        vote_average: "8.1",
+        genre: "En Cartelera"
+      }
+    ];
+
     const INITIAL_REVIEWS = [
       {
         id: 'r1',
@@ -85,8 +104,8 @@
     ];
 
     const COUNTRY_CODES = [
-      { code: 'US', name: 'Estados Unidos 🇺🇸' },
       { code: 'AR', name: 'Argentina 🇦🇷' },
+      { code: 'US', name: 'Estados Unidos 🇺🇸' },
       { code: 'ES', name: 'España 🇪🇸' },
       { code: 'MX', name: 'México 🇲🇽' },
       { code: 'CL', name: 'Chile 🇨🇱' },
@@ -107,8 +126,8 @@
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
 
-      const [userCity, setUserCity] = useState('Austin, Texas');
-      const [userCountryCode, setUserCountryCode] = useState('US');
+      const [userCity, setUserCity] = useState('Quilmes');
+      const [userCountryCode, setUserCountryCode] = useState('AR');
       const [userLanguage, setUserLanguage] = useState('es-ES');
 
       const [moviesList, setMoviesList] = useState([]);
@@ -128,18 +147,36 @@
       const [editTv, setEditTv] = useState(currentUser.socialLinks?.tv || '');
       const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks?.twitter || '');
 
+      // Búsqueda Inteligente en Cascada (3 Fallbacks)
       useEffect(() => {
         const fetchMovies = async () => {
           setIsLoading(true);
           setMoviesList([]); 
 
           try {
-            const res = await fetch(
-              `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&region=${userCountryCode}&page=1&_t=${Date.now()}`
+            // Nivel 1: Intentar buscar estrenos del país específico
+            let res = await fetch(
+              `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&region=${userCountryCode}&page=1`
             );
-            const data = await res.json();
+            let data = await res.json();
 
-            if (data && data.results && data.results.length > 0) {
+            // Nivel 2: Si el país no tiene datos cargados, buscar cartelera global
+            if (!data.results || data.results.length === 0) {
+              res = await fetch(
+                `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&page=1`
+              );
+              data = await res.json();
+            }
+
+            // Nivel 3: Si aún está vacío, traer películas populares
+            if (!data.results || data.results.length === 0) {
+              res = await fetch(
+                `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_KEY}&language=${userLanguage}&page=1`
+              );
+              data = await res.json();
+            }
+
+            if (data.results && data.results.length > 0) {
               const formatted = data.results.slice(0, 9).map(m => ({
                 id: m.id,
                 title: m.title || m.original_title || 'Sin Título',
@@ -154,11 +191,11 @@
               }));
               setMoviesList(formatted);
             } else {
-              setMoviesList([]);
+              setMoviesList(FEATURED_MOVIES);
             }
           } catch (err) {
             console.error("Error al consultar TMDb:", err);
-            setMoviesList([]);
+            setMoviesList(FEATURED_MOVIES);
           } finally {
             setIsLoading(false);
           }
@@ -239,14 +276,14 @@
                 </div>
               </div>
 
-              {/* SELECCIÓN REGIONAL E IDIOMA */}
+              {/* BARRA DE CONFIGURACIÓN REGIONAL E IDIOMA */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ubicación:</span>
                 <input 
                   type="text" 
                   value={userCity} 
                   onChange={(e) => setUserCity(e.target.value)} 
-                  className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-32 text-amber-300 focus:outline-none capitalize text-xs" 
+                  className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs" 
                   placeholder="Ciudad..." 
                 />
                 
@@ -276,7 +313,7 @@
                 </select>
               </div>
 
-              {/* NAV TAB */}
+              {/* NAVEGACIÓN */}
               <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto max-w-full">
                 <button onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
                 <button onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
@@ -297,10 +334,10 @@
             </div>
           </header>
 
-          {/* MAIN */}
+          {/* CONTENIDO PRINCIPAL */}
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
             
-            {/* CARTELERA */}
+            {/* CARTELERA DE CINE */}
             {activeTab === 'cinema' && (
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -309,7 +346,7 @@
                       🏛️ Estrenos en {COUNTRY_CODES.find(c => c.code === userCountryCode)?.name || userCountryCode}
                     </h2>
                     <p className="text-xs text-slate-300 mt-1">
-                      Películas en cartelera nacional. Consulta funciones y salas exactas en <b className="capitalize text-white">{userCity}</b>.
+                      Películas en cartelera. Consulta funciones y salas exactas en <b className="capitalize text-white">{userCity}</b>.
                     </p>
                   </div>
                   <button 
@@ -321,11 +358,12 @@
                   </button>
                 </div>
 
+                {/* GRILLA DE AFICHES */}
                 {isLoading ? (
                   <div className="text-center py-20 text-amber-400 font-bold text-sm">
                     ⏳ Sincronizando la cartelera oficial...
                   </div>
-                ) : moviesList.length > 0 ? (
+                ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {moviesList.map(m => (
                       <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-amber-500/50 transition-all">
@@ -354,13 +392,6 @@
                         </button>
                       </div>
                     ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-16 bg-slate-900 border border-slate-800 rounded-3xl p-6">
-                    <p className="text-slate-400 text-sm">No se encontraron estrenos activos registrados para esta selección.</p>
-                    <button onClick={() => openCitySchedule()} className="mt-4 bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">
-                      Buscar cartelera directa de {userCity} en Google
-                    </button>
                   </div>
                 )}
               </div>
@@ -553,7 +584,6 @@
       );
     }
 
-    // Inicialización segura de React
     try {
       const rootElement = document.getElementById('root');
       if (rootElement) {
