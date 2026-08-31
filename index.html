@@ -27,13 +27,14 @@
   </div>
 
   <script type="text/babel">
-    const { useState, useMemo } = React;
+    const { useState, useMemo, useEffect } = React;
 
     const INITIAL_USERS = [
       {
         id: 'u1',
         name: 'Marcelo Buttice',
         email: 'marbuttice@gmail.com',
+        password: 'admin',
         age: 57,
         sex: 'Masculino',
         lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
@@ -46,13 +47,13 @@
         verified: true,
         bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-        socialLinks: { twitter: '@marbuttice', radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' },
-        receivedLikes: 14
+        socialLinks: { twitter: '@marbuttice', radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
       },
       {
         id: 'u2',
         name: 'Elena Montero',
         email: 'elena@gmail.com',
+        password: '123',
         age: 24,
         sex: 'Femenino',
         lookingFor: 'Amigos Cinéfilos',
@@ -65,8 +66,7 @@
         verified: true,
         bio: 'Directora de cortos amateur y crítica de cine asiático y de autor.',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
-        socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' },
-        receivedLikes: 29
+        socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' }
       }
     ];
 
@@ -89,23 +89,11 @@
         category: 'Debates Clásicos',
         author: 'Marcelo Buttice',
         date: '2026-08-30',
-        repliesCount: 3,
-        content: 'Abran debate: entre El Sexto Sentido, Club de la Pelea y Los Sospechosos de Siempre... ¿cuál les causó más impacto la primera vez en la sala?',
+        repliesCount: 2,
+        content: 'Abran debate: entre El Sexto Sentido, Club de la Pelea y Los Sospechosos de Siempre... ¿cuál les causó más impacto?',
         comments: [
-          { id: 'c1', author: 'Elena Montero', date: '2026-08-30', text: '¡Sin dudas Los Sospechosos de Siempre! Kaiser Soze cambió el cine de los 90.' },
-          { id: 'c2', author: 'Marcelo Buttice', date: '2026-08-31', text: 'Coincido con Elena, la escena de la taza rompiéndose es magistral.' }
-        ]
-      },
-      {
-        id: 'f2',
-        title: 'Teorías y simbolismos en el cine de Tarkovsky y Kubrick',
-        category: 'Cine de Autor',
-        author: 'Elena Montero',
-        date: '2026-08-28',
-        repliesCount: 1,
-        content: 'Analicemos la similitud en el manejo del tiempo entre 2001: Odisea del Espacio y Stalker.',
-        comments: [
-          { id: 'c3', author: 'Marcelo Buttice', date: '2026-08-29', text: 'El uso del silencio en ambas obras crea un ritmo hipnótico único.' }
+          { id: 'c1', author: 'Elena Montero', date: '2026-08-30', text: '¡Sin dudas Los Sospechosos de Siempre!' },
+          { id: 'c2', author: 'Marcelo Buttice', date: '2026-08-31', text: 'Coincido plenamente.' }
         ]
       }
     ];
@@ -130,18 +118,30 @@
     ];
 
     function App() {
+      const [usersList, setUsersList] = useState(INITIAL_USERS);
       const [currentUser, setCurrentUser] = useState(() => INITIAL_USERS[0]);
+      
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
 
       const [userCity, setUserCity] = useState('Quilmes');
       const [userCountryCode, setUserCountryCode] = useState('AR');
 
+      // MODALES
+      const [showAuthModal, setShowAuthModal] = useState(false);
+      const [authMode, setAuthMode] = useState('signup'); // 'signup' o 'login'
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-      const [usersList, setUsersList] = useState(INITIAL_USERS);
-      const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
 
-      // ESTADOS DEL FORO
+      // ESTADOS DE REGISTRO / LOGIN
+      const [authEmail, setAuthEmail] = useState('');
+      const [authPassword, setAuthPassword] = useState('');
+      const [authName, setAuthName] = useState('');
+      const [authAge, setAuthAge] = useState(25);
+      const [authSex, setAuthSex] = useState('Masculino');
+      const [authLookingFor, setAuthLookingFor] = useState('Amigos Cinéfilos');
+
+      // ESTADOS DE RESEÑAS Y FORO
+      const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
       const [forumTopics, setForumTopics] = useState(INITIAL_FORUM_TOPICS);
       const [selectedCategory, setSelectedCategory] = useState('Todas');
       const [activeTopic, setActiveTopic] = useState(null);
@@ -156,11 +156,27 @@
       const [newReviewRating, setNewReviewRating] = useState(10);
       const [newReviewText, setNewReviewText] = useState('');
 
-      const [editBio, setEditBio] = useState(currentUser.bio);
-      const [editAvatar, setEditAvatar] = useState(currentUser.avatar);
-      const [editRadio, setEditRadio] = useState(currentUser.socialLinks?.radio || '');
-      const [editTv, setEditTv] = useState(currentUser.socialLinks?.tv || '');
-      const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks?.twitter || '');
+      // PERFIL
+      const [editBio, setEditBio] = useState(currentUser ? currentUser.bio : '');
+      const [editAvatar, setEditAvatar] = useState(currentUser ? currentUser.avatar : '');
+      const [editRadio, setEditRadio] = useState(currentUser?.socialLinks?.radio || '');
+      const [editTv, setEditTv] = useState(currentUser?.socialLinks?.tv || '');
+
+      useEffect(() => {
+        if (currentUser) {
+          setEditBio(currentUser.bio || '');
+          setEditAvatar(currentUser.avatar || '');
+          setEditRadio(currentUser.socialLinks?.radio || '');
+          setEditTv(currentUser.socialLinks?.tv || '');
+        }
+      }, [currentUser]);
+
+      // SEGURIDAD: SI NO ES ADMIN Y ESTA EN PESTAÑA ADMIN, REDIRIGIR
+      useEffect(() => {
+        if (activeTab === 'admin' && currentUser?.role !== 'admin') {
+          setActiveTab('cinema');
+        }
+      }, [activeTab, currentUser]);
 
       const getCountryName = () => {
         const found = COUNTRY_CODES.find(c => c.code === userCountryCode);
@@ -174,18 +190,73 @@
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=es`, '_blank');
       };
 
-      const maxDistance = currentUser.isPremium ? 500 : 100;
+      // MANEJO DE REGISTRO E INICIO DE SESIÓN
+      const handleAuthSubmit = (e) => {
+        e.preventDefault();
+        if (authMode === 'signup') {
+          const existing = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase());
+          if (existing) {
+            alert('⚠️ Este email ya está registrado. Intenta iniciar sesión.');
+            return;
+          }
+          const newUser = {
+            id: 'u_' + Date.now(),
+            name: authName,
+            email: authEmail,
+            password: authPassword,
+            age: Number(authAge),
+            sex: authSex,
+            lookingFor: authLookingFor,
+            location: `${userCity}, ${getCountryName()}`,
+            distanceKm: 5.0,
+            role: 'general', // SIEMPRE GENERAL POR DEFECTO
+            roleLabel: 'Cinéfilo Estándar',
+            isPremium: false,
+            isCritic: false,
+            verified: false,
+            bio: '¡Hola! Soy cinéfilo en Plottwisme.',
+            avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80`,
+            socialLinks: {}
+          };
+          setUsersList([...usersList, newUser]);
+          setCurrentUser(newUser);
+          alert('🎉 ¡Cuenta creada con éxito!');
+        } else {
+          const found = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase() && u.password === authPassword);
+          if (!found) {
+            alert('❌ Credenciales incorrectas. Verifica tu email y contraseña.');
+            return;
+          }
+          setCurrentUser(found);
+          alert(`👋 ¡Bienvenido de nuevo, ${found.name}!`);
+        }
+        setShowAuthModal(false);
+        setAuthEmail('');
+        setAuthPassword('');
+      };
+
+      const handleLogout = () => {
+        setCurrentUser(null);
+        setActiveTab('cinema');
+        alert('Sesión cerrada.');
+      };
+
+      const maxDistance = currentUser?.isPremium ? 500 : 100;
       const filteredCandidates = useMemo(() => {
-        return usersList.filter(u => u.email !== currentUser.email && u.distanceKm <= maxDistance);
+        return usersList.filter(u => u.email !== currentUser?.email && u.distanceKm <= maxDistance);
       }, [usersList, currentUser, maxDistance]);
 
       const currentCandidate = filteredCandidates[currentIndex];
 
       const handleUpgradePlan = (isPrem) => {
+        if (!currentUser) {
+          setShowAuthModal(true);
+          return;
+        }
         const updated = { 
           ...currentUser, 
           isPremium: isPrem, 
-          roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar' 
+          roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : (currentUser.role === 'admin' ? 'Administrador General' : 'Cinéfilo Estándar') 
         };
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
@@ -194,11 +265,12 @@
 
       const handleSaveProfile = (e) => {
         e.preventDefault();
+        if (!currentUser) return;
         const updated = {
           ...currentUser,
           bio: editBio,
           avatar: editAvatar,
-          socialLinks: { radio: editRadio, tv: editTv, twitter: editTwitter }
+          socialLinks: { radio: editRadio, tv: editTv }
         };
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
@@ -207,6 +279,10 @@
 
       const handlePublishReview = (e) => {
         e.preventDefault();
+        if (!currentUser) {
+          setShowAuthModal(true);
+          return;
+        }
         if (!newReviewMovie || !newReviewText) return;
         const newRev = {
           id: 'r_' + Date.now(),
@@ -223,9 +299,12 @@
         alert('📝 ¡Reseña publicada!');
       };
 
-      // FORO: CREAR HILO
       const handleCreateTopic = (e) => {
         e.preventDefault();
+        if (!currentUser) {
+          setShowAuthModal(true);
+          return;
+        }
         if (!newTopicTitle || !newTopicContent) return;
         const newTopic = {
           id: 'f_' + Date.now(),
@@ -241,12 +320,15 @@
         setNewTopicTitle('');
         setNewTopicContent('');
         setShowNewTopicModal(false);
-        alert('💬 ¡Debate creado con éxito!');
+        alert('💬 ¡Debate creado!');
       };
 
-      // FORO: COMENTAR HILO
       const handleAddComment = (e) => {
         e.preventDefault();
+        if (!currentUser) {
+          setShowAuthModal(true);
+          return;
+        }
         if (!newCommentText || !activeTopic) return;
         const comment = {
           id: 'c_' + Date.now(),
@@ -267,15 +349,10 @@
         setNewCommentText('');
       };
 
-      const filteredTopics = useMemo(() => {
-        if (selectedCategory === 'Todas') return forumTopics;
-        return forumTopics.filter(t => t.category === selectedCategory);
-      }, [forumTopics, selectedCategory]);
-
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
-          {/* HEADER DE NAVEGACIÓN */}
+          {/* HEADER */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
               
@@ -283,11 +360,13 @@
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center font-bold text-xl text-slate-950">P</div>
                 <div>
                   <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
-                  <p className="text-[10px] uppercase text-slate-400 font-bold">{currentUser.isPremium ? '⭐ Plan Premium (500 km)' : '👤 Plan Estándar (100 km)'}</p>
+                  <p className="text-[10px] uppercase text-slate-400 font-bold">
+                    {currentUser ? (currentUser.isPremium ? '⭐ Plan Premium' : '👤 Plan Estándar') : '🌐 Modo Invitado'}
+                  </p>
                 </div>
               </div>
 
-              {/* CONTROLES DE UBICACIÓN */}
+              {/* CONTROLES UBICACIÓN */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad:</span>
                 <input 
@@ -295,7 +374,6 @@
                   value={userCity} 
                   onChange={(e) => setUserCity(e.target.value)} 
                   className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs" 
-                  placeholder="Ciudad..." 
                 />
                 
                 <span className="text-slate-600">|</span>
@@ -312,21 +390,31 @@
                 </select>
               </div>
 
-              {/* PESTAÑAS */}
+              {/* PESTAÑAS Y SESIÓN */}
               <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto max-w-full">
-                <button onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera Real</button>
+                <button onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
                 <button onClick={() => { setActiveTab('forums'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>💬 Foros</button>
                 <button onClick={() => { setActiveTab('radar'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
                 <button onClick={() => { setActiveTab('critics'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>📰 Críticos</button>
-                <button onClick={() => { setActiveTab('profile'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>👤 Mi Perfil</button>
                 
-                <button onClick={() => setShowSubscriptionModal(true)} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600 hover:text-white transition-all whitespace-nowrap">
-                  💳 Planes
-                </button>
+                {currentUser && (
+                  <button onClick={() => { setActiveTab('profile'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>👤 Perfil</button>
+                )}
 
-                {currentUser.role === 'admin' && (
+                {/* SOLO VISIBLE SI ES ADMINISTRADOR */}
+                {currentUser?.role === 'admin' && (
                   <button onClick={() => { setActiveTab('admin'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/50'}`}>
                     🛡️ Admin
+                  </button>
+                )}
+
+                {currentUser ? (
+                  <button onClick={handleLogout} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">
+                    🚪 Salir
+                  </button>
+                ) : (
+                  <button onClick={() => { setAuthMode('signup'); setShowAuthModal(true); }} className="px-3 py-1.5 rounded-xl text-xs font-black bg-amber-500 text-slate-950 hover:bg-amber-400 whitespace-nowrap">
+                    ✨ Crear Cuenta
                   </button>
                 )}
               </nav>
@@ -337,7 +425,7 @@
           {/* CONTENIDO PRINCIPAL */}
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
             
-            {/* TAB: CARTELERA REAL */}
+            {/* CARTELERA */}
             {activeTab === 'cinema' && (
               <div className="space-y-8">
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/30 p-8 shadow-2xl">
@@ -391,17 +479,12 @@
               </div>
             )}
 
-            {/* TAB: FOROS CINÉFILOS */}
+            {/* FOROS */}
             {activeTab === 'forums' && (
               <div className="space-y-6 max-w-4xl mx-auto">
-                
-                {/* SI HAY UN HILO SELECCIONADO: DETALLE Y COMENTARIOS */}
                 {activeTopic ? (
                   <div className="space-y-6">
-                    <button 
-                      onClick={() => setActiveTopic(null)} 
-                      className="bg-slate-900 border border-slate-800 text-amber-400 hover:text-amber-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all"
-                    >
+                    <button onClick={() => setActiveTopic(null)} className="bg-slate-900 border border-slate-800 text-amber-400 hover:text-amber-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all">
                       <span>← Volver a los debates</span>
                     </button>
 
@@ -416,9 +499,8 @@
                       <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{activeTopic.content}</p>
                     </div>
 
-                    {/* SECCIÓN RESPUESTAS */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-black text-amber-500">💬 Respuestas y Debate ({activeTopic.comments.length})</h3>
+                      <h3 className="text-lg font-black text-amber-500">💬 Respuestas ({activeTopic.comments.length})</h3>
 
                       {activeTopic.comments.map(c => (
                         <div key={c.id} className="bg-slate-900/80 border border-slate-800/80 p-4 rounded-2xl space-y-2">
@@ -430,69 +512,35 @@
                         </div>
                       ))}
 
-                      {/* FORMULARIO RESPONDER */}
                       <form onSubmit={handleAddComment} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-                        <textarea 
-                          rows="3" 
-                          value={newCommentText} 
-                          onChange={(e) => setNewCommentText(e.target.value)} 
-                          placeholder="Escribe tu opinión en este debate..." 
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500" 
-                          required 
-                        />
-                        <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all">
+                        <textarea rows="3" value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} placeholder={currentUser ? "Escribe tu respuesta..." : "Inicia sesión para responder..."} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500" required disabled={!currentUser} />
+                        <button type="submit" disabled={!currentUser} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider disabled:opacity-50">
                           Publicar Respuesta
                         </button>
                       </form>
                     </div>
                   </div>
                 ) : (
-                  /* VISTA PRINCIPAL DEL FORO */
                   <div className="space-y-6">
                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
                       <div>
                         <h2 className="text-2xl font-black text-white">💬 Foros de Discusión Cinéfila</h2>
-                        <p className="text-xs text-slate-400 mt-1">Intercambiá opiniones, teorías y recomendaciones con la comunidad.</p>
+                        <p className="text-xs text-slate-400 mt-1">Intercambiá opiniones y teorías con la comunidad.</p>
                       </div>
-                      <button 
-                        onClick={() => setShowNewTopicModal(true)} 
-                        className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs transition-all shadow-lg shadow-amber-500/20 whitespace-nowrap"
-                      >
+                      <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
                         ✍️ Crear Nuevo Debate
                       </button>
                     </div>
 
-                    {/* FILTROS POR CATEGORÍA */}
-                    <div className="flex items-center gap-2 overflow-x-auto pb-2 text-xs">
-                      {['Todas', 'Cine de Autor', 'Debates Clásicos', 'Teorías & Spoilers', 'Estrenos'].map(cat => (
-                        <button 
-                          key={cat} 
-                          onClick={() => setSelectedCategory(cat)} 
-                          className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'}`}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* LISTA DE HILOS */}
                     <div className="space-y-4">
-                      {filteredTopics.map(topic => (
-                        <div 
-                          key={topic.id} 
-                          onClick={() => setActiveTopic(topic)} 
-                          className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all hover:-translate-y-0.5 shadow-md space-y-3 group"
-                        >
+                      {forumTopics.map(topic => (
+                        <div key={topic.id} onClick={() => setActiveTopic(topic)} className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all space-y-3 group">
                           <div className="flex justify-between items-center text-xs">
-                            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                              {topic.category}
-                            </span>
+                            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">{topic.category}</span>
                             <span className="text-slate-500 text-[10px]">{topic.date}</span>
                           </div>
-                          <h3 className="text-base font-bold text-white group-hover:text-amber-400 transition-colors">
-                            {topic.title}
-                          </h3>
-                          <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800/80">
+                          <h3 className="text-base font-bold text-white group-hover:text-amber-400 transition-colors">{topic.title}</h3>
+                          <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800">
                             <span>Por <b>{topic.author}</b></span>
                             <span className="text-amber-500 font-bold">💬 {topic.repliesCount} respuestas</span>
                           </div>
@@ -501,18 +549,12 @@
                     </div>
                   </div>
                 )}
-
               </div>
             )}
 
-            {/* TAB: RADAR CINÉFILO */}
+            {/* RADAR */}
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center">
-                <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center flex items-center gap-2 flex-wrap justify-center">
-                  <span>🎯 Buscando cinéfilos cerca de <b className="capitalize">{userCity}</b></span>
-                  <span className="bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/40">Radio: <b>{currentUser.isPremium ? '500 km' : '100 km'}</b></span>
-                </div>
-
                 {currentCandidate ? (
                   <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
                     <div className="relative h-96 w-full bg-slate-950">
@@ -520,28 +562,28 @@
                       <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
                       <div className="absolute bottom-4 left-4 right-4">
                         <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
-                        <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location} • A {currentCandidate.distanceKm} km</p>
+                        <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location}</p>
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
                       <p className="text-xs italic text-slate-300">"{currentCandidate.bio}"</p>
                       <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
-                        <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold hover:bg-slate-700 transition-all">✖</button>
-                        <button onClick={() => { alert(`🍿 ¡Le diste Me Gusta a ${currentCandidate.name}!`); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-105 transition-all">🍿</button>
+                        <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
+                        <button onClick={() => { alert(`🍿 ¡Le diste Me Gusta a ${currentCandidate.name}!`); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20">🍿</button>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay más perfiles cercanos en tu rango.</h3>
+                    <h3 className="text-xl font-bold">No hay más perfiles en tu rango.</h3>
                     <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Vista</button>
                   </div>
                 )}
               </div>
             )}
 
-            {/* TAB: CRÍTICOS */}
+            {/* CRÍTICOS */}
             {activeTab === 'critics' && (
               <div className="space-y-6 max-w-3xl mx-auto">
                 <h2 className="text-2xl font-black">📰 Panel de Críticos & Medios</h2>
@@ -551,23 +593,23 @@
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div>
                       <label className="block mb-1 text-slate-400">Película:</label>
-                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Película..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500" required />
+                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Película..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
                     </div>
                     <div>
                       <label className="block mb-1 text-slate-400">Calificación (1-10):</label>
-                      <input type="number" min="1" max="10" step="0.5" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500" required />
+                      <input type="number" min="1" max="10" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
                     </div>
                   </div>
                   <div className="text-xs">
                     <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
-                    <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu reseña..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500" required />
+                    <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu reseña..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
-                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase hover:bg-amber-400 transition-all">Publicar Reseña</button>
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña</button>
                 </form>
 
                 <div className="space-y-4 pt-2">
                   {reviewsList.map(rev => (
-                    <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-md">
+                    <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
                       <div className="flex justify-between items-start text-xs">
                         <div>
                           <span className="font-bold text-amber-500">{rev.author}</span>
@@ -575,18 +617,16 @@
                         </div>
                         <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
                       </div>
-                      <div>
-                        <h4 className="text-base font-black">{rev.movieTitle}</h4>
-                        <p className="text-xs pt-1 text-slate-300 leading-relaxed">{rev.content}</p>
-                      </div>
+                      <h4 className="text-base font-black">{rev.movieTitle}</h4>
+                      <p className="text-xs text-slate-300 leading-relaxed">{rev.content}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* TAB: MI PERFIL */}
-            {activeTab === 'profile' && (
+            {/* PERFIL */}
+            {activeTab === 'profile' && currentUser && (
               <form onSubmit={handleSaveProfile} className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-4">
                   <div>
@@ -594,40 +634,26 @@
                     <p className="text-xs text-amber-500">{currentUser.roleLabel}</p>
                   </div>
                   <button type="button" onClick={() => setShowSubscriptionModal(true)} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs">
-                    {currentUser.isPremium ? '⭐ Plan Premium Activo' : '🚀 Cambiar Plan'}
+                    {currentUser.isPremium ? '⭐ Premium' : '🚀 Cambiar Plan'}
                   </button>
                 </div>
 
                 <div className="space-y-4 text-xs">
                   <div>
-                    <label className="block mb-1 text-slate-400">URL Foto de Perfil:</label>
+                    <label className="block mb-1 text-slate-400">Foto URL:</label>
                     <input type="url" value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
-
                   <div>
-                    <label className="block mb-1 text-slate-400">Biografía Cinéfila:</label>
+                    <label className="block mb-1 text-slate-400">Biografía:</label>
                     <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
                   </div>
-
-                  <div className="pt-2 border-t border-slate-800 space-y-3">
-                    <h3 className="font-bold text-amber-500">🎙️ Medios & Redes Sociales</h3>
-                    <div>
-                      <label className="block mb-1 text-slate-400">Programa de Radio / Podcast:</label>
-                      <input type="text" value={editRadio} onChange={(e) => setEditRadio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
-                    </div>
-                    <div>
-                      <label className="block mb-1 text-slate-400">Canal de Televisión / Columna:</label>
-                      <input type="text" value={editTv} onChange={(e) => setEditTv(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
-                    </div>
-                  </div>
-
-                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">Guardar Cambios</button>
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil</button>
                 </div>
               </form>
             )}
 
-            {/* TAB: ADMIN */}
-            {activeTab === 'admin' && currentUser.role === 'admin' && (
+            {/* PANEL ADMIN (SOLO VISIBLE SI ROLE IS ADMIN) */}
+            {activeTab === 'admin' && currentUser?.role === 'admin' && (
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div>
@@ -635,13 +661,13 @@
                     <p className="text-xs text-amber-400 mt-1">Sesión activa: <b>{currentUser.name}</b> ({currentUser.email})</p>
                   </div>
                   <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
-                    Control Total Plottwisme
+                    Acceso Restringido
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <p className="text-xs text-slate-400">Usuarios Registrados</p>
+                    <p className="text-xs text-slate-400">Usuarios Totales</p>
                     <p className="text-2xl font-black text-white mt-1">{usersList.length}</p>
                   </div>
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
@@ -649,8 +675,23 @@
                     <p className="text-2xl font-black text-white mt-1">{forumTopics.length}</p>
                   </div>
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <p className="text-xs text-slate-400">Estado del Sistema</p>
-                    <p className="text-sm font-black text-emerald-400 mt-1">Sincronizado 🌙</p>
+                    <p className="text-xs text-slate-400">Seguridad Rol</p>
+                    <p className="text-sm font-black text-emerald-400 mt-1">Protegido 🟢</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="font-bold text-sm text-amber-500">Listado de Usuarios Registrados:</h3>
+                  <div className="space-y-2">
+                    {usersList.map(u => (
+                      <div key={u.id} className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+                        <div>
+                          <p className="font-bold text-white">{u.name} <span className="text-slate-500">({u.email})</span></p>
+                          <p className="text-[10px] text-amber-400">{u.roleLabel} • Rol: {u.role}</p>
+                        </div>
+                        <span className="bg-slate-800 px-2.5 py-1 rounded-lg text-slate-300 text-[10px]">{u.location}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -658,7 +699,68 @@
 
           </main>
 
-          {/* MODAL CREAR DEBATE EN FORO */}
+          {/* MODAL AUTENTICACIÓN (CREAR CUENTA / INICIAR SESIÓN) */}
+          {showAuthModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <h3 className="text-lg font-black text-white">
+                    {authMode === 'signup' ? '✨ Crear Cuenta en Plottwisme' : '🔑 Iniciar Sesión'}
+                  </h3>
+                  <button onClick={() => setShowAuthModal(false)} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
+                </div>
+
+                <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
+                  {authMode === 'signup' && (
+                    <>
+                      <div>
+                        <label className="block mb-1 text-slate-400 font-bold">Nombre Completo:</label>
+                        <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Ej: Juan Pérez" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block mb-1 text-slate-400 font-bold">Edad:</label>
+                          <input type="number" min="18" max="99" value={authAge} onChange={(e) => setAuthAge(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                        </div>
+                        <div>
+                          <label className="block mb-1 text-slate-400 font-bold">Género:</label>
+                          <select value={authSex} onChange={(e) => setAuthSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Otro">Otro</option>
+                          </select>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div>
+                    <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
+                    <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-slate-400 font-bold">Contraseña:</label>
+                    <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                  </div>
+
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
+                    {authMode === 'signup' ? 'Registrarme' : 'Ingresar'}
+                  </button>
+                </form>
+
+                <div className="text-center pt-2 border-t border-slate-800 text-xs">
+                  {authMode === 'signup' ? (
+                    <p className="text-slate-400">¿Ya tienes cuenta? <button onClick={() => setAuthMode('login')} className="text-amber-400 font-bold underline">Inicia Sesión</button></p>
+                  ) : (
+                    <p className="text-slate-400">¿No tienes cuenta? <button onClick={() => setAuthMode('signup')} className="text-amber-400 font-bold underline">Regístrate gratis</button></p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL FORO */}
           {showNewTopicModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
@@ -670,76 +772,23 @@
                 <form onSubmit={handleCreateTopic} className="space-y-4 text-xs">
                   <div>
                     <label className="block mb-1 text-slate-400 font-bold">Título del Debate:</label>
-                    <input 
-                      type="text" 
-                      value={newTopicTitle} 
-                      onChange={(e) => setNewTopicTitle(e.target.value)} 
-                      placeholder="Ej: ¿Qué opinan del final de X película?" 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500" 
-                      required 
-                    />
+                    <input type="text" value={newTopicTitle} onChange={(e) => setNewTopicTitle(e.target.value)} placeholder="Ej: ¿Qué opinan de...?" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
-
                   <div>
                     <label className="block mb-1 text-slate-400 font-bold">Categoría:</label>
-                    <select 
-                      value={newTopicCategory} 
-                      onChange={(e) => setNewTopicCategory(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
-                    >
+                    <select value={newTopicCategory} onChange={(e) => setNewTopicCategory(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
                       <option value="Cine de Autor">Cine de Autor</option>
                       <option value="Debates Clásicos">Debates Clásicos</option>
                       <option value="Teorías & Spoilers">Teorías & Spoilers</option>
                       <option value="Estrenos">Estrenos</option>
                     </select>
                   </div>
-
                   <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Contenido / Pregunta:</label>
-                    <textarea 
-                      rows="4" 
-                      value={newTopicContent} 
-                      onChange={(e) => setNewTopicContent(e.target.value)} 
-                      placeholder="Desarrolla tu punto de vista para iniciar el debate..." 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500" 
-                      required 
-                    />
+                    <label className="block mb-1 text-slate-400 font-bold">Contenido:</label>
+                    <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe el tema..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
-
-                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                    Publicar Debate
-                  </button>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase">Publicar Debate</button>
                 </form>
-              </div>
-            </div>
-          )}
-
-          {/* MODAL SUSCRIPCIONES */}
-          {showSubscriptionModal && (
-            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-black text-white">💳 Selecciona tu Suscripción</h3>
-                  <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-5 rounded-2xl border border-slate-800 bg-slate-950 flex flex-col justify-between space-y-4">
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-200">Plan Estándar</h4>
-                      <p className="text-2xl font-black text-white mt-1">Gratis</p>
-                    </div>
-                    <button onClick={() => handleUpgradePlan(false)} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-xl text-xs">Usar Estándar</button>
-                  </div>
-
-                  <div className="p-5 rounded-2xl border border-amber-500 bg-amber-500/10 flex flex-col justify-between space-y-4">
-                    <div>
-                      <h4 className="font-bold text-sm text-amber-400">Plan Premium</h4>
-                      <p className="text-2xl font-black text-amber-400 mt-1">$4.99 USD <span className="text-xs font-normal text-slate-400">/mes</span></p>
-                    </div>
-                    <button onClick={() => handleUpgradePlan(true)} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase shadow-lg shadow-amber-500/20">Activar Premium</button>
-                  </div>
-                </div>
               </div>
             </div>
           )}
