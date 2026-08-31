@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plottwisme - Red Social Cinéfila, Cartelera Global & Comunidad</title>
+  <title>Plottwisme - Red Social Cinéfila & Cartelera Global</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -12,12 +12,11 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
 
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; }
     .font-brand { font-family: 'Outfit', sans-serif; }
-    .font-mono { font-family: 'JetBrains+Mono', monospace; }
   </style>
 </head>
 <body class="antialiased bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
@@ -26,7 +25,8 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    // USUARIOS INICIALES (MANTIENE PRIVILEGIOS DE ADMINISTRADOR DE MARCELO)
+    const TMDB_KEY = "15d102713cd16ba5f3293f49ae858a76";
+
     const INITIAL_USERS = [
       {
         id: 'u1',
@@ -87,34 +87,30 @@
       }
     ];
 
-    // CATÁLOGO BASE DE ENTRADA (MIENTRAS SE CONECTA API TMDB)
-    const FALLBACK_TMDB_MOVIES = [
+    const RECENT_MOVIES_FALLBACK = [
       {
-        id: 693134,
-        title: 'Dune: Parte Dos',
-        overview: 'Paul Atreides se une a Chani y los Fremen mientras busca venganza contra los conspiradores que destruyeron a su familia.',
-        poster_path: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80',
-        vote_average: 8.5,
-        release_date: '2024-02-27',
-        genre: 'Ciencia Ficción'
+        id: 1,
+        title: "Deadpool & Wolverine",
+        overview: "Un peligro inminente amenaza la existencia del universo y Wade Wilson debe hacer equipo con un reticente Wolverine.",
+        poster_path: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80",
+        vote_average: "8.2",
+        genre: "Acción / Comedia"
       },
       {
-        id: 872585,
-        title: 'Oppenheimer',
-        overview: 'La historia del físico J. Robert Oppenheimer y su papel en el desarrollo de la bomba atómica.',
-        poster_path: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80',
-        vote_average: 8.1,
-        release_date: '2023-07-19',
-        genre: 'Drama / Historia'
+        id: 2,
+        title: "Intensa-Mente 2",
+        overview: "Nuevas emociones llegan a la mente de Riley justo cuando la sede central está sufriendo una repentina demolición.",
+        poster_path: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80",
+        vote_average: "8.4",
+        genre: "Animación"
       },
       {
-        id: 792307,
-        title: 'Pobres Criaturas',
-        overview: 'La fantástica historia y evolución de Bella Baxter, una joven resucitada por un brillante científico.',
-        poster_path: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
-        vote_average: 7.8,
-        release_date: '2023-12-07',
-        genre: 'Comedia Negra'
+        id: 3,
+        title: "Alien: Romulus",
+        overview: "Un grupo de jóvenes colonizadores espaciales se encuentra cara a cara con la forma de vida más aterradora del universo.",
+        poster_path: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80",
+        vote_average: "7.5",
+        genre: "Terror / Ciencia Ficción"
       }
     ];
 
@@ -122,11 +118,11 @@
       {
         id: 'r1',
         author: 'Elena Montero',
-        movieTitle: 'Dune: Parte Dos',
-        rating: 10,
-        content: 'Villeneuve logra una de las obras maestras de la ciencia ficción moderna. El diseño de sonido y la fotografía en IMAX son monumentales.',
+        movieTitle: 'Alien: Romulus',
+        rating: 9,
+        content: 'Excelente regreso a las raíces del terror espacial. La tensión y atmósfera práctica están muy bien logradas.',
         mediaOutlet: 'Columnista Radio LT3 / Canal 12 Misiones',
-        date: '2026-06-10'
+        date: '2026-08-15'
       }
     ];
 
@@ -144,77 +140,58 @@
 
     function App() {
       const [currentUser, setCurrentUser] = useState(() => INITIAL_USERS[0]);
-      const [activeTab, setActiveTab] = useState('radar');
+      // Pestaña inicial configurada en Cartelera ('cinema')
+      const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
 
-      // ESTADOS DE UBICACIÓN GLOBAL
-      const [userCity, setUserCity] = useState('Oberá, Misiones');
+      const [userCity, setUserCity] = useState('posadas');
       const [userCountryCode, setUserCountryCode] = useState('AR');
 
-      // ESTADOS DE TMDB & CARTELERA DINÁMICA GLOBAL
-      const [tmdbApiKey, setTmdbApiKey] = useState('');
-      const [moviesList, setMoviesList] = useState(FALLBACK_TMDB_MOVIES);
-      const [isLoadingTmdb, setIsLoadingTmdb] = useState(false);
+      const [moviesList, setMoviesList] = useState(RECENT_MOVIES_FALLBACK);
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
       const [usersList, setUsersList] = useState(INITIAL_USERS);
       const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
 
-      // ESTADOS FORMULARIO RESEÑA
       const [newReviewMovie, setNewReviewMovie] = useState('');
       const [newReviewRating, setNewReviewRating] = useState(10);
       const [newReviewText, setNewReviewText] = useState('');
 
-      // ESTADOS PERFIL
       const [editBio, setEditBio] = useState(currentUser.bio);
       const [editAvatar, setEditAvatar] = useState(currentUser.avatar);
       const [editRadio, setEditRadio] = useState(currentUser.socialLinks.radio);
       const [editTv, setEditTv] = useState(currentUser.socialLinks.tv);
       const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks.twitter);
 
-      // Cargar cartelera global activa en cines (TMDB now_playing por país)
-      const fetchTmdbNowPlaying = async (key, country) => {
-        if (!key) return;
-        setIsLoadingTmdb(true);
-        try {
-          // Endpoint 'now_playing' filtrado por el código de país exacto del usuario
-          const res = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${key}&language=es-ES&region=${country}&page=1`);
-          const data = await res.json();
-
-          if (data.results && data.results.length > 0) {
-            const formatted = data.results.map(m => ({
-              id: m.id,
-              title: m.title || m.original_title,
-              overview: m.overview || 'Sin descripción disponible para esta película.',
-              poster_path: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
-              vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0',
-              release_date: m.release_date || 'En cartelera',
-              genre: 'Estreno en Cines'
-            }));
-            setMoviesList(formatted);
-            alert(`🍿 Cartelera actualizada: mostrando estrenos activos en ${country}!`);
-          } else {
-            alert('No se encontraron películas activas para esa combinación. Manteniendo catálogo base.');
-          }
-        } catch (err) {
-          alert('Error al conectar con TMDb. Revisa tu API Key.');
-        } finally {
-          setIsLoadingTmdb(false);
-        }
-      };
-
-      // Auto-reconsultar si cambia el país y hay API Key
+      // Carga automática desde TMDb según país
       useEffect(() => {
-        if (tmdbApiKey) {
-          fetchTmdbNowPlaying(tmdbApiKey, userCountryCode);
-        }
+        const fetchMovies = async () => {
+          try {
+            const res = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=es-ES&region=${userCountryCode}&page=1`);
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+              const formatted = data.results.slice(0, 9).map(m => ({
+                id: m.id,
+                title: m.title || m.original_title,
+                overview: m.overview || 'Sin descripción disponible.',
+                poster_path: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : RECENT_MOVIES_FALLBACK[0].poster_path,
+                vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0',
+                genre: 'Estreno en Cines'
+              }));
+              setMoviesList(formatted);
+            }
+          } catch (err) {
+            console.log("Usando lista local de respaldo");
+          }
+        };
+        fetchMovies();
       }, [userCountryCode]);
 
-      // Redirección en tiempo real a Google / Google Maps
-      const handleOpenGoogleTheaters = (movieTitle) => {
-        const query = `cartelera cine ${movieTitle} en ${userCity}`;
-        const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-        window.open(url, '_blank');
+      const openCitySchedule = (movieTitle = '') => {
+        const query = movieTitle 
+          ? `cartelera cine ${movieTitle} en ${userCity}` 
+          : `cartelera de cine en ${userCity} hoy funciones`;
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
       };
 
       const maxDistance = currentUser.isPremium ? 500 : 100;
@@ -233,7 +210,6 @@
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
         setShowSubscriptionModal(false);
-        alert(isPrem ? '🎉 ¡Plan Premium Activo ($4.99 USD)! Cobertura de radar hasta 500 km.' : 'ℹ️ Has cambiado al Plan Estándar (100 km).');
       };
 
       const handleLikeCandidate = () => {
@@ -276,11 +252,11 @@
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
-          {/* HEADER PRINCIPAL */}
+          {/* HEADER CON UBICACIÓN */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
               
-              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('radar')}>
+              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('cinema')}>
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center font-bold text-xl text-slate-950">P</div>
                 <div>
                   <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
@@ -288,15 +264,15 @@
                 </div>
               </div>
 
-              {/* BARRA DE UBICACIÓN DINÁMICA CIUDAD + PAÍS */}
+              {/* BARRA DE UBICACIÓN */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ubicación:</span>
                 <input 
                   type="text" 
                   value={userCity} 
                   onChange={(e) => setUserCity(e.target.value)} 
-                  className="bg-transparent border-0 px-1 py-0.5 font-bold w-36 text-amber-300 focus:outline-none" 
-                  placeholder="Ciudad (Ej: Oberá)..." 
+                  className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs" 
+                  placeholder="Ciudad..." 
                 />
                 <span className="text-slate-600">|</span>
                 <select 
@@ -310,19 +286,17 @@
                 </select>
               </div>
 
-              {/* NAVEGACIÓN */}
+              {/* NAVEGACIÓN COMPLETA */}
               <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto max-w-full">
-                <button onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
                 <button onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
+                <button onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
                 <button onClick={() => setActiveTab('critics')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>📰 Críticos</button>
                 <button onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>👤 Mi Perfil</button>
                 
-                {/* BOTÓN PLANES DE SUSCRIPCIÓN */}
                 <button onClick={() => setShowSubscriptionModal(true)} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600 hover:text-white transition-all whitespace-nowrap">
                   💳 Planes
                 </button>
 
-                {/* BOTÓN ADMIN EXCLUSIVO */}
                 {currentUser.role === 'admin' && (
                   <button onClick={() => setActiveTab('admin')} className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/50'}`}>
                     🛡️ Admin
@@ -333,14 +307,60 @@
             </div>
           </header>
 
-          {/* MAIN CONTAINER */}
+          {/* CONTENIDO PRINCIPAL */}
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
             
-            {/* TAB 1: RADAR CINÉFILO */}
+            {/* TAB 1: CARTELERA CON CONSULTA REAL POR CIUDAD (VISTA PRINCIPAL) */}
+            {activeTab === 'cinema' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 p-4 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-base font-bold text-amber-400">🏛️ Cartelera de Cines en <span className="capitalize text-white">{userCity}</span></h2>
+                    <p className="text-xs text-slate-400">Consultá las funciones y salas exactas de hoy en tu localidad.</p>
+                  </div>
+                  <button 
+                    onClick={() => openCitySchedule()} 
+                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs whitespace-nowrap transition-all shadow-lg shadow-amber-500/20"
+                  >
+                    Ver Cartelera Completa en {userCity} ↗
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {moviesList.map(m => (
+                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-slate-700 transition-all">
+                      <div className="space-y-3">
+                        <div className="relative h-72 rounded-2xl overflow-hidden bg-slate-950">
+                          <img src={m.poster_path} alt={m.title} className="w-full h-full object-cover" />
+                          <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md shadow">
+                            ★ {m.vote_average}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre || 'Cine'}</span>
+                          <h3 className="text-base font-black text-white">{m.title}</h3>
+                          <p className="text-xs text-slate-400 line-clamp-3 pt-1">{m.overview}</p>
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={() => openCitySchedule(m.title)} 
+                        className="w-full bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-slate-700 flex items-center justify-center gap-2"
+                      >
+                        <span>Consultar Funciones en {userCity}</span>
+                        <span>↗</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: RADAR CINÉFILO */}
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center">
                 <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center flex items-center gap-2 flex-wrap justify-center">
-                  <span>🎯 Buscando cinéfilos cerca de <b>{userCity}</b></span>
+                  <span>🎯 Buscando cinéfilos cerca de <b className="capitalize">{userCity}</b></span>
                   <span className="bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/40">Radio: <b>{currentUser.isPremium ? '500 km' : '100 km'}</b></span>
                   {!currentUser.isPremium && (
                     <button onClick={() => setShowSubscriptionModal(true)} className="underline text-amber-300 font-bold hover:text-amber-200">Ampliar a 500 km</button>
@@ -379,65 +399,6 @@
               </div>
             )}
 
-            {/* TAB 2: CARTELERA GLOBAL CON TMDB NOW_PLAYING & GOOGLE REAL TIME */}
-            {activeTab === 'cinema' && (
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-3xl">
-                  <div>
-                    <h2 className="text-2xl font-black">🎬 Estrenos en Cines: <span className="text-amber-500">{userCity} ({userCountryCode})</span></h2>
-                    <p className="text-xs text-slate-400">Películas actualmente en salas en tu país. El botón "Ver Salas" te lleva directo a las funciones en tu ciudad.</p>
-                  </div>
-
-                  {/* CONFIGURADOR DE TMDB API KEY */}
-                  <div className="flex items-center gap-2 text-xs bg-slate-950 p-2 rounded-2xl border border-slate-800 w-full sm:w-auto">
-                    <input 
-                      type="text" 
-                      placeholder="API Key TMDb (Opcional)" 
-                      value={tmdbApiKey} 
-                      onChange={(e) => setTmdbApiKey(e.target.value)} 
-                      className="bg-transparent border-0 px-2 text-slate-200 focus:outline-none w-40 text-[11px]"
-                    />
-                    <button 
-                      onClick={() => fetchTmdbNowPlaying(tmdbApiKey, userCountryCode)} 
-                      disabled={isLoadingTmdb}
-                      className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap"
-                    >
-                      {isLoadingTmdb ? 'Sincronizando...' : 'Sincronizar TMDb'}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {moviesList.map(m => (
-                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-slate-700 transition-all">
-                      <div className="space-y-3">
-                        <div className="relative h-72 rounded-2xl overflow-hidden bg-slate-950">
-                          <img src={m.poster_path} alt={m.title} className="w-full h-full object-cover" />
-                          <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md shadow">
-                            ★ {m.vote_average}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre || 'Cine'}</span>
-                          <h3 className="text-base font-black">{m.title}</h3>
-                          <p className="text-xs text-slate-400 line-clamp-3 pt-1">{m.overview}</p>
-                        </div>
-                      </div>
-
-                      {/* BOTÓN REDIRECCIÓN A GOOGLE REAL TIME PARA LA CIUDAD DEL USUARIO */}
-                      <button 
-                        onClick={() => handleOpenGoogleTheaters(m.title)} 
-                        className="w-full bg-amber-500/10 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-3 rounded-xl text-xs transition-all border border-amber-500/40 flex items-center justify-center gap-2"
-                      >
-                        <span>🏛️ Ver Salas y Horarios en Google ({userCity})</span>
-                        <span>↗</span>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* TAB 3: CRÍTICOS & MEDIOS */}
             {activeTab === 'critics' && (
               <div className="space-y-6 max-w-3xl mx-auto">
@@ -448,7 +409,7 @@
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div>
                       <label className="block mb-1 text-slate-400">Película:</label>
-                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Dune: Parte Dos" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500" required />
+                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Alien: Romulus" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500" required />
                     </div>
                     <div>
                       <label className="block mb-1 text-slate-400">Calificación (1-10):</label>
@@ -523,7 +484,7 @@
               </form>
             )}
 
-            {/* TAB 5: PANEL DE ADMINISTRADOR */}
+            {/* TAB 5: ADMIN */}
             {activeTab === 'admin' && currentUser.role === 'admin' && (
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -572,7 +533,7 @@
 
           </main>
 
-          {/* MODAL SELECCIÓN DE PLANES DE SUSCRIPCIÓN */}
+          {/* MODAL SUSCRIPCIONES */}
           {showSubscriptionModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative">
