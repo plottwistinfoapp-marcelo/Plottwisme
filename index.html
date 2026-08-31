@@ -64,39 +64,55 @@
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
         socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' },
         receivedLikes: 29
+      },
+      {
+        id: 'u3',
+        name: 'Mateo Fernández',
+        email: 'mateo@gmail.com',
+        age: 31,
+        sex: 'Masculino',
+        lookingFor: 'Cita / Pareja',
+        location: 'Encarnación, Paraguay',
+        distanceKm: 140.0,
+        role: 'general',
+        roleLabel: 'Cinéfilo Pro',
+        isPremium: false,
+        isCritic: false,
+        verified: false,
+        bio: 'Coleccionista de Blu-ray y adicto a A24 y Neo-Noir.',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
+        socialLinks: { twitter: '@mateocine', radio: '', tv: '' },
+        receivedLikes: 8
       }
     ];
 
-    const BASE_MOVIES = [
+    const FALLBACK_TMDB_MOVIES = [
       {
-        id: 'm1',
+        id: 693134,
         title: 'Dune: Parte Dos',
-        director: 'Denis Villeneuve',
-        genre: 'Ciencia Ficción / Épica',
-        duration: '166 min',
-        rating: '9.4',
-        poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80',
-        synopsis: 'Paul Atreides se une a Chani y a los Fremen buscando venganza contra los conspiradores.'
+        overview: 'Paul Atreides se une a Chani y los Fremen mientras busca venganza contra los conspiradores que destruyeron a su familia.',
+        poster_path: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80',
+        vote_average: 8.5,
+        release_date: '2024-02-27',
+        genre: 'Ciencia Ficción'
       },
       {
-        id: 'm2',
+        id: 872585,
         title: 'Oppenheimer',
-        director: 'Christopher Nolan',
-        genre: 'Drama / Biografía',
-        duration: '180 min',
-        rating: '9.1',
-        poster: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80',
-        synopsis: 'La historia del físico J. Robert Oppenheimer y su rol en el desarrollo de la bomba atómica.'
+        overview: 'La historia del físico J. Robert Oppenheimer y su papel en el desarrollo de la bomba atómica.',
+        poster_path: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80',
+        vote_average: 8.1,
+        release_date: '2023-07-19',
+        genre: 'Drama / Historia'
       },
       {
-        id: 'm3',
+        id: 792307,
         title: 'Pobres Criaturas',
-        director: 'Yorgos Lanthimos',
-        genre: 'Comedia Negra / Fantasía',
-        duration: '141 min',
-        rating: '8.8',
-        poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
-        synopsis: 'La fantástica evolución de Bella Baxter, una joven revivida por un científico brillante.'
+        overview: 'La fantástica historia y evolución de Bella Baxter, una joven resucitada por un brillante científico.',
+        poster_path: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
+        vote_average: 7.8,
+        release_date: '2023-12-07',
+        genre: 'Comedia Negra'
       }
     ];
 
@@ -114,14 +130,13 @@
 
     function App() {
       const [currentUser, setCurrentUser] = useState(() => INITIAL_USERS[0]);
-      const [authMode, setAuthMode] = useState('login');
-      const [loginEmail, setLoginEmail] = useState('marbuttice@gmail.com');
-      const [loginPassword, setLoginPassword] = useState('');
-
       const [activeTab, setActiveTab] = useState('radar');
       const [currentIndex, setCurrentIndex] = useState(0);
       const [userCity, setUserCity] = useState('Oberá, Misiones');
-      const [selectedMovieTheaters, setSelectedMovieTheaters] = useState(null);
+      const [tmdbApiKey, setTmdbApiKey] = useState('');
+      const [moviesList, setMoviesList] = useState(FALLBACK_TMDB_MOVIES);
+      const [isLoadingTmdb, setIsLoadingTmdb] = useState(false);
+      const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
       const [usersList, setUsersList] = useState(INITIAL_USERS);
       const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
@@ -136,40 +151,39 @@
       const [editTv, setEditTv] = useState(currentUser.socialLinks.tv);
       const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks.twitter);
 
-      // Generador dinámico de salas según la ciudad ingresada por el usuario
-      const dynamicBillboard = useMemo(() => {
-        const cityClean = (userCity || 'Oberá').trim();
-        const cityLower = cityClean.toLowerCase();
-
-        let customTheaters = [];
-
-        if (cityLower.includes('oberá') || cityLower.includes('obera')) {
-          customTheaters = [
-            { name: 'Cine Teatro Oberá (Espacio INCAA)', distance: '0.8 km', showtimes: ['18:00', '21:00'] },
-            { name: 'Casa del Bicentenario (Oberá)', distance: '2.1 km', showtimes: ['19:30'] }
-          ];
-        } else if (cityLower.includes('posadas')) {
-          customTheaters = [
-            { name: 'Cine Sunstar (Plaza Mayor Posadas)', distance: '2.4 km', showtimes: ['17:00', '19:45', '22:30'] },
-            { name: 'Centro Cultural Vicente Cidade', distance: '1.1 km', showtimes: ['19:00', '21:30'] }
-          ];
-        } else if (cityLower.includes('buenos aires') || cityLower.includes('caba')) {
-          customTheaters = [
-            { name: 'Gaumont (Espacio INCAA - CABA)', distance: '1.5 km', showtimes: ['14:00', '16:30', '19:00', '21:30'] },
-            { name: 'Multiplex Belgrano', distance: '3.2 km', showtimes: ['15:00', '18:00', '21:00'] }
-          ];
-        } else {
-          customTheaters = [
-            { name: `Cine Municipal / Cultural de ${cityClean}`, distance: '1.2 km', showtimes: ['17:30', '20:15'] },
-            { name: `Complejo Cinematográfico Multiplex (${cityClean})`, distance: '3.5 km', showtimes: ['16:00', '19:00', '22:00'] }
-          ];
+      // Cargar cartelera desde TMDb
+      const fetchTmdbMovies = async (key) => {
+        if (!key) return;
+        setIsLoadingTmdb(true);
+        try {
+          const res = await fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${key}&language=es-ES`);
+          const data = await res.json();
+          if (data.results && data.results.length > 0) {
+            const formatted = data.results.map(m => ({
+              id: m.id,
+              title: m.title || m.original_title,
+              overview: m.overview || 'Sin descripción disponible.',
+              poster_path: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
+              vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0',
+              release_date: m.release_date || 'En cartelera',
+              genre: 'Cine & Estrenos'
+            }));
+            setMoviesList(formatted);
+            alert('🍿 ¡Cartelera actualizada exitosamente desde TMDb!');
+          }
+        } catch (err) {
+          alert('No se pudo conectar a TMDb con esa API Key. Usando catálogo base.');
+        } finally {
+          setIsLoadingTmdb(false);
         }
+      };
 
-        return BASE_MOVIES.map(movie => ({
-          ...movie,
-          theaters: customTheaters
-        }));
-      }, [userCity]);
+      // Redirección en tiempo real a Google / Google Maps
+      const handleOpenGoogleTheaters = (movieTitle) => {
+        const query = `cartelera cine ${movieTitle} en ${userCity}`;
+        const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        window.open(url, '_blank');
+      };
 
       const maxDistance = currentUser.isPremium ? 500 : 100;
       const filteredCandidates = useMemo(() => {
@@ -178,23 +192,16 @@
 
       const currentCandidate = filteredCandidates[currentIndex];
 
-      const handleLogin = (e) => {
-        e.preventDefault();
-        const found = usersList.find(u => u.email === loginEmail);
-        if (found) {
-          setCurrentUser(found);
-          setEditBio(found.bio);
-          setEditAvatar(found.avatar);
-          setActiveTab('radar');
-        } else {
-          alert('Usuario no encontrado.');
-        }
-      };
-
-      const handleUpgradeToPremium = () => {
-        const updated = { ...currentUser, isPremium: true, roleLabel: 'Cinéfilo Premium ⭐' };
+      const handleUpgradePlan = (isPrem) => {
+        const updated = { 
+          ...currentUser, 
+          isPremium: isPrem, 
+          roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar' 
+        };
         setCurrentUser(updated);
-        alert('🎉 ¡Membresía Premium activada con éxito! Radar ampliado a 500 km.');
+        setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
+        setShowSubscriptionModal(false);
+        alert(isPrem ? '🎉 ¡Plan Premium Activo ($4.99 USD)! Cobertura de radar hasta 500 km.' : 'ℹ️ Has cambiado al Plan Estándar (100 km).');
       };
 
       const handleLikeCandidate = () => {
@@ -212,6 +219,7 @@
           socialLinks: { radio: editRadio, tv: editTv, twitter: editTwitter }
         };
         setCurrentUser(updated);
+        setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
         alert('✅ ¡Perfil actualizado correctamente!');
       };
 
@@ -235,41 +243,66 @@
 
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
+          
+          {/* HEADER PRINCIPAL */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+              
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('radar')}>
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center font-bold text-xl text-slate-950">P</div>
                 <div>
                   <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
-                  <p className="text-[10px] uppercase text-slate-400">{currentUser.isPremium ? '⭐ Premium' : '👤 Estándar'}</p>
+                  <p className="text-[10px] uppercase text-slate-400 font-bold">{currentUser.isPremium ? '⭐ Plan Premium (500 km)' : '👤 Plan Estándar (100 km)'}</p>
                 </div>
               </div>
 
+              {/* UBICACIÓN DE CIUDAD */}
               <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full sm:w-auto justify-center">
-                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Tu Ubicación (Ciudad):</span>
+                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Tu Ubicación:</span>
                 <input 
                   type="text" 
                   value={userCity} 
                   onChange={(e) => setUserCity(e.target.value)} 
                   className="bg-transparent border-0 px-1 py-0.5 font-bold w-44 text-amber-300 focus:outline-none" 
-                  placeholder="Ej: Posadas, Buenos Aires..." 
+                  placeholder="Ej: Oberá, Posadas..." 
                 />
               </div>
 
-              <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto">
-                <button onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
-                <button onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
-                <button onClick={() => setActiveTab('critics')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>📰 Críticos</button>
-                <button onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>👤 Perfil</button>
+              {/* NAVEGACIÓN */}
+              <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto max-w-full">
+                <button onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
+                <button onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
+                <button onClick={() => setActiveTab('critics')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>📰 Críticos</button>
+                <button onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>👤 Mi Perfil</button>
+                
+                {/* BOTÓN PLANES DE SUSCRIPCIÓN */}
+                <button onClick={() => setShowSubscriptionModal(true)} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600 hover:text-white transition-all whitespace-nowrap">
+                  💳 Planes
+                </button>
+
+                {/* BOTÓN ADMIN EXCLUSIVO */}
+                {currentUser.role === 'admin' && (
+                  <button onClick={() => setActiveTab('admin')} className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/50'}`}>
+                    🛡️ Admin
+                  </button>
+                )}
               </nav>
+
             </div>
           </header>
 
+          {/* MAIN CONTAINER */}
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+            
+            {/* TAB 1: RADAR CINÉFILO */}
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center">
-                <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center">
-                  🎯 Buscando cinéfilos cerca de <b>{userCity}</b> (Radio: <b>{currentUser.isPremium ? '500 km' : '100 km'}</b>)
+                <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center flex items-center gap-2">
+                  <span>🎯 Buscando cinéfilos cerca de <b>{userCity}</b></span>
+                  <span className="bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/40">Radio: <b>{currentUser.isPremium ? '500 km' : '100 km'}</b></span>
+                  {!currentUser.isPremium && (
+                    <button onClick={() => setShowSubscriptionModal(true)} className="underline text-amber-300 font-bold hover:text-amber-200">Ampliar a 500 km</button>
+                  )}
                 </div>
 
                 {currentCandidate ? (
@@ -279,98 +312,112 @@
                       <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
                       <div className="absolute bottom-4 left-4 right-4">
                         <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
-                        <p className="text-xs text-amber-300">📍 {currentCandidate.location} • A {currentCandidate.distanceKm} km</p>
+                        <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location} • A {currentCandidate.distanceKm} km</p>
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
                       <p className="text-xs italic text-slate-300">"{currentCandidate.bio}"</p>
+                      {currentCandidate.socialLinks?.radio && (
+                        <p className="text-[11px] text-slate-400">🎙️ {currentCandidate.socialLinks.radio}</p>
+                      )}
                       <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
-                        <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
-                        <button onClick={handleLikeCandidate} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg">🍿</button>
+                        <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold hover:bg-slate-700 transition-all">✖</button>
+                        <button onClick={handleLikeCandidate} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-105 transition-all">🍿</button>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-20 space-y-4 max-w-md">
-                    <h3 className="text-xl font-bold">No hay más perfiles cercanos en este momento.</h3>
+                  <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                    <div className="text-4xl">🎟️</div>
+                    <h3 className="text-xl font-bold">No hay más perfiles cercanos dentro de tu rango.</h3>
+                    <p className="text-xs text-slate-400">Prueba ampliando tu radio de búsqueda a 500 km con el Plan Premium.</p>
+                    <button onClick={() => { setCurrentIndex(0); }} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Vista</button>
                   </div>
                 )}
               </div>
             )}
 
+            {/* TAB 2: CARTELERA CON TMDb & GOOGLE REAL TIME */}
             {activeTab === 'cinema' && (
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-black">🎬 Salas de Cine en: <span className="text-amber-500">{userCity}</span></h2>
-                  <p className="text-xs text-slate-400">Cartelera adaptada en tiempo real a la ubicación seleccionada.</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-3xl">
+                  <div>
+                    <h2 className="text-2xl font-black">🎬 Cartelera en Tiempo Real: <span className="text-amber-500">{userCity}</span></h2>
+                    <p className="text-xs text-slate-400">Películas sincronizadas con TMDb. Haz clic en "Ver Salas" para consultar horarios y mapas exactos en Google.</p>
+                  </div>
+
+                  {/* CONFIGURADOR DE TMDB API KEY */}
+                  <div className="flex items-center gap-2 text-xs bg-slate-950 p-2 rounded-2xl border border-slate-800 w-full sm:w-auto">
+                    <input 
+                      type="text" 
+                      placeholder="API Key de TMDb (Opcional)" 
+                      value={tmdbApiKey} 
+                      onChange={(e) => setTmdbApiKey(e.target.value)} 
+                      className="bg-transparent border-0 px-2 text-slate-200 focus:outline-none w-40 text-[11px]"
+                    />
+                    <button 
+                      onClick={() => fetchTmdbMovies(tmdbApiKey)} 
+                      disabled={isLoadingTmdb}
+                      className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap"
+                    >
+                      {isLoadingTmdb ? 'Cargando...' : 'Conectar TMDb'}
+                    </button>
+                  </div>
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {dynamicBillboard.map(m => (
-                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl">
+                  {moviesList.map(m => (
+                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-slate-700 transition-all">
                       <div className="space-y-3">
-                        <div className="relative h-64 rounded-2xl overflow-hidden bg-slate-950">
-                          <img src={m.poster} alt={m.title} className="w-full h-full object-cover" />
-                          <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md">★ {m.rating}</span>
+                        <div className="relative h-72 rounded-2xl overflow-hidden bg-slate-950">
+                          <img src={m.poster_path} alt={m.title} className="w-full h-full object-cover" />
+                          <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md shadow">
+                            ★ {m.vote_average}
+                          </span>
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre}</span>
+                          <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre || 'Cine'}</span>
                           <h3 className="text-base font-black">{m.title}</h3>
-                          <p className="text-[11px] text-slate-400">Dir. {m.director} • {m.duration}</p>
+                          <p className="text-xs text-slate-400 line-clamp-3 pt-1">{m.overview}</p>
                         </div>
                       </div>
-                      <button onClick={() => setSelectedMovieTheaters(m)} className="w-full bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-amber-500/40">🏛️ Ver Salas en {userCity}</button>
+
+                      {/* BOTÓN REDIRECCIÓN A GOOGLE REAL TIME */}
+                      <button 
+                        onClick={() => handleOpenGoogleTheaters(m.title)} 
+                        className="w-full bg-amber-500/10 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-3 rounded-xl text-xs transition-all border border-amber-500/40 flex items-center justify-center gap-2"
+                      >
+                        <span>🏛️ Ver Salas y Horarios en Google ({userCity})</span>
+                        <span>↗</span>
+                      </button>
                     </div>
                   ))}
                 </div>
-
-                {selectedMovieTheaters && (
-                  <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-                      <h3 className="text-base font-black">Funciones para: {selectedMovieTheaters.title}</h3>
-                      <p className="text-xs text-amber-400">Ubicación actual: {userCity}</p>
-                      <div className="space-y-3">
-                        {selectedMovieTheaters.theaters.map((t, idx) => (
-                          <div key={idx} className="p-3 rounded-2xl border border-slate-800 bg-slate-950 space-y-1">
-                            <div className="flex justify-between text-xs font-bold">
-                              <span>🏛️ {t.name}</span>
-                              <span className="text-amber-500">{t.distance}</span>
-                            </div>
-                            <div className="flex gap-1 pt-1">
-                              {t.showtimes.map((st, i) => (
-                                <span key={i} className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-[10px] font-mono font-bold">{st} hs</span>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <button onClick={() => setSelectedMovieTheaters(null)} className="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs">Cerrar</button>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
+            {/* TAB 3: CRÍTICOS & MEDIOS */}
             {activeTab === 'critics' && (
               <div className="space-y-6 max-w-3xl mx-auto">
                 <h2 className="text-2xl font-black">📰 Panel de Críticos & Medios</h2>
                 
                 <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-                  <h3 className="text-sm font-black text-amber-500">✍️ Publicar Nueva Reseña</h3>
+                  <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña en la Red</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div>
                       <label className="block mb-1 text-slate-400">Película:</label>
-                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Dune: Parte Dos" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Dune: Parte Dos" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500" required />
                     </div>
                     <div>
                       <label className="block mb-1 text-slate-400">Calificación (1-10):</label>
-                      <input type="number" min="1" max="10" step="0.5" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                      <input type="number" min="1" max="10" step="0.5" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500" required />
                     </div>
                   </div>
                   <div className="text-xs">
                     <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
-                    <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu reseña..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu reseña crítica..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500" required />
                   </div>
-                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña</button>
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase hover:bg-amber-400 transition-all">Publicar Reseña</button>
                 </form>
 
                 <div className="space-y-4 pt-2">
@@ -385,7 +432,7 @@
                       </div>
                       <div>
                         <h4 className="text-base font-black">{rev.movieTitle}</h4>
-                        <p className="text-xs pt-1 text-slate-300">{rev.content}</p>
+                        <p className="text-xs pt-1 text-slate-300 leading-relaxed">{rev.content}</p>
                       </div>
                     </div>
                   ))}
@@ -393,26 +440,32 @@
               </div>
             )}
 
+            {/* TAB 4: MI PERFIL */}
             {activeTab === 'profile' && (
               <form onSubmit={handleSaveProfile} className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-black">👤 Mi Perfil & Enlaces</h2>
-                  <button type="button" onClick={handleUpgradeToPremium} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs">⭐ Ser Premium</button>
+                <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+                  <div>
+                    <h2 className="text-xl font-black">{currentUser.name}</h2>
+                    <p className="text-xs text-amber-500">{currentUser.roleLabel}</p>
+                  </div>
+                  <button type="button" onClick={() => setShowSubscriptionModal(true)} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs">
+                    {currentUser.isPremium ? '⭐ Plan Premium Activo' : '🚀 Cambiar Plan'}
+                  </button>
                 </div>
 
                 <div className="space-y-4 text-xs">
                   <div>
-                    <label className="block mb-1 text-slate-400">URL de tu Foto de Perfil:</label>
+                    <label className="block mb-1 text-slate-400">URL Foto de Perfil:</label>
                     <input type="url" value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
 
                   <div>
-                    <label className="block mb-1 text-slate-400">Biografía / Tus gustos:</label>
+                    <label className="block mb-1 text-slate-400">Biografía Cinéfila:</label>
                     <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
                   </div>
 
                   <div className="pt-2 border-t border-slate-800 space-y-3">
-                    <h3 className="font-bold text-amber-500">🎙️ Tus Medios (Radio, TV y Redes)</h3>
+                    <h3 className="font-bold text-amber-500">🎙️ Medios & Redes Sociales</h3>
                     <div>
                       <label className="block mb-1 text-slate-400">Programa de Radio / Podcast:</label>
                       <input type="text" value={editRadio} onChange={(e) => setEditRadio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
@@ -423,11 +476,120 @@
                     </div>
                   </div>
 
-                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider">Guardar Cambios</button>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">Guardar Cambios</button>
                 </div>
               </form>
             )}
+
+            {/* TAB 5: PANEL DE ADMINISTRADOR */}
+            {activeTab === 'admin' && currentUser.role === 'admin' && (
+              <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div>
+                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador General</h2>
+                    <p className="text-xs text-amber-400 mt-1">Sesión activa: <b>{currentUser.name}</b> ({currentUser.email})</p>
+                  </div>
+                  <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
+                    Control Total Plottwisme
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <p className="text-xs text-slate-400">Usuarios Registrados</p>
+                    <p className="text-2xl font-black text-white mt-1">{usersList.length}</p>
+                  </div>
+                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <p className="text-xs text-slate-400">Reseñas Publicadas</p>
+                    <p className="text-2xl font-black text-white mt-1">{reviewsList.length}</p>
+                  </div>
+                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <p className="text-xs text-slate-400">Películas en Cartelera</p>
+                    <p className="text-2xl font-black text-white mt-1">{moviesList.length}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="font-bold text-sm text-amber-500">👥 Gestión de Usuarios</h3>
+                  <div className="space-y-2">
+                    {usersList.map(u => (
+                      <div key={u.id} className="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+                        <div>
+                          <span className="font-bold text-white">{u.name}</span> ({u.email})
+                          <span className="ml-2 text-[10px] text-slate-400">{u.location}</span>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${u.isPremium ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`}>
+                          {u.isPremium ? '⭐ Premium' : 'Estándar'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
           </main>
+
+          {/* MODAL SELECCIÓN DE PLANES DE SUSCRIPCIÓN */}
+          {showSubscriptionModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative">
+                
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-black text-white">💳 Selecciona tu Suscripción</h3>
+                  <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  
+                  {/* PLAN ESTÁNDAR */}
+                  <div className={`p-5 rounded-2xl border ${!currentUser.isPremium ? 'border-slate-600 bg-slate-950' : 'border-slate-800 bg-slate-950/50'} flex flex-col justify-between space-y-4`}>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-200">Plan Estándar</h4>
+                      <p className="text-2xl font-black text-white mt-1">Gratis</p>
+                      <ul className="text-xs text-slate-400 mt-3 space-y-2">
+                        <li>• Radar hasta <b>100 km</b></li>
+                        <li>• Búsqueda de salas en Google</li>
+                        <li>• Publicación de reseñas</li>
+                      </ul>
+                    </div>
+                    <button 
+                      onClick={() => handleUpgradePlan(false)} 
+                      className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-xl text-xs"
+                    >
+                      Usar Estándar
+                    </button>
+                  </div>
+
+                  {/* PLAN PREMIUM */}
+                  <div className={`p-5 rounded-2xl border ${currentUser.isPremium ? 'border-amber-500 bg-amber-500/10' : 'border-amber-500/50 bg-slate-950'} flex flex-col justify-between space-y-4`}>
+                    <div>
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold text-sm text-amber-400">Plan Premium</h4>
+                        <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded">RECOMENDADO</span>
+                      </div>
+                      <p className="text-2xl font-black text-amber-400 mt-1">$4.99 USD <span className="text-xs font-normal text-slate-400">/mes</span></p>
+                      <ul className="text-xs text-slate-300 mt-3 space-y-2">
+                        <li>• Radar ampliado hasta <b>500 km</b></li>
+                        <li>• Insignia ⭐ Premium en Perfil</li>
+                        <li>• Prioridad en el Radar de Citas</li>
+                        <li>• Acceso ilimitado a funciones</li>
+                      </ul>
+                    </div>
+                    <button 
+                      onClick={() => handleUpgradePlan(true)} 
+                      className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase shadow-lg shadow-amber-500/20"
+                    >
+                      Activar Premium
+                    </button>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+          )}
+
         </div>
       );
     }
