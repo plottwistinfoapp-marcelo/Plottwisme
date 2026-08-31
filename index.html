@@ -68,7 +68,6 @@
       }
     ];
 
-    // Grilla diversa de opciones principales de cartelera
     const FEATURED_MOVIES = [
       {
         id: 101,
@@ -168,31 +167,39 @@
       const [editTv, setEditTv] = useState(currentUser.socialLinks.tv);
       const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks.twitter);
 
-      // Carga dinámica desde la API de TMDb si hay conexión activa
+      // Carga dinámica optimizada con bypass de caché para cambio de país
       useEffect(() => {
         const fetchMovies = async () => {
+          setMoviesList([]); 
           try {
-            const res = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=es-ES&region=${userCountryCode}&page=1`);
+            const res = await fetch(
+              `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=es-ES&region=${userCountryCode}&page=1&_t=${Date.now()}`
+            );
             const data = await res.json();
+
             if (data.results && data.results.length > 0) {
               const formatted = data.results.slice(0, 9).map(m => ({
                 id: m.id,
                 title: m.title || m.original_title,
                 overview: m.overview || 'Consulta horarios y funciones disponibles en tu ciudad.',
-                poster_path: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : FEATURED_MOVIES[0].poster_path,
+                poster_path: m.poster_path 
+                  ? `https://image.tmdb.org/t/p/w500${m.poster_path}` 
+                  : FEATURED_MOVIES[0].poster_path,
                 vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0',
                 genre: 'En Cartelera'
               }));
               setMoviesList(formatted);
+            } else {
+              setMoviesList(FEATURED_MOVIES);
             }
           } catch (err) {
             setMoviesList(FEATURED_MOVIES);
           }
         };
+
         fetchMovies();
       }, [userCountryCode]);
 
-      // Redirección directa al buscador con los parámetros que abren la marquesina de Google
       const openCitySchedule = (movieTitle = '') => {
         const cleanCity = userCity.trim().toLowerCase();
         const query = movieTitle 
@@ -253,7 +260,7 @@
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
-          {/* HEADER CON SELECCIÓN DE CIUDAD */}
+          {/* HEADER CON SELECCIÓN DE CIUDAD Y PAÍS */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
               
@@ -265,7 +272,7 @@
                 </div>
               </div>
 
-              {/* BARRA DE UBICACIÓN */}
+              {/* BARRA DE UBICACIÓN Y REGIONALIZACIÓN */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ubicación:</span>
                 <input 
@@ -287,7 +294,7 @@
                 </select>
               </div>
 
-              {/* BARRA DE NAVEGACIÓN */}
+              {/* NAV TAB */}
               <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto max-w-full">
                 <button onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
                 <button onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
@@ -308,16 +315,16 @@
             </div>
           </header>
 
-          {/* CONTENIDO PRINCIPAL */}
+          {/* MAIN CONTENT */}
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
             
-            {/* TAB 1: CARTELERA CON GRILLA COMPLETA */}
+            {/* CARTELERA */}
             {activeTab === 'cinema' && (
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
                     <h2 className="text-lg font-black text-amber-400">🏛️ Cartelera de Cines en <span className="capitalize text-white">{userCity}</span></h2>
-                    <p className="text-xs text-slate-300 mt-1">Hacé clic en cualquier película o en el botón general para abrir las funciones de hoy en Google.</p>
+                    <p className="text-xs text-slate-300 mt-1">Selecciona cualquier título para ver la marquesina de horarios y funciones en Google.</p>
                   </div>
                   <button 
                     onClick={() => openCitySchedule()} 
@@ -328,40 +335,46 @@
                   </button>
                 </div>
 
-                {/* GRILLA CON MÚLTIPLES OPCIONES EN PANTALLA */}
+                {/* GRILLA DE PELÍCULAS */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {moviesList.map(m => (
-                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-amber-500/50 transition-all">
-                      <div className="space-y-3">
-                        <div className="relative h-72 rounded-2xl overflow-hidden bg-slate-950 cursor-pointer" onClick={() => openCitySchedule(m.title)}>
-                          <img src={m.poster_path} alt={m.title} className="w-full h-full object-cover hover:scale-105 transition-all duration-300" />
-                          <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md shadow">
-                            ★ {m.vote_average}
-                          </span>
+                  {moviesList.length > 0 ? (
+                    moviesList.map(m => (
+                      <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-amber-500/50 transition-all">
+                        <div className="space-y-3">
+                          <div className="relative h-72 rounded-2xl overflow-hidden bg-slate-950 cursor-pointer" onClick={() => openCitySchedule(m.title)}>
+                            <img src={m.poster_path} alt={m.title} className="w-full h-full object-cover hover:scale-105 transition-all duration-300" />
+                            <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md shadow">
+                              ★ {m.vote_average}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre || 'Cine'}</span>
+                            <h3 className="text-base font-black text-white cursor-pointer hover:text-amber-400 transition-colors" onClick={() => openCitySchedule(m.title)}>
+                              {m.title}
+                            </h3>
+                            <p className="text-xs text-slate-400 line-clamp-3 pt-1">{m.overview}</p>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-rose-500 uppercase">{m.genre || 'Cine'}</span>
-                          <h3 className="text-base font-black text-white cursor-pointer hover:text-amber-400 transition-colors" onClick={() => openCitySchedule(m.title)}>
-                            {m.title}
-                          </h3>
-                          <p className="text-xs text-slate-400 line-clamp-3 pt-1">{m.overview}</p>
-                        </div>
-                      </div>
 
-                      <button 
-                        onClick={() => openCitySchedule(m.title)} 
-                        className="w-full bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-slate-700 flex items-center justify-center gap-2"
-                      >
-                        <span>Funciones en {userCity}</span>
-                        <span>↗</span>
-                      </button>
+                        <button 
+                          onClick={() => openCitySchedule(m.title)} 
+                          className="w-full bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-slate-700 flex items-center justify-center gap-2"
+                        >
+                          <span>Funciones en {userCity}</span>
+                          <span>↗</span>
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-12 text-slate-400 text-sm">
+                      ⏳ Cargando cartelera actualizada...
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
 
-            {/* TAB 2: RADAR CINÉFILO */}
+            {/* RADAR */}
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center">
                 <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center flex items-center gap-2 flex-wrap justify-center">
@@ -397,7 +410,7 @@
               </div>
             )}
 
-            {/* TAB 3: CRÍTICOS & MEDIOS */}
+            {/* CRÍTICOS */}
             {activeTab === 'critics' && (
               <div className="space-y-6 max-w-3xl mx-auto">
                 <h2 className="text-2xl font-black">📰 Panel de Críticos & Medios</h2>
@@ -441,7 +454,7 @@
               </div>
             )}
 
-            {/* TAB 4: MI PERFIL */}
+            {/* MI PERFIL */}
             {activeTab === 'profile' && (
               <form onSubmit={handleSaveProfile} className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-4">
@@ -482,7 +495,7 @@
               </form>
             )}
 
-            {/* TAB 5: ADMIN */}
+            {/* ADMIN */}
             {activeTab === 'admin' && currentUser.role === 'admin' && (
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
