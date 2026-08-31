@@ -128,11 +128,12 @@
         return found ? found.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
       };
 
+      // Apertura de Google forzando tema oscuro mediante el parámetro &cs=2
       const openGoogleEngine = (customQueryFormat = 'cartelera de cines en {city} {country}') => {
         const cleanCity = userCity.trim();
         const country = getCountryName();
         const query = customQueryFormat.replace('{city}', cleanCity).replace('{country}', country);
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2`, '_blank');
       };
 
       const maxDistance = currentUser.isPremium ? 500 : 100;
@@ -262,7 +263,7 @@
                       Cartelera en Tiempo Real para <span className="text-amber-400 capitalize">{userCity}</span>
                     </h2>
                     <p className="text-sm text-slate-300 leading-relaxed">
-                      Accede instantáneamente al panel interactivo oficial de Google con las películas, complejos, horarios y salas disponibles hoy en tu ciudad.
+                      Accede instantáneamente al panel interactivo oficial de Google con las películas, complejos, horarios y salas disponibles hoy en tu ciudad en modo oscuro.
                     </p>
                     <div className="pt-2">
                       <button 
@@ -451,7 +452,7 @@
                   </div>
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
                     <p className="text-xs text-slate-400">Estado del Sistema</p>
-                    <p className="text-sm font-black text-emerald-400 mt-1">Sincronizado con Google 🟢</p>
+                    <p className="text-sm font-black text-emerald-400 mt-1">Modo Oscuro Sincronizado 🌙</p>
                   </div>
                 </div>
               </div>
