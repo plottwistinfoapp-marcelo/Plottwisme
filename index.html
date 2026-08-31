@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plottwisme - Red Social Cinéfila & Cartelera Global</title>
+  <title>Plottwisme - Red Social Cinéfila & Cartelera Real</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -65,52 +65,18 @@
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
         socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' },
         receivedLikes: 29
-      },
-      {
-        id: 'u3',
-        name: 'Mateo Fernández',
-        email: 'mateo@gmail.com',
-        age: 31,
-        sex: 'Masculino',
-        lookingFor: 'Cita / Pareja',
-        location: 'Encarnación, Itapúa, Paraguay',
-        distanceKm: 140.0,
-        role: 'general',
-        roleLabel: 'Cinéfilo Pro',
-        isPremium: false,
-        isCritic: false,
-        verified: false,
-        bio: 'Coleccionista de Blu-ray y apasionado del cine de culto y Neo-Noir.',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
-        socialLinks: { twitter: '@mateocine', radio: '', tv: '' },
-        receivedLikes: 8
       }
     ];
 
+    // Respaldo actualizado sin títulos viejos
     const RECENT_MOVIES_FALLBACK = [
       {
         id: 1,
-        title: "Deadpool & Wolverine",
-        overview: "Un peligro inminente amenaza la existencia del universo y Wade Wilson debe hacer equipo con un reticente Wolverine.",
-        poster_path: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80",
-        vote_average: "8.2",
-        genre: "Acción / Comedia"
-      },
-      {
-        id: 2,
-        title: "Intensa-Mente 2",
-        overview: "Nuevas emociones llegan a la mente de Riley justo cuando la sede central está sufriendo una repentina demolición.",
-        poster_path: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80",
-        vote_average: "8.4",
-        genre: "Animación"
-      },
-      {
-        id: 3,
-        title: "Alien: Romulus",
-        overview: "Un grupo de jóvenes colonizadores espaciales se encuentra cara a cara con la forma de vida más aterradora del universo.",
-        poster_path: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80",
-        vote_average: "7.5",
-        genre: "Terror / Ciencia Ficción"
+        title: "Cartelera General de Cine",
+        overview: "Consulta los horarios, salas y funciones disponibles hoy en tu ciudad.",
+        poster_path: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&auto=format&fit=crop&q=80",
+        vote_average: "9.0",
+        genre: "Estrenos Semanales"
       }
     ];
 
@@ -118,11 +84,11 @@
       {
         id: 'r1',
         author: 'Elena Montero',
-        movieTitle: 'Alien: Romulus',
+        movieTitle: 'Cine de Autor & Estrenos',
         rating: 9,
-        content: 'Excelente regreso a las raíces del terror espacial. La tensión y atmósfera práctica están muy bien logradas.',
+        content: 'Análisis y recomendaciones de las salas locales.',
         mediaOutlet: 'Columnista Radio LT3 / Canal 12 Misiones',
-        date: '2026-08-15'
+        date: '2026-08-31'
       }
     ];
 
@@ -140,7 +106,6 @@
 
     function App() {
       const [currentUser, setCurrentUser] = useState(() => INITIAL_USERS[0]);
-      // Pestaña inicial configurada en Cartelera ('cinema')
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -163,7 +128,7 @@
       const [editTv, setEditTv] = useState(currentUser.socialLinks.tv);
       const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks.twitter);
 
-      // Carga automática desde TMDb según país
+      // Carga automática desde TMDb
       useEffect(() => {
         const fetchMovies = async () => {
           try {
@@ -176,21 +141,23 @@
                 overview: m.overview || 'Sin descripción disponible.',
                 poster_path: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : RECENT_MOVIES_FALLBACK[0].poster_path,
                 vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0',
-                genre: 'Estreno en Cines'
+                genre: 'En Cartelera'
               }));
               setMoviesList(formatted);
             }
           } catch (err) {
-            console.log("Usando lista local de respaldo");
+            console.log("Usando redirección directa a Google");
           }
         };
         fetchMovies();
       }, [userCountryCode]);
 
+      // Redirección directa al formato exacto de Google (Panel 'Películas que se proyectan')
       const openCitySchedule = (movieTitle = '') => {
+        const cleanCity = userCity.trim().toLowerCase();
         const query = movieTitle 
-          ? `cartelera cine ${movieTitle} en ${userCity}` 
-          : `cartelera de cine en ${userCity} hoy funciones`;
+          ? `cartelera cine ${movieTitle} en ${cleanCity}` 
+          : `cartelera de cines en ${cleanCity}`;
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
       };
 
@@ -210,12 +177,6 @@
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
         setShowSubscriptionModal(false);
-      };
-
-      const handleLikeCandidate = () => {
-        if (!currentCandidate) return;
-        alert(`🍿 ¡Le diste Me Gusta a ${currentCandidate.name}!`);
-        setCurrentIndex(prev => prev + 1);
       };
 
       const handleSaveProfile = (e) => {
@@ -310,19 +271,20 @@
           {/* CONTENIDO PRINCIPAL */}
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
             
-            {/* TAB 1: CARTELERA CON CONSULTA REAL POR CIUDAD (VISTA PRINCIPAL) */}
+            {/* TAB 1: CARTELERA CON REDIRECCIÓN DIRECTA A GOOGLE */}
             {activeTab === 'cinema' && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 p-4 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-base font-bold text-amber-400">🏛️ Cartelera de Cines en <span className="capitalize text-white">{userCity}</span></h2>
-                    <p className="text-xs text-slate-400">Consultá las funciones y salas exactas de hoy en tu localidad.</p>
+                    <h2 className="text-lg font-black text-amber-400">🏛️ Cartelera Real en <span className="capitalize text-white">{userCity}</span></h2>
+                    <p className="text-xs text-slate-300 mt-1">Abre el panel interactivo directo de Google con las funciones de hoy en tu ciudad.</p>
                   </div>
                   <button 
                     onClick={() => openCitySchedule()} 
-                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs whitespace-nowrap transition-all shadow-lg shadow-amber-500/20"
+                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs whitespace-nowrap transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2"
                   >
-                    Ver Cartelera Completa en {userCity} ↗
+                    <span>Ver Cartelera de Cines en {userCity}</span>
+                    <span>↗</span>
                   </button>
                 </div>
 
@@ -344,10 +306,10 @@
                       </div>
 
                       <button 
-                        onClick={() => openCitySchedule(m.title)} 
+                        onClick={() => openCitySchedule(m.title === "Cartelera General de Cine" ? '' : m.title)} 
                         className="w-full bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all border border-slate-700 flex items-center justify-center gap-2"
                       >
-                        <span>Consultar Funciones en {userCity}</span>
+                        <span>Buscar Funciones en Google ({userCity})</span>
                         <span>↗</span>
                       </button>
                     </div>
@@ -362,9 +324,6 @@
                 <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center flex items-center gap-2 flex-wrap justify-center">
                   <span>🎯 Buscando cinéfilos cerca de <b className="capitalize">{userCity}</b></span>
                   <span className="bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/40">Radio: <b>{currentUser.isPremium ? '500 km' : '100 km'}</b></span>
-                  {!currentUser.isPremium && (
-                    <button onClick={() => setShowSubscriptionModal(true)} className="underline text-amber-300 font-bold hover:text-amber-200">Ampliar a 500 km</button>
-                  )}
                 </div>
 
                 {currentCandidate ? (
@@ -379,12 +338,9 @@
                     </div>
                     <div className="p-6 space-y-4">
                       <p className="text-xs italic text-slate-300">"{currentCandidate.bio}"</p>
-                      {currentCandidate.socialLinks?.radio && (
-                        <p className="text-[11px] text-slate-400">🎙️ {currentCandidate.socialLinks.radio}</p>
-                      )}
                       <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
                         <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold hover:bg-slate-700 transition-all">✖</button>
-                        <button onClick={handleLikeCandidate} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-105 transition-all">🍿</button>
+                        <button onClick={() => { alert(`🍿 ¡Le diste Me Gusta a ${currentCandidate.name}!`); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-105 transition-all">🍿</button>
                       </div>
                     </div>
                   </div>
@@ -392,8 +348,7 @@
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
                     <h3 className="text-xl font-bold">No hay más perfiles cercanos dentro de tu rango.</h3>
-                    <p className="text-xs text-slate-400">Prueba ampliando tu radio de búsqueda a 500 km con el Plan Premium.</p>
-                    <button onClick={() => { setCurrentIndex(0); }} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Vista</button>
+                    <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Vista</button>
                   </div>
                 )}
               </div>
@@ -409,7 +364,7 @@
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div>
                       <label className="block mb-1 text-slate-400">Película:</label>
-                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Alien: Romulus" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500" required />
+                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Película..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500" required />
                     </div>
                     <div>
                       <label className="block mb-1 text-slate-400">Calificación (1-10):</label>
@@ -511,23 +466,6 @@
                     <p className="text-2xl font-black text-white mt-1">{moviesList.length}</p>
                   </div>
                 </div>
-
-                <div className="space-y-3">
-                  <h3 className="font-bold text-sm text-amber-500">👥 Gestión de Usuarios</h3>
-                  <div className="space-y-2">
-                    {usersList.map(u => (
-                      <div key={u.id} className="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
-                        <div>
-                          <span className="font-bold text-white">{u.name}</span> ({u.email})
-                          <span className="ml-2 text-[10px] text-slate-400">{u.location}</span>
-                        </div>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${u.isPremium ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`}>
-                          {u.isPremium ? '⭐ Premium' : 'Estándar'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             )}
 
@@ -537,58 +475,28 @@
           {showSubscriptionModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative">
-                
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-black text-white">💳 Selecciona tu Suscripción</h3>
                   <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  
-                  {/* PLAN ESTÁNDAR */}
-                  <div className={`p-5 rounded-2xl border ${!currentUser.isPremium ? 'border-slate-600 bg-slate-950' : 'border-slate-800 bg-slate-950/50'} flex flex-col justify-between space-y-4`}>
+                  <div className="p-5 rounded-2xl border border-slate-800 bg-slate-950 flex flex-col justify-between space-y-4">
                     <div>
                       <h4 className="font-bold text-sm text-slate-200">Plan Estándar</h4>
                       <p className="text-2xl font-black text-white mt-1">Gratis</p>
-                      <ul className="text-xs text-slate-400 mt-3 space-y-2">
-                        <li>• Radar hasta <b>100 km</b></li>
-                        <li>• Búsqueda de salas en Google</li>
-                        <li>• Publicación de reseñas</li>
-                      </ul>
                     </div>
-                    <button 
-                      onClick={() => handleUpgradePlan(false)} 
-                      className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-xl text-xs"
-                    >
-                      Usar Estándar
-                    </button>
+                    <button onClick={() => handleUpgradePlan(false)} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-xl text-xs">Usar Estándar</button>
                   </div>
 
-                  {/* PLAN PREMIUM */}
-                  <div className={`p-5 rounded-2xl border ${currentUser.isPremium ? 'border-amber-500 bg-amber-500/10' : 'border-amber-500/50 bg-slate-950'} flex flex-col justify-between space-y-4`}>
+                  <div className="p-5 rounded-2xl border border-amber-500 bg-amber-500/10 flex flex-col justify-between space-y-4">
                     <div>
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-bold text-sm text-amber-400">Plan Premium</h4>
-                        <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded">RECOMENDADO</span>
-                      </div>
+                      <h4 className="font-bold text-sm text-amber-400">Plan Premium</h4>
                       <p className="text-2xl font-black text-amber-400 mt-1">$4.99 USD <span className="text-xs font-normal text-slate-400">/mes</span></p>
-                      <ul className="text-xs text-slate-300 mt-3 space-y-2">
-                        <li>• Radar ampliado hasta <b>500 km</b></li>
-                        <li>• Insignia ⭐ Premium en Perfil</li>
-                        <li>• Prioridad en el Radar de Citas</li>
-                        <li>• Acceso ilimitado a funciones</li>
-                      </ul>
                     </div>
-                    <button 
-                      onClick={() => handleUpgradePlan(true)} 
-                      className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase shadow-lg shadow-amber-500/20"
-                    >
-                      Activar Premium
-                    </button>
+                    <button onClick={() => handleUpgradePlan(true)} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase shadow-lg shadow-amber-500/20">Activar Premium</button>
                   </div>
-
                 </div>
-
               </div>
             </div>
           )}
