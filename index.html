@@ -44,6 +44,7 @@
         roleLabel: 'Administrador General',
         isPremium: true,
         isCritic: true,
+        criticRequested: false,
         verified: true,
         bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
@@ -63,29 +64,11 @@
         roleLabel: 'Cinéfila Pro & Crítica',
         isPremium: false,
         isCritic: true,
+        criticRequested: false,
         verified: true,
         bio: 'Directora de cortos amateur y crítica de cine asiático y de autor.',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
         socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' }
-      },
-      {
-        id: 'u3',
-        name: 'Carlos Ruiz',
-        email: 'carlos@gmail.com',
-        password: '123',
-        age: 30,
-        sex: 'Masculino',
-        lookingFor: 'Cita',
-        location: 'Asunción, Paraguay',
-        distanceKm: 150.0,
-        role: 'general',
-        roleLabel: 'Cinéfilo Estándar',
-        isPremium: false,
-        isCritic: false,
-        verified: false,
-        bio: 'Buscando con quién maratonear películas de terror.',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop&q=80',
-        socialLinks: {}
       }
     ];
 
@@ -125,8 +108,21 @@
       { code: 'CL', name: 'Chile 🇨🇱' },
       { code: 'CO', name: 'Colombia 🇨🇴' },
       { code: 'PY', name: 'Paraguay 🇵🇾' },
-      { code: 'UY', name: 'Uruguay 🇺🇾' },
+      { code: 'UY', name: 'Uruguay UY' },
       { code: 'BR', name: 'Brasil 🇧🇷' }
+    ];
+
+    const SEXUALITIES_OPTIONS = [
+      'Masculino',
+      'Femenino',
+      'No Binario',
+      'Género Fluido',
+      'Pansexual',
+      'Queer',
+      'Bisexual',
+      'Homosexual',
+      'Heterosexual',
+      'Otro'
     ];
 
     const SEARCH_CATEGORIES = [
@@ -143,7 +139,6 @@
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
 
-      // Inicia en blanco para no asumir una ubicación
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
 
@@ -159,6 +154,7 @@
       const [authAge, setAuthAge] = useState(25);
       const [authSex, setAuthSex] = useState('Masculino');
       const [authLookingFor, setAuthLookingFor] = useState('Amigos Cinéfilos');
+      const [authWantCritic, setAuthWantCritic] = useState(false);
 
       // ESTADOS DE RESEÑAS Y FORO
       const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
@@ -181,6 +177,36 @@
       const [editRadio, setEditRadio] = useState(currentUser?.socialLinks?.radio || '');
       const [editTv, setEditTv] = useState(currentUser?.socialLinks?.tv || '');
 
+      // AUTO-DETECTAR UBICACIÓN REAL AL CARGAR LA APP
+      useEffect(() => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                const { latitude, longitude } = position.coords;
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+                const data = await response.json();
+                const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Mi Ubicación';
+                const countryCode = data.address.country_code ? data.address.country_code.toUpperCase() : 'AR';
+                
+                setUserCity(city);
+                if (COUNTRY_CODES.some(c => c.code === countryCode)) {
+                  setUserCountryCode(countryCode);
+                }
+              } catch (e) {
+                console.error("Error geolocalización automática:", e);
+                setUserCity('Buenos Aires');
+              }
+            },
+            () => {
+              setUserCity('Buenos Aires'); // Valor por defecto si rechaza el GPS
+            }
+          );
+        } else {
+          setUserCity('Buenos Aires');
+        }
+      }, []);
+
       useEffect(() => {
         if (currentUser) {
           setEditBio(currentUser.bio || '');
@@ -190,7 +216,6 @@
         }
       }, [currentUser]);
 
-      // SEGURIDAD: REDIRIGIR SI NO ES ADMIN
       useEffect(() => {
         if (activeTab === 'admin' && currentUser?.role !== 'admin') {
           setActiveTab('cinema');
@@ -203,49 +228,10 @@
       };
 
       const openGoogleEngine = (customQueryFormat = 'cartelera de cines en {city} {country}') => {
-        if (!userCity) {
-            alert('⚠️ Por favor, detecta tu ubicación o ingresa una ciudad primero.');
-            return;
-        }
-        const cleanCity = userCity.trim();
+        const cleanCity = userCity.trim() || 'Buenos Aires';
         const country = getCountryName();
         const query = customQueryFormat.replace('{city}', cleanCity).replace('{country}', country);
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=es`, '_blank');
-      };
-
-      // DETECTAR UBICACIÓN GPS REAL CON OPENSTREETMAP API
-      const handleDetectLocation = () => {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              try {
-                const { latitude, longitude } = position.coords;
-                // API gratuita Nominatim de OpenStreetMap para geocodificación inversa
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
-                const data = await response.json();
-                
-                // Extraer la mejor coincidencia de ciudad
-                const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Ubicación Detectada';
-                const countryCode = data.address.country_code ? data.address.country_code.toUpperCase() : 'AR';
-                
-                setUserCity(city);
-                
-                // Si el país detectado está en nuestra lista, lo seleccionamos
-                if (COUNTRY_CODES.some(c => c.code === countryCode)) {
-                  setUserCountryCode(countryCode);
-                }
-                
-                alert(`📍 Ubicación detectada con éxito: ${city}`);
-              } catch (error) {
-                console.error("Error al obtener la ciudad:", error);
-                alert('⚠️ Tenemos tus coordenadas, pero hubo un error al leer el nombre de la ciudad. Intenta escribirla manualmente si eres administrador.');
-              }
-            }, 
-            () => alert('❌ Debes permitir el acceso a la ubicación en tu navegador para ver cines cercanos.')
-          );
-        } else {
-          alert('❌ Tu navegador no soporta geolocalización.');
-        }
       };
 
       // ACCIONES DE MODERACIÓN (ADMIN)
@@ -267,12 +253,26 @@
         }
       };
 
+      const handleToggleCriticBadge = (userId) => {
+        setUsersList(usersList.map(u => {
+          if (u.id === userId) {
+            const nextVal = !u.isCritic;
+            return { 
+              ...u, 
+              isCritic: nextVal, 
+              roleLabel: nextVal ? 'Cinéfilo Pro & Crítico' : 'Cinéfilo Estándar',
+              criticRequested: false 
+            };
+          }
+          return u;
+        }));
+      };
+
       // REGISTRO E INICIO DE SESIÓN
       const handleAuthSubmit = (e) => {
         e.preventDefault();
         
         if (authMode === 'signup') {
-          // Validación +18
           if (Number(authAge) < 18) {
             alert('🚫 Acceso denegado: Debes ser mayor de 18 años para registrarte en Plottwisme.');
             return;
@@ -291,12 +291,13 @@
             age: Number(authAge),
             sex: authSex,
             lookingFor: authLookingFor,
-            location: `${userCity || 'Ciudad Desconocida'}, ${getCountryName()}`,
-            distanceKm: 5.0, // Simulado cercano al registro
+            location: `${userCity || 'Ciudad'}, ${getCountryName()}`,
+            distanceKm: 5.0,
             role: 'general',
-            roleLabel: 'Cinéfilo Estándar',
+            roleLabel: authWantCritic ? 'Solicitud Crítico Pendiente' : 'Cinéfilo Estándar',
             isPremium: false,
             isCritic: false,
+            criticRequested: authWantCritic,
             verified: false,
             bio: '¡Hola! Soy cinéfilo en Plottwisme.',
             avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80`,
@@ -304,7 +305,11 @@
           };
           setUsersList([...usersList, newUser]);
           setCurrentUser(newUser);
-          alert('🎉 ¡Cuenta creada con éxito!');
+          if (authWantCritic) {
+            alert('🎉 ¡Cuenta creada! Tu solicitud de insignia de crítico fue enviada al Administrador.');
+          } else {
+            alert('🎉 ¡Cuenta creada con éxito!');
+          }
         } else {
           const found = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase() && u.password === authPassword);
           if (!found) {
@@ -325,7 +330,7 @@
         alert('Sesión cerrada.');
       };
 
-      // LÓGICA DE RADAR Y DISTANCIAS
+      // LÓGICA DE RADAR Y DISTANCIAS SEGÚN PLAN (Estándar 100km, Premium 500km)
       const maxDistance = currentUser?.isPremium ? 500 : 100;
       const filteredCandidates = useMemo(() => {
         return usersList.filter(u => u.email !== currentUser?.email && u.distanceKm <= maxDistance);
@@ -341,11 +346,12 @@
         const updated = { 
           ...currentUser, 
           isPremium: isPrem, 
-          roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : (currentUser.role === 'admin' ? 'Administrador General' : 'Cinéfilo Estándar') 
+          roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar' 
         };
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
         setShowSubscriptionModal(false);
+        alert(isPrem ? '⭐ ¡Felicidades! Ahora eres Premium ($4.99 USD/mes).' : 'Cambiado a plan Estándar.');
       };
 
       const handleSaveProfile = (e) => {
@@ -366,6 +372,10 @@
         e.preventDefault();
         if (!currentUser) {
           setShowAuthModal(true);
+          return;
+        }
+        if (!currentUser.isCritic) {
+          alert('🔒 Solo los usuarios con Insignia de Crítico pueden publicar reseñas oficiales.');
           return;
         }
         if (!newReviewMovie || !newReviewText) return;
@@ -445,41 +455,37 @@
                 <div>
                   <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
                   <p className="text-[10px] uppercase text-slate-400 font-bold">
-                    {currentUser ? (currentUser.isPremium ? '⭐ Plan Premium' : '👤 Plan Estándar') : '🌐 Modo Invitado'}
+                    {currentUser ? (currentUser.isPremium ? '⭐ Plan Premium (500km)' : '👤 Plan Estándar (100km)') : '🌐 Modo Invitado'}
                   </p>
                 </div>
               </div>
 
-              {/* CONTROLES UBICACIÓN */}
+              {/* CONTROLES UBICACIÓN (Solo visibles o editables por Administrador en su panel, o ciudad limpia para carteleras) */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
-                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad:</span>
+                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad Cartelera:</span>
                 <input 
                   type="text" 
                   value={userCity} 
                   onChange={(e) => setUserCity(e.target.value)} 
-                  placeholder="Sin Detectar"
-                  disabled={currentUser?.role !== 'admin'}
-                  className={`bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs ${currentUser?.role !== 'admin' ? 'opacity-70 cursor-not-allowed' : ''}`} 
+                  placeholder="Tu Ciudad"
+                  className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-32 text-amber-300 focus:outline-none capitalize text-xs" 
                 />
-                
-                <span className="text-slate-600">|</span>
-                
-                <span className="text-amber-500 font-bold whitespace-nowrap">🌎 País:</span>
-                <select 
-                  value={userCountryCode} 
-                  onChange={(e) => setUserCountryCode(e.target.value)}
-                  disabled={currentUser?.role !== 'admin'}
-                  className={`bg-slate-900 text-amber-300 font-bold rounded-lg px-2 py-1 text-xs border border-amber-500/30 focus:outline-none ${currentUser?.role !== 'admin' ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                  {COUNTRY_CODES.map(c => (
-                    <option key={c.code} value={c.code}>{c.name}</option>
-                  ))}
-                </select>
 
-                {currentUser?.role !== 'admin' && (
-                  <button onClick={handleDetectLocation} className="ml-2 bg-amber-500/20 hover:bg-amber-500/40 px-2 py-1 rounded-lg text-lg" title="Detectar mi ubicación automática">
-                    📍
-                  </button>
+                {/* SELECTOR DE PAÍS SOLO VISIBLE SI ES ADMIN */}
+                {currentUser?.role === 'admin' && (
+                  <>
+                    <span className="text-slate-600">|</span>
+                    <span className="text-amber-500 font-bold whitespace-nowrap">🌎 País:</span>
+                    <select 
+                      value={userCountryCode} 
+                      onChange={(e) => setUserCountryCode(e.target.value)}
+                      className="bg-slate-900 text-amber-300 font-bold rounded-lg px-2 py-1 text-xs border border-amber-500/30 focus:outline-none cursor-pointer"
+                    >
+                      {COUNTRY_CODES.map(c => (
+                        <option key={c.code} value={c.code}>{c.name}</option>
+                      ))}
+                    </select>
+                  </>
                 )}
               </div>
 
@@ -525,14 +531,14 @@
                       Cartelera en Tiempo Real para <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
                     </h2>
                     <p className="text-sm text-slate-300 leading-relaxed">
-                      Accede instantáneamente al panel interactivo oficial de Google con las películas, complejos, horarios y salas disponibles hoy en tu ciudad en modo oscuro.
+                      Accede instantáneamente al panel interactivo oficial con las películas, complejos, horarios y salas disponibles hoy en tu zona.
                     </p>
                     <div className="pt-2">
                       <button 
                         onClick={() => openGoogleEngine()} 
                         className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
                       >
-                        <span>🏛️ Abrir Cartelera Completa {userCity ? `de ${userCity}` : ''}</span>
+                        <span>🏛️ Abrir Cartelera de {userCity || 'tu ciudad'}</span>
                         <span>↗</span>
                       </button>
                     </div>
@@ -639,8 +645,13 @@
               </div>
             )}
 
+            {/* RADAR DE MATCHES (Limitado por distancia de plan) */}
             {activeTab === 'radar' && (
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold">
+                  📡 Radio activo: {currentUser?.isPremium ? '500 km (Plan Premium ⭐)' : '100 km (Plan Estándar 👤)'}
+                </div>
+
                 {currentCandidate ? (
                   <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
                     <div className="relative h-96 w-full bg-slate-950">
@@ -648,21 +659,22 @@
                       <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
                       <div className="absolute bottom-4 left-4 right-4">
                         <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
-                        <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location}</p>
+                        <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location} • Aprox. {currentCandidate.distanceKm} km</p>
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
                       <p className="text-xs italic text-slate-300">"{currentCandidate.bio}"</p>
                       <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
                         <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
-                        <button onClick={() => { alert(`🍿 ¡Le diste Me Gusta a ${currentCandidate.name}!`); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20">🍿</button>
+                        <button onClick={() => { alert(`🍿 ¡Match enviado a ${currentCandidate.name}!`); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20">🍿</button>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay más perfiles en tu rango.</h3>
+                    <h3 className="text-xl font-bold">No hay más perfiles en tu radio de {currentUser?.isPremium ? '500km' : '100km'}.</h3>
+                    <p className="text-xs text-slate-400">¡Actualiza a Premium para expandir tu radar o espera nuevos cinéfilos!</p>
                     <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Vista</button>
                   </div>
                 )}
@@ -673,31 +685,40 @@
               <div className="space-y-6 max-w-3xl mx-auto">
                 <h2 className="text-2xl font-black">📰 Panel de Críticos & Medios</h2>
                 
-                <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-                  <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña en la Red</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <label className="block mb-1 text-slate-400">Película:</label>
-                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Película..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                {currentUser?.isCritic ? (
+                  <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+                    <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña en la Red (Insignia Verificada 🌟)</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <label className="block mb-1 text-slate-400">Película:</label>
+                        <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Película..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                      </div>
+                      <div>
+                        <label className="block mb-1 text-slate-400">Calificación (1-10):</label>
+                        <input type="number" min="1" max="10" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block mb-1 text-slate-400">Calificación (1-10):</label>
-                      <input type="number" min="1" max="10" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                    <div className="text-xs">
+                      <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
+                      <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu reseña..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                     </div>
+                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña</button>
+                  </form>
+                ) : (
+                  <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2 text-xs">
+                    <p className="text-amber-400 font-bold">🔒 Necesitas la Insignia de Crítico para publicar reseñas oficiales.</p>
+                    <p className="text-slate-400">Puedes solicitarla o verificar el estado de tu insignia desde la configuración de tu perfil o contactando al Administrador.</p>
                   </div>
-                  <div className="text-xs">
-                    <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
-                    <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu reseña..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                  </div>
-                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña</button>
-                </form>
+                )}
 
                 <div className="space-y-4 pt-2">
                   {reviewsList.map(rev => (
                     <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
                       <div className="flex justify-between items-start text-xs">
                         <div>
-                          <span className="font-bold text-amber-500">{rev.author}</span>
+                          <span className="font-bold text-amber-500 flex items-center gap-1">
+                            {rev.author} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">🌟 Crítico</span>
+                          </span>
                           <p className="text-[10px] text-slate-400">🎙️ {rev.mediaOutlet}</p>
                         </div>
                         <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
@@ -711,37 +732,40 @@
             )}
 
             {activeTab === 'profile' && currentUser && (
-              <form onSubmit={handleSaveProfile} className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-4">
-                  <div>
-                    <h2 className="text-xl font-black">{currentUser.name}</h2>
-                    <p className="text-xs text-amber-500">{currentUser.roleLabel}</p>
+              <div className="max-w-xl mx-auto space-y-6">
+                <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+                    <div>
+                      <h2 className="text-xl font-black">{currentUser.name}</h2>
+                      <p className="text-xs text-amber-500">{currentUser.roleLabel} {currentUser.isCritic ? '🌟' : ''}</p>
+                    </div>
+                    <button type="button" onClick={() => setShowSubscriptionModal(true)} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
+                      {currentUser.isPremium ? '⭐ Premium ($4.99)' : '🚀 Ver Planes'}
+                    </button>
                   </div>
-                  <button type="button" onClick={() => setShowSubscriptionModal(true)} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs">
-                    {currentUser.isPremium ? '⭐ Premium' : '🚀 Cambiar Plan'}
-                  </button>
-                </div>
 
-                <div className="space-y-4 text-xs">
-                  <div>
-                    <label className="block mb-1 text-slate-400">Foto URL:</label>
-                    <input type="url" value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="block mb-1 text-slate-400">Foto URL (Hasta 10 permitidas en Premium):</label>
+                      <input type="url" value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-slate-400">Biografía:</label>
+                      <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                    </div>
+                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil</button>
                   </div>
-                  <div>
-                    <label className="block mb-1 text-slate-400">Biografía:</label>
-                    <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
-                  </div>
-                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil</button>
-                </div>
-              </form>
+                </form>
+              </div>
             )}
 
+            {/* PANEL ADMIN (CON GESTIÓN DE CRÍTICOS, FOTOS Y SANCIONES) */}
             {activeTab === 'admin' && currentUser?.role === 'admin' && (
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div>
                     <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador General</h2>
-                    <p className="text-xs text-amber-400 mt-1">Sesión activa: <b>{currentUser.name}</b> ({currentUser.email})</p>
+                    <p className="text-xs text-amber-400 mt-1">Control total de usuarios, insignias y país/ciudad global.</p>
                   </div>
                   <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
                     Acceso Restringido
@@ -764,7 +788,7 @@
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="font-bold text-sm text-amber-500">Moderación de Usuarios y Fotos:</h3>
+                  <h3 className="font-bold text-sm text-amber-500">Moderación de Usuarios, Fotos e Insignias de Crítico:</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {usersList.map(u => (
                       <div key={u.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
@@ -774,22 +798,35 @@
                             <button onClick={() => handleDeletePhoto(u.id)} className="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full px-2 py-1 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">✖ Foto</button>
                           </div>
                           <div>
-                            <p className="font-bold text-white text-sm">{u.name} <span className="text-slate-500 font-normal">({u.age} años)</span></p>
+                            <p className="font-bold text-white text-sm">
+                              {u.name} {u.isCritic && '🌟'} <span className="text-slate-500 font-normal">({u.age}a)</span>
+                            </p>
                             <p className="text-xs text-amber-400">{u.roleLabel} • {u.location}</p>
                             <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
+                            {u.criticRequested && (
+                              <span className="inline-block mt-1 bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] px-2 py-0.5 rounded font-bold">
+                                ⚠️ Solicitó Insignia de Crítico
+                              </span>
+                            )}
                           </div>
                         </div>
                         
-                        {u.role !== 'admin' && (
-                          <div className="flex gap-2 border-t border-slate-800 pt-3">
-                            <button onClick={() => handleSanctionUser(u.id)} className="flex-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-orange-500/30">
-                              ⛔ Sancionar
-                            </button>
-                            <button onClick={() => handleDeleteUser(u.id)} className="flex-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
-                              🗑️ Eliminar
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
+                          <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                            {u.isCritic ? '🌟 Quitar Insignia de Crítico' : '✨ Otorgar Insignia de Crítico'}
+                          </button>
+                          
+                          {u.role !== 'admin' && (
+                            <div className="flex gap-2">
+                              <button onClick={() => handleSanctionUser(u.id)} className="flex-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-orange-500/30">
+                                ⛔ Sancionar
+                              </button>
+                              <button onClick={() => handleDeleteUser(u.id)} className="flex-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
+                                🗑️ Eliminar
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -799,9 +836,43 @@
 
           </main>
 
-          {showAuthModal && (
+          {/* MODAL SUSCRIPCIÓN (BENEFICIOS Y PRECIO $4.99) */}
+          {showSubscriptionModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <h3 className="text-lg font-black text-white">🚀 Planes de Suscripción Plottwisme</h3>
+                  <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-2">
+                    <h4 className="font-bold text-slate-300 text-sm">👤 Plan Estándar (Gratis)</h4>
+                    <p className="text-slate-400">• Radio de radar de búsqueda: <b>100 km</b></p>
+                    <p className="text-slate-400">• Matches: <b>Limitado a 1 por semana</b></p>
+                    <p className="text-slate-400">• Fotos de perfil: <b>1 foto</b></p>
+                    <button onClick={() => handleUpgradePlan(false)} className="w-full mt-2 bg-slate-800 text-slate-300 font-bold py-2 rounded-xl">Seleccionar Estándar</button>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-amber-500/20 to-slate-950 border border-amber-500/50 p-4 rounded-2xl space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-bold text-amber-400 text-sm">⭐ Plan Premium</h4>
+                      <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-0.5 rounded-lg text-xs">$4.99 USD / mes</span>
+                    </div>
+                    <p className="text-slate-300">• Radio de radar ampliado: <b>500 km</b></p>
+                    <p className="text-slate-300">• Matches: <b>Ilimitados</b></p>
+                    <p className="text-slate-300">• Fotos de perfil: <b>Hasta 10 fotos</b></p>
+                    <button onClick={() => handleUpgradePlan(true)} className="w-full mt-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">Obtener Premium por $4.99</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL AUTENTICACIÓN (CREAR CUENTA + NUEVAS SEXUALIDADES + SOLICITUD CRÍTICO) */}
+          {showAuthModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-white">
                     {authMode === 'signup' ? '✨ Crear Cuenta en Plottwisme' : '🔑 Iniciar Sesión'}
@@ -822,13 +893,21 @@
                           <input type="number" min="18" max="99" value={authAge} onChange={(e) => setAuthAge(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                         </div>
                         <div>
-                          <label className="block mb-1 text-slate-400 font-bold">Género:</label>
+                          <label className="block mb-1 text-slate-400 font-bold">Género / Sexualidad:</label>
                           <select value={authSex} onChange={(e) => setAuthSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
-                            <option value="Masculino">Masculino</option>
-                            <option value="Femenino">Femenino</option>
-                            <option value="Otro">Otro</option>
+                            {SEXUALITIES_OPTIONS.map(opt => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
                           </select>
                         </div>
+                      </div>
+                      
+                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-white">¿Solicitar Insignia de Crítico?</p>
+                          <p className="text-[10px] text-slate-400">Permite postularte para publicar reseñas oficiales tras aprobación del Admin.</p>
+                        </div>
+                        <input type="checkbox" checked={authWantCritic} onChange={(e) => setAuthWantCritic(e.target.checked)} className="w-4 h-4 accent-amber-500 cursor-pointer" />
                       </div>
                     </>
                   )}
