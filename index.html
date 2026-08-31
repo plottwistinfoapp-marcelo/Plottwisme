@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plottwisme - Red Social Cinéfila, Cartelera & Comunidad</title>
+  <title>Plottwisme - Red Social Cinéfila, Cartelera Global & Comunidad</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -26,12 +26,13 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
+    // USUARIOS INICIALES (MANTIENE PRIVILEGIOS DE ADMINISTRADOR DE MARCELO)
     const INITIAL_USERS = [
       {
         id: 'u1',
         name: 'Marcelo Buttice',
         email: 'marbuttice@gmail.com',
-        age: 56,
+        age: 57,
         sex: 'Masculino',
         lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
         location: 'Oberá, Misiones, Argentina',
@@ -41,9 +42,9 @@
         isPremium: true,
         isCritic: true,
         verified: true,
-        bio: 'Devoto del cine de autor y la ciencia ficción dura. Creador de Plottwisme.',
+        bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-        socialLinks: { twitter: '@marbuttice', radio: 'Frecuencia Cine (Misiones)', tv: 'Canal 12 Misiones' },
+        socialLinks: { twitter: '@marbuttice', radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' },
         receivedLikes: 14
       },
       {
@@ -53,14 +54,14 @@
         age: 24,
         sex: 'Femenino',
         lookingFor: 'Amigos Cinéfilos',
-        location: 'Posadas, Misiones',
+        location: 'Posadas, Misiones, Argentina',
         distanceKm: 85.0,
         role: 'general',
         roleLabel: 'Cinéfila Pro & Crítica',
         isPremium: false,
         isCritic: true,
         verified: true,
-        bio: 'Directora de cortos amateur y crítica de cine asiático.',
+        bio: 'Directora de cortos amateur y crítica de cine asiático y de autor.',
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
         socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' },
         receivedLikes: 29
@@ -72,20 +73,21 @@
         age: 31,
         sex: 'Masculino',
         lookingFor: 'Cita / Pareja',
-        location: 'Encarnación, Paraguay',
+        location: 'Encarnación, Itapúa, Paraguay',
         distanceKm: 140.0,
         role: 'general',
         roleLabel: 'Cinéfilo Pro',
         isPremium: false,
         isCritic: false,
         verified: false,
-        bio: 'Coleccionista de Blu-ray y adicto a A24 y Neo-Noir.',
+        bio: 'Coleccionista de Blu-ray y apasionado del cine de culto y Neo-Noir.',
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
         socialLinks: { twitter: '@mateocine', radio: '', tv: '' },
         receivedLikes: 8
       }
     ];
 
+    // CATÁLOGO BASE DE ENTRADA (MIENTRAS SE CONECTA API TMDB)
     const FALLBACK_TMDB_MOVIES = [
       {
         id: 693134,
@@ -128,11 +130,28 @@
       }
     ];
 
+    const COUNTRY_CODES = [
+      { code: 'AR', name: 'Argentina 🇦🇷' },
+      { code: 'ES', name: 'España 🇪🇸' },
+      { code: 'MX', name: 'México 🇲🇽' },
+      { code: 'US', name: 'Estados Unidos 🇺🇸' },
+      { code: 'CL', name: 'Chile 🇨🇱' },
+      { code: 'CO', name: 'Colombia 🇨🇴' },
+      { code: 'PY', name: 'Paraguay 🇵🇾' },
+      { code: 'UY', name: 'Uruguay 🇺🇾' },
+      { code: 'BR', name: 'Brasil 🇧🇷' }
+    ];
+
     function App() {
       const [currentUser, setCurrentUser] = useState(() => INITIAL_USERS[0]);
       const [activeTab, setActiveTab] = useState('radar');
       const [currentIndex, setCurrentIndex] = useState(0);
+
+      // ESTADOS DE UBICACIÓN GLOBAL
       const [userCity, setUserCity] = useState('Oberá, Misiones');
+      const [userCountryCode, setUserCountryCode] = useState('AR');
+
+      // ESTADOS DE TMDB & CARTELERA DINÁMICA GLOBAL
       const [tmdbApiKey, setTmdbApiKey] = useState('');
       const [moviesList, setMoviesList] = useState(FALLBACK_TMDB_MOVIES);
       const [isLoadingTmdb, setIsLoadingTmdb] = useState(false);
@@ -141,42 +160,55 @@
       const [usersList, setUsersList] = useState(INITIAL_USERS);
       const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
 
+      // ESTADOS FORMULARIO RESEÑA
       const [newReviewMovie, setNewReviewMovie] = useState('');
       const [newReviewRating, setNewReviewRating] = useState(10);
       const [newReviewText, setNewReviewText] = useState('');
 
+      // ESTADOS PERFIL
       const [editBio, setEditBio] = useState(currentUser.bio);
       const [editAvatar, setEditAvatar] = useState(currentUser.avatar);
       const [editRadio, setEditRadio] = useState(currentUser.socialLinks.radio);
       const [editTv, setEditTv] = useState(currentUser.socialLinks.tv);
       const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks.twitter);
 
-      // Cargar cartelera desde TMDb
-      const fetchTmdbMovies = async (key) => {
+      // Cargar cartelera global activa en cines (TMDB now_playing por país)
+      const fetchTmdbNowPlaying = async (key, country) => {
         if (!key) return;
         setIsLoadingTmdb(true);
         try {
-          const res = await fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${key}&language=es-ES`);
+          // Endpoint 'now_playing' filtrado por el código de país exacto del usuario
+          const res = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${key}&language=es-ES&region=${country}&page=1`);
           const data = await res.json();
+
           if (data.results && data.results.length > 0) {
             const formatted = data.results.map(m => ({
               id: m.id,
               title: m.title || m.original_title,
-              overview: m.overview || 'Sin descripción disponible.',
+              overview: m.overview || 'Sin descripción disponible para esta película.',
               poster_path: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
               vote_average: m.vote_average ? m.vote_average.toFixed(1) : '8.0',
               release_date: m.release_date || 'En cartelera',
-              genre: 'Cine & Estrenos'
+              genre: 'Estreno en Cines'
             }));
             setMoviesList(formatted);
-            alert('🍿 ¡Cartelera actualizada exitosamente desde TMDb!');
+            alert(`🍿 Cartelera actualizada: mostrando estrenos activos en ${country}!`);
+          } else {
+            alert('No se encontraron películas activas para esa combinación. Manteniendo catálogo base.');
           }
         } catch (err) {
-          alert('No se pudo conectar a TMDb con esa API Key. Usando catálogo base.');
+          alert('Error al conectar con TMDb. Revisa tu API Key.');
         } finally {
           setIsLoadingTmdb(false);
         }
       };
+
+      // Auto-reconsultar si cambia el país y hay API Key
+      useEffect(() => {
+        if (tmdbApiKey) {
+          fetchTmdbNowPlaying(tmdbApiKey, userCountryCode);
+        }
+      }, [userCountryCode]);
 
       // Redirección en tiempo real a Google / Google Maps
       const handleOpenGoogleTheaters = (movieTitle) => {
@@ -246,7 +278,7 @@
           
           {/* HEADER PRINCIPAL */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
-            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
               
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('radar')}>
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center font-bold text-xl text-slate-950">P</div>
@@ -256,16 +288,26 @@
                 </div>
               </div>
 
-              {/* UBICACIÓN DE CIUDAD */}
-              <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full sm:w-auto justify-center">
-                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Tu Ubicación:</span>
+              {/* BARRA DE UBICACIÓN DINÁMICA CIUDAD + PAÍS */}
+              <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
+                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ubicación:</span>
                 <input 
                   type="text" 
                   value={userCity} 
                   onChange={(e) => setUserCity(e.target.value)} 
-                  className="bg-transparent border-0 px-1 py-0.5 font-bold w-44 text-amber-300 focus:outline-none" 
-                  placeholder="Ej: Oberá, Posadas..." 
+                  className="bg-transparent border-0 px-1 py-0.5 font-bold w-36 text-amber-300 focus:outline-none" 
+                  placeholder="Ciudad (Ej: Oberá)..." 
                 />
+                <span className="text-slate-600">|</span>
+                <select 
+                  value={userCountryCode} 
+                  onChange={(e) => setUserCountryCode(e.target.value)}
+                  className="bg-slate-900 text-amber-300 font-bold rounded-lg px-2 py-1 text-xs border border-amber-500/30 focus:outline-none cursor-pointer"
+                >
+                  {COUNTRY_CODES.map(c => (
+                    <option key={c.code} value={c.code}>{c.name}</option>
+                  ))}
+                </select>
               </div>
 
               {/* NAVEGACIÓN */}
@@ -297,7 +339,7 @@
             {/* TAB 1: RADAR CINÉFILO */}
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center">
-                <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center flex items-center gap-2">
+                <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center flex items-center gap-2 flex-wrap justify-center">
                   <span>🎯 Buscando cinéfilos cerca de <b>{userCity}</b></span>
                   <span className="bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/40">Radio: <b>{currentUser.isPremium ? '500 km' : '100 km'}</b></span>
                   {!currentUser.isPremium && (
@@ -337,30 +379,30 @@
               </div>
             )}
 
-            {/* TAB 2: CARTELERA CON TMDb & GOOGLE REAL TIME */}
+            {/* TAB 2: CARTELERA GLOBAL CON TMDB NOW_PLAYING & GOOGLE REAL TIME */}
             {activeTab === 'cinema' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-3xl">
                   <div>
-                    <h2 className="text-2xl font-black">🎬 Cartelera en Tiempo Real: <span className="text-amber-500">{userCity}</span></h2>
-                    <p className="text-xs text-slate-400">Películas sincronizadas con TMDb. Haz clic en "Ver Salas" para consultar horarios y mapas exactos en Google.</p>
+                    <h2 className="text-2xl font-black">🎬 Estrenos en Cines: <span className="text-amber-500">{userCity} ({userCountryCode})</span></h2>
+                    <p className="text-xs text-slate-400">Películas actualmente en salas en tu país. El botón "Ver Salas" te lleva directo a las funciones en tu ciudad.</p>
                   </div>
 
                   {/* CONFIGURADOR DE TMDB API KEY */}
                   <div className="flex items-center gap-2 text-xs bg-slate-950 p-2 rounded-2xl border border-slate-800 w-full sm:w-auto">
                     <input 
                       type="text" 
-                      placeholder="API Key de TMDb (Opcional)" 
+                      placeholder="API Key TMDb (Opcional)" 
                       value={tmdbApiKey} 
                       onChange={(e) => setTmdbApiKey(e.target.value)} 
                       className="bg-transparent border-0 px-2 text-slate-200 focus:outline-none w-40 text-[11px]"
                     />
                     <button 
-                      onClick={() => fetchTmdbMovies(tmdbApiKey)} 
+                      onClick={() => fetchTmdbNowPlaying(tmdbApiKey, userCountryCode)} 
                       disabled={isLoadingTmdb}
                       className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap"
                     >
-                      {isLoadingTmdb ? 'Cargando...' : 'Conectar TMDb'}
+                      {isLoadingTmdb ? 'Sincronizando...' : 'Sincronizar TMDb'}
                     </button>
                   </div>
                 </div>
@@ -382,7 +424,7 @@
                         </div>
                       </div>
 
-                      {/* BOTÓN REDIRECCIÓN A GOOGLE REAL TIME */}
+                      {/* BOTÓN REDIRECCIÓN A GOOGLE REAL TIME PARA LA CIUDAD DEL USUARIO */}
                       <button 
                         onClick={() => handleOpenGoogleTheaters(m.title)} 
                         className="w-full bg-amber-500/10 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-3 rounded-xl text-xs transition-all border border-amber-500/40 flex items-center justify-center gap-2"
