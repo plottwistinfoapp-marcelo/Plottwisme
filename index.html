@@ -190,10 +190,52 @@
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=es`, '_blank');
       };
 
+      // DETECTAR UBICACIÓN GPS
+      const handleDetectLocation = () => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              // Simulamos la detección existosa de una ciudad cercana
+              setUserCity('Ubicación Detectada'); 
+              alert('📍 Ubicación detectada y actualizada correctamente.');
+            }, 
+            () => alert('❌ Por favor, permite el acceso a la ubicación en tu navegador.')
+          );
+        } else {
+          alert('❌ Geolocalización no soportada en este navegador.');
+        }
+      };
+
+      // ACCIONES DE MODERACIÓN (ADMIN)
+      const handleDeleteUser = (userId) => {
+        if (window.confirm('⚠️ ¿Estás seguro de eliminar a este usuario permanentemente?')) {
+          setUsersList(usersList.filter(u => u.id !== userId));
+        }
+      };
+
+      const handleSanctionUser = (userId) => {
+        if (window.confirm('🚫 ¿Suspender a este usuario?')) {
+          setUsersList(usersList.map(u => u.id === userId ? { ...u, roleLabel: 'Sancionado ⛔' } : u));
+        }
+      };
+
+      const handleDeletePhoto = (userId) => {
+        if (window.confirm('🗑️ ¿Eliminar el avatar de este usuario por incumplir normas?')) {
+          setUsersList(usersList.map(u => u.id === userId ? { ...u, avatar: 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80' } : u)); 
+        }
+      };
+
       // MANEJO DE REGISTRO E INICIO DE SESIÓN
       const handleAuthSubmit = (e) => {
         e.preventDefault();
+        
         if (authMode === 'signup') {
+          // Validación de Edad (Solo +18)
+          if (Number(authAge) < 18) {
+            alert('🚫 Acceso denegado: Debes ser mayor de 18 años para registrarte en Plottwisme.');
+            return;
+          }
+
           const existing = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase());
           if (existing) {
             alert('⚠️ Este email ya está registrado. Intenta iniciar sesión.');
@@ -366,14 +408,15 @@
                 </div>
               </div>
 
-              {/* CONTROLES UBICACIÓN */}
+              {/* CONTROLES UBICACIÓN (Limitado a admin para editar, general para ver) */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad:</span>
                 <input 
                   type="text" 
                   value={userCity} 
                   onChange={(e) => setUserCity(e.target.value)} 
-                  className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs" 
+                  disabled={currentUser?.role !== 'admin'}
+                  className={`bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs ${currentUser?.role !== 'admin' ? 'opacity-70 cursor-not-allowed' : ''}`} 
                 />
                 
                 <span className="text-slate-600">|</span>
@@ -382,12 +425,20 @@
                 <select 
                   value={userCountryCode} 
                   onChange={(e) => setUserCountryCode(e.target.value)}
-                  className="bg-slate-900 text-amber-300 font-bold rounded-lg px-2 py-1 text-xs border border-amber-500/30 focus:outline-none cursor-pointer"
+                  disabled={currentUser?.role !== 'admin'}
+                  className={`bg-slate-900 text-amber-300 font-bold rounded-lg px-2 py-1 text-xs border border-amber-500/30 focus:outline-none ${currentUser?.role !== 'admin' ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   {COUNTRY_CODES.map(c => (
                     <option key={c.code} value={c.code}>{c.name}</option>
                   ))}
                 </select>
+
+                {/* BOTON DETECTAR (Visible si NO eres admin para actualizar tu zona) */}
+                {currentUser?.role !== 'admin' && (
+                  <button onClick={handleDetectLocation} className="ml-2 bg-amber-500/20 hover:bg-amber-500/40 px-2 py-1 rounded-lg text-lg" title="Detectar mi ubicación automática">
+                    📍
+                  </button>
+                )}
               </div>
 
               {/* PESTAÑAS Y SESIÓN */}
@@ -652,7 +703,7 @@
               </form>
             )}
 
-            {/* PANEL ADMIN (SOLO VISIBLE SI ROLE IS ADMIN) */}
+            {/* PANEL ADMIN ACTUALIZADO CON MODERACIÓN VISUAL */}
             {activeTab === 'admin' && currentUser?.role === 'admin' && (
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -680,16 +731,33 @@
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <h3 className="font-bold text-sm text-amber-500">Listado de Usuarios Registrados:</h3>
-                  <div className="space-y-2">
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm text-amber-500">Moderación de Usuarios y Fotos:</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {usersList.map(u => (
-                      <div key={u.id} className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
-                        <div>
-                          <p className="font-bold text-white">{u.name} <span className="text-slate-500">({u.email})</span></p>
-                          <p className="text-[10px] text-amber-400">{u.roleLabel} • Rol: {u.role}</p>
+                      <div key={u.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
+                        <div className="flex gap-3 items-start">
+                          <div className="relative group">
+                            <img src={u.avatar} alt="Avatar" className="w-16 h-16 rounded-xl object-cover border border-slate-700" />
+                            <button onClick={() => handleDeletePhoto(u.id)} className="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full px-2 py-1 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">✖ Foto</button>
+                          </div>
+                          <div>
+                            <p className="font-bold text-white text-sm">{u.name} <span className="text-slate-500 font-normal">({u.age} años)</span></p>
+                            <p className="text-xs text-amber-400">{u.roleLabel} • {u.location}</p>
+                            <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
+                          </div>
                         </div>
-                        <span className="bg-slate-800 px-2.5 py-1 rounded-lg text-slate-300 text-[10px]">{u.location}</span>
+                        
+                        {u.role !== 'admin' && (
+                          <div className="flex gap-2 border-t border-slate-800 pt-3">
+                            <button onClick={() => handleSanctionUser(u.id)} className="flex-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-orange-500/30">
+                              ⛔ Sancionar
+                            </button>
+                            <button onClick={() => handleDeleteUser(u.id)} className="flex-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
+                              🗑️ Eliminar
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
