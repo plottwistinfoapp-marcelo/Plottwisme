@@ -6,9 +6,9 @@
   <title>Plottwisme - Red Social Cinéfila & Cartelera Global</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +20,11 @@
   </style>
 </head>
 <body class="antialiased bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
-  <div id="root"></div>
+  <div id="root">
+    <div className="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
+      ⏳ Cargando Plottwisme...
+    </div>
+  </div>
 
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
@@ -68,25 +72,6 @@
       }
     ];
 
-    const FEATURED_MOVIES = [
-      {
-        id: 101,
-        title: "Spider-Man: Brand New Day",
-        overview: "Nuevas aventuras y enfrentamientos épicos en la gran pantalla. Consulta salas y horarios disponibles.",
-        poster_path: "https://images.unsplash.com/photo-1635863138275-d9b33299680b?w=600&auto=format&fit=crop&q=80",
-        vote_average: "8.8",
-        genre: "Acción / Aventura"
-      },
-      {
-        id: 102,
-        title: "Yo, Narciso",
-        overview: "Una mirada profunda al drama psicológico y las relaciones contemporáneas.",
-        poster_path: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80",
-        vote_average: "7.9",
-        genre: "Romance / Comedia"
-      }
-    ];
-
     const INITIAL_REVIEWS = [
       {
         id: 'r1',
@@ -112,9 +97,9 @@
     ];
 
     const LANGUAGES = [
-      { code: 'es-ES', label: 'Español AR/MX/ES 🇪🇸' },
-      { code: 'en-US', label: 'English US/UK 🇺🇸' },
-      { code: 'pt-BR', label: 'Português BR 🇧🇷' }
+      { code: 'es-ES', label: 'Español 🇦🇷/🇲🇽/🇪🇸' },
+      { code: 'en-US', label: 'English 🇺🇸/🇬🇧' },
+      { code: 'pt-BR', label: 'Português 🇧🇷' }
     ];
 
     function App() {
@@ -139,42 +124,25 @@
 
       const [editBio, setEditBio] = useState(currentUser.bio);
       const [editAvatar, setEditAvatar] = useState(currentUser.avatar);
-      const [editRadio, setEditRadio] = useState(currentUser.socialLinks.radio);
-      const [editTv, setEditTv] = useState(currentUser.socialLinks.tv);
-      const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks.twitter);
+      const [editRadio, setEditRadio] = useState(currentUser.socialLinks?.radio || '');
+      const [editTv, setEditTv] = useState(currentUser.socialLinks?.tv || '');
+      const [editTwitter, setEditTwitter] = useState(currentUser.socialLinks?.twitter || '');
 
-      // Carga resiliente con sistema de respaldo (Fallback)
       useEffect(() => {
         const fetchMovies = async () => {
           setIsLoading(true);
+          setMoviesList([]); 
 
           try {
-            // Intento 1: Buscar por región del país e idioma seleccionado
-            let res = await fetch(
-              `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&region=${userCountryCode}&page=1`
+            const res = await fetch(
+              `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&region=${userCountryCode}&page=1&_t=${Date.now()}`
             );
-            let data = await res.json();
+            const data = await res.json();
 
-            // Intento 2: Si el país no tiene datos regionales cargados en TMDb, buscar cartelera general en ese idioma
-            if (!data.results || data.results.length === 0) {
-              res = await fetch(
-                `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_KEY}&language=${userLanguage}&page=1`
-              );
-              data = await res.json();
-            }
-
-            // Intento 3: Si aún está vacío, traer las películas populares de la semana
-            if (!data.results || data.results.length === 0) {
-              res = await fetch(
-                `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}&language=${userLanguage}`
-              );
-              data = await res.json();
-            }
-
-            if (data.results && data.results.length > 0) {
+            if (data && data.results && data.results.length > 0) {
               const formatted = data.results.slice(0, 9).map(m => ({
                 id: m.id,
-                title: m.title || m.original_title,
+                title: m.title || m.original_title || 'Sin Título',
                 overview: m.overview || (userLanguage.startsWith('es') 
                   ? 'Consulta horarios y funciones en tu ciudad.' 
                   : 'Check showtimes and schedules in your city.'),
@@ -186,11 +154,11 @@
               }));
               setMoviesList(formatted);
             } else {
-              setMoviesList(FEATURED_MOVIES);
+              setMoviesList([]);
             }
           } catch (err) {
             console.error("Error al consultar TMDb:", err);
-            setMoviesList(FEATURED_MOVIES);
+            setMoviesList([]);
           } finally {
             setIsLoading(false);
           }
@@ -247,7 +215,7 @@
           movieTitle: newReviewMovie,
           rating: Number(newReviewRating),
           content: newReviewText,
-          mediaOutlet: currentUser.socialLinks.radio || currentUser.roleLabel,
+          mediaOutlet: currentUser.socialLinks?.radio || currentUser.roleLabel,
           date: new Date().toISOString().split('T')[0]
         };
         setReviewsList([newRev, ...reviewsList]);
@@ -259,7 +227,7 @@
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
-          {/* HEADER CON SELECCIÓN DE CIUDAD, PAÍS E IDIOMA */}
+          {/* HEADER */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
               
@@ -271,7 +239,7 @@
                 </div>
               </div>
 
-              {/* BARRA DE CONFIGURACIÓN REGIONAL */}
+              {/* SELECCIÓN REGIONAL E IDIOMA */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ubicación:</span>
                 <input 
@@ -284,7 +252,6 @@
                 
                 <span className="text-slate-600">|</span>
                 
-                {/* Selector de País (Región) */}
                 <select 
                   value={userCountryCode} 
                   onChange={(e) => setUserCountryCode(e.target.value)}
@@ -297,7 +264,6 @@
 
                 <span className="text-slate-600">|</span>
 
-                {/* Selector de Idioma de la App */}
                 <span className="text-amber-500 font-bold whitespace-nowrap">🗣️ Idioma:</span>
                 <select 
                   value={userLanguage} 
@@ -310,7 +276,7 @@
                 </select>
               </div>
 
-              {/* NAVEGACIÓN */}
+              {/* NAV TAB */}
               <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto max-w-full">
                 <button onClick={() => setActiveTab('cinema')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
                 <button onClick={() => setActiveTab('radar')} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
@@ -331,19 +297,19 @@
             </div>
           </header>
 
-          {/* CONTENIDO PRINCIPAL */}
+          {/* MAIN */}
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
             
-            {/* TAB CARTELERA */}
+            {/* CARTELERA */}
             {activeTab === 'cinema' && (
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
                     <h2 className="text-lg font-black text-amber-400">
-                      🏛️ Cartelera de Cine ({COUNTRY_CODES.find(c => c.code === userCountryCode)?.name || userCountryCode})
+                      🏛️ Estrenos en {COUNTRY_CODES.find(c => c.code === userCountryCode)?.name || userCountryCode}
                     </h2>
                     <p className="text-xs text-slate-300 mt-1">
-                      Películas en cartelera. Seleccioná cualquiera para consultar salas y funciones directas en <b className="capitalize text-white">{userCity}</b>.
+                      Películas en cartelera nacional. Consulta funciones y salas exactas en <b className="capitalize text-white">{userCity}</b>.
                     </p>
                   </div>
                   <button 
@@ -355,12 +321,11 @@
                   </button>
                 </div>
 
-                {/* CARGANDO O GRILLA DE PELÍCULAS */}
                 {isLoading ? (
                   <div className="text-center py-20 text-amber-400 font-bold text-sm">
-                    ⏳ Obteniendo películas de cartelera...
+                    ⏳ Sincronizando la cartelera oficial...
                   </div>
-                ) : (
+                ) : moviesList.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {moviesList.map(m => (
                       <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-4 flex flex-col justify-between space-y-4 shadow-xl hover:border-amber-500/50 transition-all">
@@ -390,11 +355,18 @@
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <div className="text-center py-16 bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                    <p className="text-slate-400 text-sm">No se encontraron estrenos activos registrados para esta selección.</p>
+                    <button onClick={() => openCitySchedule()} className="mt-4 bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">
+                      Buscar cartelera directa de {userCity} en Google
+                    </button>
+                  </div>
                 )}
               </div>
             )}
 
-            {/* TAB RADAR */}
+            {/* RADAR */}
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center">
                 <div className="mb-4 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-xs text-amber-500 text-center flex items-center gap-2 flex-wrap justify-center">
@@ -408,4 +380,189 @@
                       <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
                       <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
                       <div className="absolute bottom-4 left-4 right-4">
-                        <h
+                        <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
+                        <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location} • A {currentCandidate.distanceKm} km</p>
+                      </div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                      <p className="text-xs italic text-slate-300">"{currentCandidate.bio}"</p>
+                      <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
+                        <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold hover:bg-slate-700 transition-all">✖</button>
+                        <button onClick={() => { alert(`🍿 ¡Le diste Me Gusta a ${currentCandidate.name}!`); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-105 transition-all">🍿</button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                    <div className="text-4xl">🎟️</div>
+                    <h3 className="text-xl font-bold">No hay más perfiles cercanos en tu rango.</h3>
+                    <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Vista</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CRÍTICOS */}
+            {activeTab === 'critics' && (
+              <div className="space-y-6 max-w-3xl mx-auto">
+                <h2 className="text-2xl font-black">📰 Panel de Críticos & Medios</h2>
+                
+                <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+                  <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña en la Red</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block mb-1 text-slate-400">Película:</label>
+                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Película..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500" required />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-slate-400">Calificación (1-10):</label>
+                      <input type="number" min="1" max="10" step="0.5" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-amber-500" required />
+                    </div>
+                  </div>
+                  <div className="text-xs">
+                    <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
+                    <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu reseña..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500" required />
+                  </div>
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase hover:bg-amber-400 transition-all">Publicar Reseña</button>
+                </form>
+
+                <div className="space-y-4 pt-2">
+                  {reviewsList.map(rev => (
+                    <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-md">
+                      <div className="flex justify-between items-start text-xs">
+                        <div>
+                          <span className="font-bold text-amber-500">{rev.author}</span>
+                          <p className="text-[10px] text-slate-400">🎙️ {rev.mediaOutlet}</p>
+                        </div>
+                        <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
+                      </div>
+                      <div>
+                        <h4 className="text-base font-black">{rev.movieTitle}</h4>
+                        <p className="text-xs pt-1 text-slate-300 leading-relaxed">{rev.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* MI PERFIL */}
+            {activeTab === 'profile' && (
+              <form onSubmit={handleSaveProfile} className="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+                  <div>
+                    <h2 className="text-xl font-black">{currentUser.name}</h2>
+                    <p className="text-xs text-amber-500">{currentUser.roleLabel}</p>
+                  </div>
+                  <button type="button" onClick={() => setShowSubscriptionModal(true)} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs">
+                    {currentUser.isPremium ? '⭐ Plan Premium Activo' : '🚀 Cambiar Plan'}
+                  </button>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  <div>
+                    <label className="block mb-1 text-slate-400">URL Foto de Perfil:</label>
+                    <input type="url" value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-slate-400">Biografía Cinéfila:</label>
+                    <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800 space-y-3">
+                    <h3 className="font-bold text-amber-500">🎙️ Medios & Redes Sociales</h3>
+                    <div>
+                      <label className="block mb-1 text-slate-400">Programa de Radio / Podcast:</label>
+                      <input type="text" value={editRadio} onChange={(e) => setEditRadio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-slate-400">Canal de Televisión / Columna:</label>
+                      <input type="text" value={editTv} onChange={(e) => setEditTv(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
+                    </div>
+                  </div>
+
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">Guardar Cambios</button>
+                </div>
+              </form>
+            )}
+
+            {/* ADMIN */}
+            {activeTab === 'admin' && currentUser.role === 'admin' && (
+              <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div>
+                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador General</h2>
+                    <p className="text-xs text-amber-400 mt-1">Sesión activa: <b>{currentUser.name}</b> ({currentUser.email})</p>
+                  </div>
+                  <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
+                    Control Total Plottwisme
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <p className="text-xs text-slate-400">Usuarios Registrados</p>
+                    <p className="text-2xl font-black text-white mt-1">{usersList.length}</p>
+                  </div>
+                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <p className="text-xs text-slate-400">Reseñas Publicadas</p>
+                    <p className="text-2xl font-black text-white mt-1">{reviewsList.length}</p>
+                  </div>
+                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <p className="text-xs text-slate-400">Películas en Cartelera</p>
+                    <p className="text-2xl font-black text-white mt-1">{moviesList.length}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </main>
+
+          {/* MODAL SUSCRIPCIONES */}
+          {showSubscriptionModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-black text-white">💳 Selecciona tu Suscripción</h3>
+                  <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-5 rounded-2xl border border-slate-800 bg-slate-950 flex flex-col justify-between space-y-4">
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-200">Plan Estándar</h4>
+                      <p className="text-2xl font-black text-white mt-1">Gratis</p>
+                    </div>
+                    <button onClick={() => handleUpgradePlan(false)} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-xl text-xs">Usar Estándar</button>
+                  </div>
+
+                  <div className="p-5 rounded-2xl border border-amber-500 bg-amber-500/10 flex flex-col justify-between space-y-4">
+                    <div>
+                      <h4 className="font-bold text-sm text-amber-400">Plan Premium</h4>
+                      <p className="text-2xl font-black text-amber-400 mt-1">$4.99 USD <span className="text-xs font-normal text-slate-400">/mes</span></p>
+                    </div>
+                    <button onClick={() => handleUpgradePlan(true)} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase shadow-lg shadow-amber-500/20">Activar Premium</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    // Inicialización segura de React
+    try {
+      const rootElement = document.getElementById('root');
+      if (rootElement) {
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(<App />);
+      }
+    } catch (e) {
+      console.error("Error al montar la aplicación:", e);
+    }
+  </script>
+</body>
+</html>
