@@ -225,234 +225,420 @@
       { id: 'theaters', label: '🏛️ Salas & Cines Cercanos', queryFormat: 'cines cerca de {city} {country}' },
       { id: 'premieres', label: '⭐ Estrenos de la Semana', queryFormat: 'estrenos de cine en {city} {country}' }
     ];
-    <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plottwisme - Red Social Cinéfila Global</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+    function App() {
+      const [lang, setLang] = useState(() => getBrowserLang());
+      const t = TRANSLATIONS[lang] || TRANSLATIONS.es;
 
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; }
-    .font-brand { font-family: 'Outfit', sans-serif; }
-  </style>
-</head>
-<body class="antialiased bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
-  <div id="root">
-    <div class="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
-      ⏳ Cargando Plottwisme...
-    </div>
-  </div>
+      const [usersList, setUsersList] = useState(INITIAL_USERS);
+      const [currentUser, setCurrentUser] = useState(null);
+      
+      const [activeTab, setActiveTab] = useState('cinema');
+      const [currentIndex, setCurrentIndex] = useState(0);
 
-  <script type="text/babel">
-    const { useState, useMemo, useEffect } = React;
+      const [userCity, setUserCity] = useState('');
+      const [userCountryCode, setUserCountryCode] = useState('AR');
 
-    const getBrowserLang = () => {
-      const lang = navigator.language || navigator.userLanguage || 'es';
-      if (lang.startsWith('en')) return 'en';
-      if (lang.startsWith('pt')) return 'pt';
-      return 'es';
-    };
+      const [chatsList, setChatsList] = useState(INITIAL_CHATS);
+      const [activeChat, setActiveChat] = useState(null);
+      const [newMessageText, setNewMessageText] = useState('');
+      const [showMatchModal, setShowMatchModal] = useState(false);
+      const [matchedUser, setMatchedUser] = useState(null);
 
-    const TRANSLATIONS = {
-      es: {
-        loading: "⏳ Cargando Plottwisme...",
-        cinema: "🎬 Cartelera",
-        forums: "💬 Foros",
-        radar: "🎯 Radar",
-        chats: "💬 Chats",
-        critics: "📰 Críticos",
-        profile: "👤 Perfil",
-        admin: "🛡️ Admin",
-        logout: "🚪 Salir",
-        signup: "✨ Crear Cuenta",
-        cityPlaceholder: "Tu Ciudad",
-        country: "País:",
-        engineTitle: "Motor Oficial Geolocalizado",
-        cinemaRealtime: "Cartelera en Tiempo Real para",
-        cinemaSubtitle: "Accede instantáneamente al panel interactivo oficial con las películas, complejos, horarios y salas disponibles hoy en tu zona.",
-        openCinema: "Abrir Cartelera de",
-        directSearch: "Buscador Directo por Categoría en",
-        consultGoogle: "Consultar Google",
-        activeChats: "Chats Activos",
-        noChats: "Aún no tienes matches. ¡Ve al Radar y haz Match con otros cinéfilos!",
-        sendPlaceholder: "Escribe un mensaje para coordinar una función...",
-        sendBtn: "Enviar",
-        matchTitle: "¡Es un Match Cinéfilo!",
-        openChatNow: "💬 Abrir Chat Ahora",
-        keepSearching: "Seguir Buscando"
-      },
-      en: {
-        loading: "⏳ Loading Plottwisme...",
-        cinema: "🎬 Now Playing",
-        forums: "💬 Forums",
-        radar: "🎯 Radar",
-        chats: "💬 Chats",
-        critics: "📰 Critics",
-        profile: "👤 Profile",
-        admin: "🛡️ Admin",
-        logout: "🚪 Logout",
-        signup: "✨ Sign Up",
-        cityPlaceholder: "Your City",
-        country: "Country:",
-        engineTitle: "Official Geolocated Engine",
-        cinemaRealtime: "Real-Time Showtimes for",
-        cinemaSubtitle: "Instantly access the official interactive panel featuring movies, theaters, schedules, and screening rooms available today in your area.",
-        openCinema: "Open Showtimes for",
-        directSearch: "Direct Category Search in",
-        consultGoogle: "Check Google",
-        activeChats: "Active Chats",
-        noChats: "No matches yet. Go to Radar and match with fellow cinephiles!",
-        sendPlaceholder: "Type a message to coordinate a screening...",
-        sendBtn: "Send",
-        matchTitle: "It's a Cinephile Match!",
-        openChatNow: "💬 Open Chat Now",
-        keepSearching: "Keep Searching"
-      },
-      pt: {
-        loading: "⏳ Carregando Plottwisme...",
-        cinema: "🎬 Estreias",
-        forums: "💬 Fóruns",
-        radar: "🎯 Radar",
-        chats: "💬 Chats",
-        critics: "📰 Críticos",
-        profile: "👤 Perfil",
-        admin: "🛡️ Admin",
-        logout: "🚪 Sair",
-        signup: "✨ Criar Conta",
-        cityPlaceholder: "Sua Cidade",
-        country: "País:",
-        engineTitle: "Mecanismo Oficial Geolocalizado",
-        cinemaRealtime: "Programação em Tempo Real para",
-        cinemaSubtitle: "Acesse instantaneamente o painel interativo oficial com filmes, cinemas, horários e salas disponíveis hoje na sua região.",
-        openCinema: "Abrir Cinemas de",
-        directSearch: "Busca Direta por Categoria em",
-        consultGoogle: "Consultar Google",
-        activeChats: "Chats Ativos",
-        noChats: "Ainda não há matches. Vá para o Radar e dê Match com outros cinéfilos!",
-        sendPlaceholder: "Digite uma mensagem para combinar uma sessão...",
-        sendBtn: "Enviar",
-        matchTitle: "É um Match Cinéfilo!",
-        openChatNow: "💬 Abrir Chat Agora",
-        keepSearching: "Continuar Buscando"
-      }
-    };
+      const [showAuthModal, setShowAuthModal] = useState(false);
+      const [authMode, setAuthMode] = useState('signup');
+      const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-    const INITIAL_USERS = [
-      {
-        id: 'u1',
-        name: 'Marcelo Buttice',
-        email: 'marbuttice@gmail.com',
-        password: 'admin',
-        age: 57,
-        sex: 'Masculino',
-        lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
-        location: 'Oberá, Misiones, Argentina',
-        distanceKm: 2.5,
-        role: 'admin',
-        roleLabel: 'Administrador General',
-        isPremium: true,
-        isCritic: true,
-        criticRequested: false,
-        verified: true,
-        bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
-        photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
-        socialLinks: { twitter: '@marbuttice', radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
-      },
-      {
-        id: 'u2',
-        name: 'Elena Montero',
-        email: 'elena@gmail.com',
-        password: '123',
-        age: 24,
-        sex: 'Femenino',
-        lookingFor: 'Amigos Cinéfilos',
-        location: 'Posadas, Misiones, Argentina',
-        distanceKm: 85.0,
-        role: 'general',
-        roleLabel: 'Cinéfila Pro & Crítica',
-        isPremium: false,
-        isCritic: true,
-        criticRequested: false,
-        verified: true,
-        bio: 'Directora de cortos amateur y crítica de cine asiático y de autor.',
-        photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80'],
-        socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' }
-      }
-    ];
+      const [authEmail, setAuthEmail] = useState('');
+      const [authPassword, setAuthPassword] = useState('');
+      const [authName, setAuthName] = useState('');
+      const [authAge, setAuthAge] = useState(25);
+      const [authSex, setAuthSex] = useState('Masculino');
+      const [authLookingFor, setAuthLookingFor] = useState('Amigos Cinéfilos');
+      const [authWantCritic, setAuthWantCritic] = useState(false);
+      
+      const [forgotEmail, setForgotEmail] = useState('');
+      const [newResetPassword, setNewResetPassword] = useState('');
+      const [resetStep, setResetStep] = useState(1);
 
-    const INITIAL_CHATS = [
-      {
-        id: 'chat_u2',
-        userId: 'u2',
-        userName: 'Elena Montero',
-        userAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
-        messages: [
-          { id: 'm1', sender: 'Elena Montero', text: '¡Hola Marcelo! Vi que te encanta el cine de autor. ¿Viste la última de Villeneuve?', time: '10:15' }
-        ]
-      }
-    ];
+      const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
+      const [forumTopics, setForumTopics] = useState(INITIAL_FORUM_TOPICS);
+      const [activeTopic, setActiveTopic] = useState(null);
+      const [showNewTopicModal, setShowNewTopicModal] = useState(false);
 
-    const INITIAL_REVIEWS = [
-      {
-        id: 'r1',
-        author: 'Elena Montero',
-        movieTitle: 'Cine de Autor & Estrenos',
-        rating: 9,
-        content: 'Excelente programación en salas locales este fin de semana.',
-        mediaOutlet: 'Columnista Radio LT3 / Canal 12 Misiones',
-        date: '2026-08-31'
-      }
-    ];
+      const [newTopicTitle, setNewTopicTitle] = useState('');
+      const [newTopicCategory, setNewTopicCategory] = useState('Cine de Autor');
+      const [newTopicContent, setNewTopicContent] = useState('');
+      const [newCommentText, setNewCommentText] = useState('');
 
-    const INITIAL_FORUM_TOPICS = [
-      {
-        id: 'f1',
-        title: '¿Cuál es el mejor Plot Twist de la historia del cine?',
-        category: 'Debates Clásicos',
-        author: 'Marcelo Buttice',
-        date: '2026-08-30',
-        repliesCount: 2,
-        content: 'Abran debate: entre El Sexto Sentido, Club de la Pelea y Los Sospechosos de Siempre... ¿cuál les causó más impacto?',
-        comments: [
-          { id: 'c1', author: 'Elena Montero', date: '2026-08-30', text: '¡Sin dudas Los Sospechosos de Siempre!' },
-          { id: 'c2', author: 'Marcelo Buttice', date: '2026-08-31', text: 'Coincido plenamente.' }
-        ]
-      }
-    ];
+      const [newReviewMovie, setNewReviewMovie] = useState('');
+      const [newReviewRating, setNewReviewRating] = useState(10);
+      const [newReviewText, setNewReviewText] = useState('');
 
-    const COUNTRY_CODES = [
-      { code: 'AR', name: 'Argentina 🇦🇷' },
-      { code: 'US', name: 'Estados Unidos 🇺🇸' },
-      { code: 'ES', name: 'España 🇪🇸' },
-      { code: 'MX', name: 'México 🇲🇽' },
-      { code: 'CL', name: 'Chile 🇨🇱' },
-      { code: 'CO', name: 'Colombia 🇨🇴' },
-      { code: 'PY', name: 'Paraguay 🇵🇾' },
-      { code: 'UY', name: 'Uruguay 🇺🇾' },
-      { code: 'BR', name: 'Brasil 🇧🇷' }
-    ];
+      const [editBio, setEditBio] = useState(currentUser ? currentUser.bio : '');
+      const [editPhotos, setEditPhotos] = useState(currentUser ? (currentUser.photos || [currentUser.avatar]) : []);
+      const [editRadio, setEditRadio] = useState(currentUser?.socialLinks?.radio || '');
+      const [editTv, setEditTv] = useState(currentUser?.socialLinks?.tv || '');
 
-    const SEXUALITIES_OPTIONS = [
-      'Masculino', 'Femenino', 'No Binario', 'Género Fluido', 'Pansexual', 'Queer', 'Bisexual', 'Homosexual', 'Heterosexual', 'Otro'
-    ];
+      useEffect(() => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                const { latitude, longitude } = position.coords;
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+                const data = await response.json();
+                const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Buenos Aires';
+                const countryCode = data.address.country_code ? data.address.country_code.toUpperCase() : 'AR';
+                
+                setUserCity(city);
+                if (COUNTRY_CODES.some(c => c.code === countryCode)) {
+                  setUserCountryCode(countryCode);
+                }
+              } catch (e) {
+                setUserCity('Buenos Aires');
+              }
+            },
+            () => { setUserCity('Buenos Aires'); }
+          );
+        } else {
+          setUserCity('Buenos Aires');
+        }
+      }, []);
 
-    const SEARCH_CATEGORIES = [
-      { id: 'all', label: '🎬 Cartelera Completa', queryFormat: 'cartelera cines {city} {country}' },
-      { id: 'today', label: '🍿 Funciones Hoy', queryFormat: 'horarios de cine hoy en {city} {country}' },
-      { id: 'theaters', label: '🏛️ Salas & Cines Cercanos', queryFormat: 'cines cerca de {city} {country}' },
-      { id: 'premieres', label: '⭐ Estrenos de la Semana', queryFormat: 'estrenos de cine en {city} {country}' }
-    ];
-    return (
+      useEffect(() => {
+        if (currentUser) {
+          setEditBio(currentUser.bio || '');
+          setEditPhotos(currentUser.photos || (currentUser.avatar ? [currentUser.avatar] : []));
+          setEditRadio(currentUser.socialLinks?.radio || '');
+          setEditTv(currentUser.socialLinks?.tv || '');
+        }
+      }, [currentUser]);
+
+      const getCountryName = () => {
+        const found = COUNTRY_CODES.find(c => c.code === userCountryCode);
+        return found ? found.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
+      };
+
+      const openGoogleEngine = (customQueryFormat = 'cartelera de cines en {city} {country}') => {
+        const cleanCity = userCity.trim() || 'Buenos Aires';
+        const country = getCountryName();
+        const query = customQueryFormat.replace('{city}', cleanCity).replace('{country}', country);
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=${lang}`, '_blank');
+      };
+
+      const handleMatchUser = (candidate) => {
+        if (!currentUser) {
+          setShowAuthModal(true);
+          return;
+        }
+
+        setMatchedUser(candidate);
+        setShowMatchModal(true);
+
+        const existingChat = chatsList.find(c => c.userId === candidate.id);
+        if (!existingChat) {
+          const newChat = {
+            id: 'chat_' + candidate.id,
+            userId: candidate.id,
+            userName: candidate.name,
+            userAvatar: candidate.avatar,
+            messages: [
+              { id: 'm_init', sender: candidate.name, text: `¡Hola ${currentUser.name}! Match 🍿`, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
+            ]
+          };
+          setChatsList([newChat, ...chatsList]);
+        }
+      };
+
+      const handleSendMessage = (e) => {
+        e.preventDefault();
+        if (!newMessageText.trim() || !activeChat) return;
+
+        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const newMsg = {
+          id: 'msg_' + Date.now(),
+          sender: currentUser.name,
+          text: newMessageText,
+          time: timeStr
+        };
+
+        const updatedChats = chatsList.map(chat => {
+          if (chat.id === activeChat.id) {
+            const updated = { ...chat, messages: [...chat.messages, newMsg] };
+            setActiveChat(updated);
+            return updated;
+          }
+          return chat;
+        });
+
+        setChatsList(updatedChats);
+        setNewMessageText('');
+      };
+
+      const handleImageCompressionAndAdd = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const maxPhotosAllowed = currentUser?.isPremium ? 10 : 3;
+        if (editPhotos.length >= maxPhotosAllowed) {
+          alert(`⚠️ Max ${maxPhotosAllowed} photos allowed.`);
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 500;
+            const MAX_HEIGHT = 500;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            setEditPhotos([...editPhotos, compressedDataUrl]);
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const handleRemovePhoto = (indexToRemove) => {
+        setEditPhotos(editPhotos.filter((_, idx) => idx !== indexToRemove));
+      };
+
+      const handleDeleteUser = (userId) => {
+        if (window.confirm('⚠️ Delete user?')) {
+          setUsersList(usersList.filter(u => u.id !== userId));
+        }
+      };
+
+      const handleSanctionUser = (userId) => {
+        if (window.confirm('🚫 Suspend user?')) {
+          setUsersList(usersList.map(u => u.id === userId ? { ...u, roleLabel: 'Sancionado ⛔' } : u));
+        }
+      };
+
+      const handleDeletePhoto = (userId, photoIndex) => {
+        if (window.confirm('🗑️ Delete photo?')) {
+          setUsersList(usersList.map(u => {
+            if (u.id === userId) {
+              const updatedPhotos = (u.photos || [u.avatar]).filter((_, i) => i !== photoIndex);
+              return { ...u, photos: updatedPhotos, avatar: updatedPhotos[0] || 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80' };
+            }
+            return u;
+          }));
+        }
+      };
+
+      const handleToggleCriticBadge = (userId) => {
+        setUsersList(usersList.map(u => {
+          if (u.id === userId) {
+            const nextVal = !u.isCritic;
+            return { 
+              ...u, 
+              isCritic: nextVal, 
+              roleLabel: nextVal ? 'Cinéfilo Pro & Crítico' : 'Cinéfilo Estándar',
+              criticRequested: false 
+            };
+          }
+          return u;
+        }));
+      };
+
+      const handleAuthSubmit = (e) => {
+        e.preventDefault();
+        if (authMode === 'signup') {
+          if (Number(authAge) < 18) {
+            alert('🚫 +18 required.');
+            return;
+          }
+
+          const existing = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase());
+          if (existing) {
+            alert('⚠️ Email already registered.');
+            return;
+          }
+          const defaultAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80';
+          const newUser = {
+            id: 'u_' + Date.now(),
+            name: authName,
+            email: authEmail,
+            password: authPassword,
+            age: Number(authAge),
+            sex: authSex,
+            lookingFor: authLookingFor,
+            location: `${userCity || 'City'}, ${getCountryName()}`,
+            distanceKm: 5.0,
+            role: 'general',
+            roleLabel: 'Cinéfilo Estándar',
+            isPremium: false,
+            isCritic: false,
+            criticRequested: authWantCritic,
+            verified: false,
+            bio: 'Cinephile.',
+            photos: [defaultAvatar],
+            avatar: defaultAvatar,
+            socialLinks: {}
+          };
+          setUsersList([...usersList, newUser]);
+          setCurrentUser(newUser);
+          alert('🎉 Account created!');
+        } else {
+          const found = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase() && u.password === authPassword);
+          if (!found) {
+            alert('❌ Invalid credentials.');
+            return;
+          }
+          setCurrentUser(found);
+          alert(`👋 Welcome back, ${found.name}!`);
+        }
+        setShowAuthModal(false);
+        setAuthEmail('');
+        setAuthPassword('');
+      };
+
+      const handleForgotSubmit = (e) => {
+        e.preventDefault();
+        if (resetStep === 1) {
+          const found = usersList.find(u => u.email.toLowerCase() === forgotEmail.toLowerCase());
+          if (!found) {
+            alert('❌ Email not found.');
+            return;
+          }
+          setResetStep(2);
+        } else {
+          if (!newResetPassword) return;
+          setUsersList(usersList.map(u => u.email.toLowerCase() === forgotEmail.toLowerCase() ? { ...u, password: newResetPassword } : u));
+          alert('✅ Password reset successfully!');
+          setShowAuthModal(false);
+          setAuthMode('login');
+          setResetStep(1);
+          setForgotEmail('');
+          setNewResetPassword('');
+        }
+      };
+
+      const handleLogout = () => {
+        setCurrentUser(null);
+        setActiveTab('cinema');
+        alert('Logged out.');
+      };
+
+      const maxDistance = currentUser?.isPremium ? 500 : 100;
+      const filteredCandidates = useMemo(() => {
+        return usersList.filter(u => u.email !== currentUser?.email && u.distanceKm <= maxDistance);
+      }, [usersList, currentUser, maxDistance]);
+
+      const currentCandidate = filteredCandidates[currentIndex];
+
+      const handleUpgradePlan = (isPrem) => {
+        if (!currentUser) {
+          setShowAuthModal(true);
+          return;
+        }
+        const updated = { 
+          ...currentUser, 
+          isPremium: isPrem, 
+          roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar' 
+        };
+        setCurrentUser(updated);
+        setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
+        setShowSubscriptionModal(false);
+        alert(isPrem ? '⭐ Upgraded to Premium!' : 'Switched to Standard.');
+      };
+
+      const handleSaveProfile = (e) => {
+        e.preventDefault();
+        if (!currentUser) return;
+        const primaryAvatar = editPhotos.length > 0 ? editPhotos[0] : 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80';
+        const updated = {
+          ...currentUser,
+          bio: editBio,
+          photos: editPhotos,
+          avatar: primaryAvatar,
+          socialLinks: { radio: editRadio, tv: editTv }
+        };
+        setCurrentUser(updated);
+        setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
+        alert('✅ Profile updated!');
+      };
+
+      const handlePublishReview = (e) => {
+        e.preventDefault();
+        if (!currentUser?.isCritic) return;
+        if (!newReviewMovie || !newReviewText) return;
+        const newRev = {
+          id: 'r_' + Date.now(),
+          author: currentUser.name,
+          movieTitle: newReviewMovie,
+          rating: Number(newReviewRating),
+          content: newReviewText,
+          mediaOutlet: currentUser.socialLinks?.radio || currentUser.roleLabel,
+          date: new Date().toISOString().split('T')[0]
+        };
+        setReviewsList([newRev, ...reviewsList]);
+        setNewReviewMovie('');
+        setNewReviewText('');
+        alert('📝 Review published!');
+      };
+
+      const handleCreateTopic = (e) => {
+        e.preventDefault();
+        if (!currentUser) { setShowAuthModal(true); return; }
+        if (!newTopicTitle || !newTopicContent) return;
+        const newTopic = {
+          id: 'f_' + Date.now(),
+          title: newTopicTitle,
+          category: newTopicCategory,
+          author: currentUser.name,
+          date: new Date().toISOString().split('T')[0],
+          repliesCount: 0,
+          content: newTopicContent,
+          comments: []
+        };
+        setForumTopics([newTopic, ...forumTopics]);
+        setNewTopicTitle('');
+        setNewTopicContent('');
+        setShowNewTopicModal(false);
+        alert('💬 Topic created!');
+      };
+
+      const handleAddComment = (e) => {
+        e.preventDefault();
+        if (!currentUser || !newCommentText || !activeTopic) return;
+        const comment = {
+          id: 'c_' + Date.now(),
+          author: currentUser.name,
+          date: new Date().toISOString().split('T')[0],
+          text: newCommentText
+        };
+        const updatedTopics = forumTopics.map(t => {
+          if (t.id === activeTopic.id) {
+            const updatedComments = [...t.comments, comment];
+            const updatedT = { ...t, comments: updatedComments, repliesCount: updatedComments.length };
+            setActiveTopic(updatedT);
+            return updatedT;
+          }
+          return t;
+        });
+        setForumTopics(updatedTopics);
+        setNewCommentText('');
+      };
+
+      return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
