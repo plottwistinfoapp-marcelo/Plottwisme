@@ -47,7 +47,7 @@
         criticRequested: false,
         verified: true,
         bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
+        photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
         socialLinks: { twitter: '@marbuttice', radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
       },
       {
@@ -67,7 +67,7 @@
         criticRequested: false,
         verified: true,
         bio: 'Directora de cortos amateur y crítica de cine asiático y de autor.',
-        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
+        photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80'],
         socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' }
       }
     ];
@@ -171,13 +171,13 @@
       const [newReviewRating, setNewReviewRating] = useState(10);
       const [newReviewText, setNewReviewText] = useState('');
 
-      // PERFIL
+      // PERFIL Y FOTOS
       const [editBio, setEditBio] = useState(currentUser ? currentUser.bio : '');
-      const [editAvatar, setEditAvatar] = useState(currentUser ? currentUser.avatar : '');
+      const [editPhotos, setEditPhotos] = useState(currentUser ? (currentUser.photos || [currentUser.avatar]) : []);
       const [editRadio, setEditRadio] = useState(currentUser?.socialLinks?.radio || '');
       const [editTv, setEditTv] = useState(currentUser?.socialLinks?.tv || '');
 
-      // AUTO-DETECTAR UBICACIÓN REAL AL CARGAR LA APP
+      // AUTO-DETECTAR UBICACIÓN REAL
       useEffect(() => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -194,13 +194,10 @@
                   setUserCountryCode(countryCode);
                 }
               } catch (e) {
-                console.error("Error geolocalización automática:", e);
                 setUserCity('Buenos Aires');
               }
             },
-            () => {
-              setUserCity('Buenos Aires');
-            }
+            () => { setUserCity('Buenos Aires'); }
           );
         } else {
           setUserCity('Buenos Aires');
@@ -210,7 +207,7 @@
       useEffect(() => {
         if (currentUser) {
           setEditBio(currentUser.bio || '');
-          setEditAvatar(currentUser.avatar || '');
+          setEditPhotos(currentUser.photos || (currentUser.avatar ? [currentUser.avatar] : []));
           setEditRadio(currentUser.socialLinks?.radio || '');
           setEditTv(currentUser.socialLinks?.tv || '');
         }
@@ -234,31 +231,31 @@
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=es`, '_blank');
       };
 
-      // 📸 COMPRESIÓN AUTOMÁTICA DE IMÁGENES POR CÓDIGO (Redimensiona y baja el peso de forma transparente)
-      const handleImageCompressionAndUpload = (e) => {
+      // COMPRESIÓN Y GESTIÓN DE FOTOS MÚLTIPLES SEGÚN LÍMITE (3 ESTÁNDAR / 10 PREMIUM)
+      const handleImageCompressionAndAdd = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        const maxPhotosAllowed = currentUser?.isPremium ? 10 : 3;
+        if (editPhotos.length >= maxPhotosAllowed) {
+          alert(`⚠️ Tu plan actual permite un máximo de ${maxPhotosAllowed} fotos. ¡Actualiza a Premium para tener hasta 10 fotos!`);
+          return;
+        }
 
         const reader = new FileReader();
         reader.onload = (event) => {
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 400; // Ancho máximo optimizado para avatar
-            const MAX_HEIGHT = 400; // Alto máximo optimizado
+            const MAX_WIDTH = 500;
+            const MAX_HEIGHT = 500;
             let width = img.width;
             let height = img.height;
 
             if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
+              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
             } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
+              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
             }
 
             canvas.width = width;
@@ -266,16 +263,19 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Comprimir a JPEG con calidad 0.7 (reduce drásticamente el peso sin perder calidad visual)
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-            setEditAvatar(compressedDataUrl);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            setEditPhotos([...editPhotos, compressedDataUrl]);
           };
           img.src = event.target.result;
         };
         reader.readAsDataURL(file);
       };
 
-      // ACCIONES DE MODERACIÓN (ADMIN)
+      const handleRemovePhoto = (indexToRemove) => {
+        setEditPhotos(editPhotos.filter((_, idx) => idx !== indexToRemove));
+      };
+
+      // MODERACIÓN ADMIN
       const handleDeleteUser = (userId) => {
         if (window.confirm('⚠️ ¿Estás seguro de eliminar a este usuario permanentemente?')) {
           setUsersList(usersList.filter(u => u.id !== userId));
@@ -288,9 +288,15 @@
         }
       };
 
-      const handleDeletePhoto = (userId) => {
-        if (window.confirm('🗑️ ¿Eliminar el avatar de este usuario por incumplir normas?')) {
-          setUsersList(usersList.map(u => u.id === userId ? { ...u, avatar: 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80' } : u)); 
+      const handleDeletePhoto = (userId, photoIndex) => {
+        if (window.confirm('🗑️ ¿Eliminar esta foto por incumplir normas?')) {
+          setUsersList(usersList.map(u => {
+            if (u.id === userId) {
+              const updatedPhotos = (u.photos || [u.avatar]).filter((_, i) => i !== photoIndex);
+              return { ...u, photos: updatedPhotos, avatar: updatedPhotos[0] || 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80' };
+            }
+            return u;
+          }));
         }
       };
 
@@ -309,10 +315,8 @@
         }));
       };
 
-      // REGISTRO E INICIO DE SESIÓN
       const handleAuthSubmit = (e) => {
         e.preventDefault();
-        
         if (authMode === 'signup') {
           if (Number(authAge) < 18) {
             alert('🚫 Acceso denegado: Debes ser mayor de 18 años para registrarte en Plottwisme.');
@@ -324,6 +328,7 @@
             alert('⚠️ Este email ya está registrado. Intenta iniciar sesión.');
             return;
           }
+          const defaultAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80';
           const newUser = {
             id: 'u_' + Date.now(),
             name: authName,
@@ -341,20 +346,17 @@
             criticRequested: authWantCritic,
             verified: false,
             bio: '¡Hola! Soy cinéfilo en Plottwisme.',
-            avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80`,
+            photos: [defaultAvatar],
+            avatar: defaultAvatar,
             socialLinks: {}
           };
           setUsersList([...usersList, newUser]);
           setCurrentUser(newUser);
-          if (authWantCritic) {
-            alert('🎉 ¡Cuenta creada! Tu solicitud de insignia de crítico fue enviada al Administrador.');
-          } else {
-            alert('🎉 ¡Cuenta creada con éxito!');
-          }
+          alert(authWantCritic ? '🎉 ¡Cuenta creada! Solicitud de crítico enviada al Administrador.' : '🎉 ¡Cuenta creada con éxito!');
         } else {
           const found = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase() && u.password === authPassword);
           if (!found) {
-            alert('❌ Credenciales incorrectas. Verifica tu email y contraseña.');
+            alert('❌ Credenciales incorrectas.');
             return;
           }
           setCurrentUser(found);
@@ -391,16 +393,18 @@
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
         setShowSubscriptionModal(false);
-        alert(isPrem ? '⭐ ¡Felicidades! Ahora eres Premium ($4.99 USD/mes).' : 'Cambiado a plan Estándar.');
+        alert(isPrem ? '⭐ ¡Felicidades! Ahora eres Premium ($4.99 USD/mes) - Hasta 10 fotos y 500km de radio.' : 'Cambiado a plan Estándar.');
       };
 
       const handleSaveProfile = (e) => {
         e.preventDefault();
         if (!currentUser) return;
+        const primaryAvatar = editPhotos.length > 0 ? editPhotos[0] : 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80';
         const updated = {
           ...currentUser,
           bio: editBio,
-          avatar: editAvatar,
+          photos: editPhotos,
+          avatar: primaryAvatar,
           socialLinks: { radio: editRadio, tv: editTv }
         };
         setCurrentUser(updated);
@@ -410,12 +414,8 @@
 
       const handlePublishReview = (e) => {
         e.preventDefault();
-        if (!currentUser) {
-          setShowAuthModal(true);
-          return;
-        }
-        if (!currentUser.isCritic) {
-          alert('🔒 Solo los usuarios con Insignia de Crítico pueden publicar reseñas oficiales.');
+        if (!currentUser?.isCritic) {
+          alert('🔒 Solo los usuarios con Insignia de Crítico pueden publicar reseñas.');
           return;
         }
         if (!newReviewMovie || !newReviewText) return;
@@ -436,10 +436,7 @@
 
       const handleCreateTopic = (e) => {
         e.preventDefault();
-        if (!currentUser) {
-          setShowAuthModal(true);
-          return;
-        }
+        if (!currentUser) { setShowAuthModal(true); return; }
         if (!newTopicTitle || !newTopicContent) return;
         const newTopic = {
           id: 'f_' + Date.now(),
@@ -460,11 +457,7 @@
 
       const handleAddComment = (e) => {
         e.preventDefault();
-        if (!currentUser) {
-          setShowAuthModal(true);
-          return;
-        }
-        if (!newCommentText || !activeTopic) return;
+        if (!currentUser || !newCommentText || !activeTopic) return;
         const comment = {
           id: 'c_' + Date.now(),
           author: currentUser.name,
@@ -495,13 +488,13 @@
                 <div>
                   <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
                   <p className="text-[10px] uppercase text-slate-400 font-bold">
-                    {currentUser ? (currentUser.isPremium ? '⭐ Plan Premium (500km)' : '👤 Plan Estándar (100km)') : '🌐 Modo Invitado'}
+                    {currentUser ? (currentUser.isPremium ? '⭐ Premium (500km • 10 Fotos)' : '👤 Estándar (100km • 3 Fotos)') : '🌐 Invitado'}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
-                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad Cartelera:</span>
+                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Cartelera:</span>
                 <input 
                   type="text" 
                   value={userCity} 
@@ -683,6 +676,7 @@
               </div>
             )}
 
+            {/* RADAR */}
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold">
@@ -744,7 +738,7 @@
                 ) : (
                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2 text-xs">
                     <p className="text-amber-400 font-bold">🔒 Necesitas la Insignia de Crítico para publicar reseñas oficiales.</p>
-                    <p className="text-slate-400">Puedes solicitarla o verificar el estado de tu insignia desde la configuración de tu perfil o contactando al Administrador.</p>
+                    <p className="text-slate-400">Puedes solicitarla desde tu registro o perfil.</p>
                   </div>
                 )}
 
@@ -768,7 +762,7 @@
               </div>
             )}
 
-            {/* PERFIL (CON COMPRESIÓN AUTOMÁTICA DE IMAGEN) */}
+            {/* PERFIL (CON CUADRÍCULA DE FOTOS DINÁMICA: 3 ESTÁNDAR / 10 PREMIUM) */}
             {activeTab === 'profile' && currentUser && (
               <div className="max-w-xl mx-auto space-y-6">
                 <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
@@ -784,24 +778,48 @@
 
                   <div className="space-y-4 text-xs">
                     
-                    {/* SELECTOR DE ARCHIVO CON COMPRESIÓN AUTOMÁTICA */}
-                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                      <img src={editAvatar} alt="Avatar preview" className="w-20 h-20 rounded-2xl object-cover border border-amber-500/40" />
-                      <div className="space-y-2 flex-1 w-full text-center sm:text-left">
-                        <label className="block font-bold text-amber-400">📸 Seleccionar foto (Se comprime sola):</label>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={handleImageCompressionAndUpload} 
-                          className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" 
-                        />
-                        <p className="text-[10px] text-slate-500">Cualquier foto pesada se optimiza automáticamente al instante.</p>
-                      </div>
-                    </div>
-
                     <div>
-                      <label className="block mb-1 text-slate-400">O ingresa URL de foto externa:</label>
-                      <input type="url" value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="font-bold text-amber-400">
+                          📸 Tus Fotos ({editPhotos.length} / {currentUser?.isPremium ? '10 máx' : '3 máx'}):
+                        </label>
+                        <span className="text-[10px] text-slate-400">Se comprimen automáticamente</span>
+                      </div>
+
+                      {/* CUADRÍCULA DE FOTOS */}
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {editPhotos.map((photo, idx) => (
+                          <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
+                            <img src={photo} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                            <button 
+                              type="button" 
+                              onClick={() => handleRemovePhoto(idx)} 
+                              className="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-90 hover:opacity-100 shadow"
+                            >
+                              ✕
+                            </button>
+                            {idx === 0 && (
+                              <span className="absolute bottom-1 left-1 bg-amber-500 text-slate-950 font-black text-[9px] px-1.5 py-0.5 rounded">
+                                Principal
+                              </span>
+                            )}
+                          </div>
+                        ))}
+
+                        {/* BOTÓN AGREGAR FOTO SI NO LLEGA AL LÍMITE */}
+                        {editPhotos.length < (currentUser?.isPremium ? 10 : 3) && (
+                          <label className="aspect-square rounded-2xl border-2 border-dashed border-slate-700 hover:border-amber-500 bg-slate-950/50 flex flex-col items-center justify-center cursor-pointer transition-all text-slate-400 hover:text-amber-400">
+                            <span className="text-2xl font-bold">+</span>
+                            <span className="text-[10px] mt-1">Subir Foto</span>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={handleImageCompressionAndAdd} 
+                              className="hidden" 
+                            />
+                          </label>
+                        )}
+                      </div>
                     </div>
 
                     <div>
@@ -845,45 +863,57 @@
                 <div className="space-y-4">
                   <h3 className="font-bold text-sm text-amber-500">Moderación de Usuarios, Fotos e Insignias de Crítico:</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {usersList.map(u => (
-                      <div key={u.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
-                        <div className="flex gap-3 items-start">
-                          <div className="relative group">
+                    {usersList.map(u => {
+                      const userPhotos = u.photos || [u.avatar];
+                      return (
+                        <div key={u.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
+                          <div className="flex gap-3 items-start">
                             <img src={u.avatar} alt="Avatar" className="w-16 h-16 rounded-xl object-cover border border-slate-700" />
-                            <button onClick={() => handleDeletePhoto(u.id)} className="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full px-2 py-1 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">✖ Foto</button>
+                            <div>
+                              <p className="font-bold text-white text-sm">
+                                {u.name} {u.isCritic && '🌟'} <span className="text-slate-500 font-normal">({u.age}a)</span>
+                              </p>
+                              <p className="text-xs text-amber-400">{u.roleLabel} • {u.location}</p>
+                              <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
+                              {u.criticRequested && (
+                                <span className="inline-block mt-1 bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] px-2 py-0.5 rounded font-bold">
+                                  ⚠️ Solicitó Insignia de Crítico
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-white text-sm">
-                              {u.name} {u.isCritic && '🌟'} <span className="text-slate-500 font-normal">({u.age}a)</span>
-                            </p>
-                            <p className="text-xs text-amber-400">{u.roleLabel} • {u.location}</p>
-                            <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
-                            {u.criticRequested && (
-                              <span className="inline-block mt-1 bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] px-2 py-0.5 rounded font-bold">
-                                ⚠️ Solicitó Insignia de Crítico
-                              </span>
+
+                          {/* MINI GALERÍA DE FOTOS DEL USUARIO EN ADMIN PARA BORRAR INDIVIDUALMENTE */}
+                          <div className="flex gap-1 overflow-x-auto py-1">
+                            {userPhotos.map((p, pIdx) => (
+                              <div key={pIdx} className="relative group shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-slate-700">
+                                <img src={p} alt="mini" className="w-full h-full object-cover" />
+                                <button onClick={() => handleDeletePhoto(u.id, pIdx)} className="absolute inset-0 bg-rose-900/80 text-white text-[9px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Borrar foto">
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
+                            <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                              {u.isCritic ? '🌟 Quitar Insignia de Crítico' : '✨ Otorgar Insignia de Crítico'}
+                            </button>
+                            
+                            {u.role !== 'admin' && (
+                              <div className="flex gap-2">
+                                <button onClick={() => handleSanctionUser(u.id)} className="flex-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-orange-500/30">
+                                  ⛔ Sancionar
+                                </button>
+                                <button onClick={() => handleDeleteUser(u.id)} className="flex-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
+                                  🗑️ Eliminar
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
-                        
-                        <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
-                          <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                            {u.isCritic ? '🌟 Quitar Insignia de Crítico' : '✨ Otorgar Insignia de Crítico'}
-                          </button>
-                          
-                          {u.role !== 'admin' && (
-                            <div className="flex gap-2">
-                              <button onClick={() => handleSanctionUser(u.id)} className="flex-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-orange-500/30">
-                                ⛔ Sancionar
-                              </button>
-                              <button onClick={() => handleDeleteUser(u.id)} className="flex-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
-                                🗑️ Eliminar
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -891,7 +921,7 @@
 
           </main>
 
-          {/* MODAL SUSCRIPCIÓN */}
+          {/* MODAL SUSCRIPCIÓN (100km / 3 FOTOS VS 500km / 10 FOTOS / $4.99 USD) */}
           {showSubscriptionModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
@@ -905,7 +935,7 @@
                     <h4 className="font-bold text-slate-300 text-sm">👤 Plan Estándar (Gratis)</h4>
                     <p className="text-slate-400">• Radio de radar de búsqueda: <b>100 km</b></p>
                     <p className="text-slate-400">• Matches: <b>Limitado a 1 por semana</b></p>
-                    <p className="text-slate-400">• Fotos de perfil: <b>1 foto</b></p>
+                    <p className="text-slate-400">• Cuadrícula de fotos de perfil: <b>Hasta 3 fotos</b></p>
                     <button onClick={() => handleUpgradePlan(false)} className="w-full mt-2 bg-slate-800 text-slate-300 font-bold py-2 rounded-xl">Seleccionar Estándar</button>
                   </div>
 
@@ -916,8 +946,8 @@
                     </div>
                     <p className="text-slate-300">• Radio de radar ampliado: <b>500 km</b></p>
                     <p className="text-slate-300">• Matches: <b>Ilimitados</b></p>
-                    <p className="text-slate-300">• Fotos de perfil: <b>Hasta 10 fotos</b></p>
-                    <button onClick={() => handleUpgradePlan(true)} className="w-full mt-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">Obtener Premium por $4.99</button>
+                    <p className="text-slate-300">• Cuadrícula de fotos de perfil: <b>Hasta 10 fotos</b></p>
+                    <button onClick={() => handleUpgradePlan(true)} className="w-full mt-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">Obtener Premium por $4.99 USD</button>
                   </div>
                 </div>
               </div>
