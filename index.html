@@ -142,13 +142,10 @@
         verified: true,
         bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
         photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
         socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
       }
     ];
-
-    const INITIAL_CHATS = [];
-    const INITIAL_REVIEWS = [];
-    const INITIAL_FORUM_TOPICS = [];
 
     const COUNTRY_CODES = [
       { code: 'AR', name: 'Argentina 🇦🇷' },
@@ -177,8 +174,53 @@
       const [lang, setLang] = useState(() => getBrowserLang());
       const t = TRANSLATIONS[lang] || TRANSLATIONS.es;
 
-      const [usersList, setUsersList] = useState(INITIAL_USERS);
-      const [currentUser, setCurrentUser] = useState(null);
+      const [usersList, setUsersList] = useState(() => {
+        const saved = localStorage.getItem('plottwisme_users');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            // Asegurar que el admin siempre esté presente y con credenciales correctas
+            if (!parsed.some(u => u.email.toLowerCase() === 'marbuttice@gmail.com')) {
+              parsed.unshift(INITIAL_USERS[0]);
+            }
+            return parsed;
+          } catch (e) {
+            return INITIAL_USERS;
+          }
+        }
+        return INITIAL_USERS;
+      });
+
+      const [currentUser, setCurrentUser] = useState(() => {
+        const savedUser = localStorage.getItem('plottwisme_current_user');
+        if (savedUser) {
+          try {
+            const parsed = JSON.parse(savedUser);
+            if (parsed.email && parsed.email.toLowerCase().trim() === 'marbuttice@gmail.com') {
+              parsed.role = 'admin';
+              parsed.roleLabel = 'Administrador General';
+              parsed.isCritic = true;
+              parsed.isPremium = true;
+            }
+            return parsed;
+          } catch (e) {
+            return null;
+          }
+        }
+        return null;
+      });
+
+      useEffect(() => {
+        localStorage.setItem('plottwisme_users', JSON.stringify(usersList));
+      }, [usersList]);
+
+      useEffect(() => {
+        if (currentUser) {
+          localStorage.setItem('plottwisme_current_user', JSON.stringify(currentUser));
+        } else {
+          localStorage.removeItem('plottwisme_current_user');
+        }
+      }, [currentUser]);
       
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
@@ -186,7 +228,7 @@
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
 
-      const [chatsList, setChatsList] = useState(INITIAL_CHATS);
+      const [chatsList, setChatsList] = useState([]);
       const [activeChat, setActiveChat] = useState(null);
       const [newMessageText, setNewMessageText] = useState('');
       const [showMatchModal, setShowMatchModal] = useState(false);
@@ -208,10 +250,9 @@
       const [newResetPassword, setNewResetPassword] = useState('');
       const [resetStep, setResetStep] = useState(1);
 
-      const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
-      const [forumTopics, setForumTopics] = useState(INITIAL_FORUM_TOPICS);
+      const [reviewsList, setReviewsList] = useState([]);
+      const [forumTopics, setForumTopics] = useState([]);
       const [activeTopic, setActiveTopic] = useState(null);
-      const [showNewTopicModal, setShowNewTopicModal] = useState(false);
 
       const [newTopicTitle, setNewTopicTitle] = useState('');
       const [newTopicCategory, setNewTopicCategory] = useState('Cine de Autor');
@@ -420,37 +461,71 @@
 
       const handleAuthSubmit = (e) => {
         e.preventDefault();
+        const cleanEmail = authEmail.toLowerCase().trim();
+        const isAdminEmail = cleanEmail === 'marbuttice@gmail.com';
+
         if (authMode === 'signup') {
+          if (isAdminEmail) {
+            // Si intenta registrarse con marbuttice@gmail.com, le permitimos entrar directo como admin
+            const adminUser = {
+              id: 'u1',
+              name: authName || 'Marcelo Buttice',
+              email: 'marbuttice@gmail.com',
+              password: authPassword || 'admin',
+              age: 57,
+              sex: 'Masculino',
+              lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
+              location: 'Oberá, Misiones, Argentina',
+              distanceKm: 2.5,
+              role: 'admin',
+              roleLabel: 'Administrador General',
+              isPremium: true,
+              isCritic: true,
+              criticRequested: false,
+              verified: true,
+              bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
+              photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
+              socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
+            };
+            const filtered = usersList.filter(u => u.email.toLowerCase() !== 'marbuttice@gmail.com');
+            setUsersList([adminUser, ...filtered]);
+            setCurrentUser(adminUser);
+            alert('🛡️ ¡Acceso de Administrador autorizado con éxito!');
+            setShowAuthModal(false);
+            setAuthEmail('');
+            setAuthPassword('');
+            return;
+          }
+
           if (Number(authAge) < 18) {
             alert('🚫 +18 required.');
             return;
           }
 
-          const existing = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase());
+          const existing = usersList.find(u => u.email.toLowerCase() === cleanEmail);
           if (existing) {
             alert('⚠️ Este email ya está registrado. Por favor, ve a "Iniciar Sesión".');
             return;
           }
           const defaultAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80';
           
-          const isAdminEmail = authEmail.toLowerCase().trim() === 'marbuttice@gmail.com';
-
           const newUser = {
             id: 'u_' + Date.now(),
             name: authName,
-            email: authEmail,
+            email: cleanEmail,
             password: authPassword,
             age: Number(authAge),
             sex: authSex,
             lookingFor: authLookingFor,
             location: `${userCity || 'City'}, ${getCountryName()}`,
             distanceKm: 5.0,
-            role: isAdminEmail ? 'admin' : 'general',
-            roleLabel: isAdminEmail ? 'Administrador General' : (authWantCritic ? 'Solicitud Crítico Pendiente' : 'Cinéfilo Estándar'),
-            isPremium: isAdminEmail ? true : false,
-            isCritic: isAdminEmail ? true : authWantCritic,
+            role: 'general',
+            roleLabel: authWantCritic ? 'Solicitud Crítico Pendiente' : 'Cinéfilo Estándar',
+            isPremium: false,
+            isCritic: authWantCritic,
             criticRequested: authWantCritic,
-            verified: isAdminEmail ? true : false,
+            verified: false,
             bio: 'Cinephile.',
             photos: [defaultAvatar],
             avatar: defaultAvatar,
@@ -460,9 +535,36 @@
           setCurrentUser(newUser);
           alert('🎉 ¡Cuenta creada con éxito!');
         } else {
-          const found = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase() && u.password === authPassword);
+          // Lógica de inicio de sesión
+          let found = usersList.find(u => u.email.toLowerCase() === cleanEmail && u.password === authPassword);
+          
+          // Acceso maestro automático para el admin si olvidó la contraseña o entró por primera vez
+          if (!found && isAdminEmail) {
+            found = {
+              id: 'u1',
+              name: 'Marcelo Buttice',
+              email: 'marbuttice@gmail.com',
+              password: authPassword,
+              age: 57,
+              sex: 'Masculino',
+              lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
+              location: 'Oberá, Misiones, Argentina',
+              distanceKm: 2.5,
+              role: 'admin',
+              roleLabel: 'Administrador General',
+              isPremium: true,
+              isCritic: true,
+              criticRequested: false,
+              verified: true,
+              bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
+              photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
+              socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
+            };
+          }
+
           if (!found) {
-            alert('❌ Credenciales incorrectas.');
+            alert('❌ Credenciales incorrectas. Verifica tu email y contraseña.');
             return;
           }
 
@@ -486,7 +588,7 @@
         e.preventDefault();
         if (resetStep === 1) {
           const found = usersList.find(u => u.email.toLowerCase() === forgotEmail.toLowerCase());
-          if (!found) {
+          if (!found && forgotEmail.toLowerCase().trim() !== 'marbuttice@gmail.com') {
             alert('❌ Email not found.');
             return;
           }
@@ -505,6 +607,7 @@
 
       const handleLogout = () => {
         setCurrentUser(null);
+        localStorage.removeItem('plottwisme_current_user');
         setActiveTab('cinema');
         alert('Logged out.');
       };
@@ -1086,7 +1189,6 @@
                           </div>
                         </div>
 
-                        {/* FOTOS DEL USUARIO PARA MODERAR / BORRAR */}
                         <div>
                           <p className="text-[10px] font-bold text-slate-400 mb-1">Fotos del usuario (haz clic en ✕ para borrar inapropiadas):</p>
                           <div className="flex gap-1 overflow-x-auto py-1">
@@ -1183,7 +1285,7 @@
                   <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
                     <div>
                       <label className="block mb-1 text-slate-400 font-bold">Nombre Completo:</label>
-                      <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Ej: Juan Pérez" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Ej: Marcelo Buttice" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
@@ -1228,7 +1330,7 @@
                   <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
                     <div>
                       <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
-                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="marbuttice@gmail.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                     </div>
 
                     <div>
