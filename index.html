@@ -199,7 +199,7 @@
               }
             },
             () => {
-              setUserCity('Buenos Aires'); // Valor por defecto si rechaza el GPS
+              setUserCity('Buenos Aires');
             }
           );
         } else {
@@ -232,6 +232,22 @@
         const country = getCountryName();
         const query = customQueryFormat.replace('{city}', cleanCity).replace('{country}', country);
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=es`, '_blank');
+      };
+
+      // MANEJADOR DE SUBIDA RÁPIDA DE FOTO LOCAL (FILE READER)
+      const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          if (file.size > 2 * 1024 * 1024) {
+            alert('⚠️ La imagen es muy pesada. Intenta subir una foto menor a 2MB.');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setEditAvatar(reader.result);
+          };
+          reader.readAsDataURL(file);
+        }
       };
 
       // ACCIONES DE MODERACIÓN (ADMIN)
@@ -330,7 +346,6 @@
         alert('Sesión cerrada.');
       };
 
-      // LÓGICA DE RADAR Y DISTANCIAS SEGÚN PLAN (Estándar 100km, Premium 500km)
       const maxDistance = currentUser?.isPremium ? 500 : 100;
       const filteredCandidates = useMemo(() => {
         return usersList.filter(u => u.email !== currentUser?.email && u.distanceKm <= maxDistance);
@@ -460,7 +475,6 @@
                 </div>
               </div>
 
-              {/* CONTROLES UBICACIÓN (Solo visibles o editables por Administrador en su panel, o ciudad limpia para carteleras) */}
               <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad Cartelera:</span>
                 <input 
@@ -471,7 +485,6 @@
                   className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-32 text-amber-300 focus:outline-none capitalize text-xs" 
                 />
 
-                {/* SELECTOR DE PAÍS SOLO VISIBLE SI ES ADMIN */}
                 {currentUser?.role === 'admin' && (
                   <>
                     <span className="text-slate-600">|</span>
@@ -645,7 +658,6 @@
               </div>
             )}
 
-            {/* RADAR DE MATCHES (Limitado por distancia de plan) */}
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold">
@@ -731,6 +743,7 @@
               </div>
             )}
 
+            {/* PERFIL (CON BOTÓN DE SUBIDA RÁPIDA DE FOTO DESDE DISPOSITIVO) */}
             {activeTab === 'profile' && currentUser && (
               <div className="max-w-xl mx-auto space-y-6">
                 <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
@@ -745,10 +758,26 @@
                   </div>
 
                   <div className="space-y-4 text-xs">
+                    
+                    {/* PREVISUALIZACIÓN Y SELECTOR DE ARCHIVO LOCAL */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                      <img src={editAvatar} alt="Avatar preview" className="w-20 h-20 rounded-2xl object-cover border border-amber-500/40" />
+                      <div className="space-y-2 flex-1 w-full text-center sm:text-left">
+                        <label className="block font-bold text-amber-400">📸 Subir foto desde tu dispositivo:</label>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleImageUpload} 
+                          className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" 
+                        />
+                      </div>
+                    </div>
+
                     <div>
-                      <label className="block mb-1 text-slate-400">Foto URL (Hasta 10 permitidas en Premium):</label>
+                      <label className="block mb-1 text-slate-400">O ingresa URL de foto externa:</label>
                       <input type="url" value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                     </div>
+
                     <div>
                       <label className="block mb-1 text-slate-400">Biografía:</label>
                       <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
@@ -759,7 +788,7 @@
               </div>
             )}
 
-            {/* PANEL ADMIN (CON GESTIÓN DE CRÍTICOS, FOTOS Y SANCIONES) */}
+            {/* PANEL ADMIN */}
             {activeTab === 'admin' && currentUser?.role === 'admin' && (
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -836,7 +865,7 @@
 
           </main>
 
-          {/* MODAL SUSCRIPCIÓN (BENEFICIOS Y PRECIO $4.99) */}
+          {/* MODAL SUSCRIPCIÓN */}
           {showSubscriptionModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
@@ -869,7 +898,7 @@
             </div>
           )}
 
-          {/* MODAL AUTENTICACIÓN (CREAR CUENTA + NUEVAS SEXUALIDADES + SOLICITUD CRÍTICO) */}
+          {/* MODAL AUTENTICACIÓN */}
           {showAuthModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
