@@ -134,7 +134,6 @@
       { id: 'theaters', label: '🏛️ Salas & Cines Cercanos', queryFormat: 'cines cerca de {city} {country}' },
       { id: 'premieres', label: '⭐ Estrenos de la Semana', queryFormat: 'estrenos de cine en {city} {country}' }
     ];
-
     function App() {
       const [usersList, setUsersList] = useState(INITIAL_USERS);
       const [currentUser, setCurrentUser] = useState(() => INITIAL_USERS[0]);
@@ -145,19 +144,16 @@
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
 
-      // ESTADOS CHAT Y MATCHES
       const [chatsList, setChatsList] = useState(INITIAL_CHATS);
       const [activeChat, setActiveChat] = useState(null);
       const [newMessageText, setNewMessageText] = useState('');
       const [showMatchModal, setShowMatchModal] = useState(false);
       const [matchedUser, setMatchedUser] = useState(null);
 
-      // MODALES AUTENTICACIÓN
       const [showAuthModal, setShowAuthModal] = useState(false);
       const [authMode, setAuthMode] = useState('signup');
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-      // ESTADOS DE REGISTRO / LOGIN / RECUPERACIÓN
       const [authEmail, setAuthEmail] = useState('');
       const [authPassword, setAuthPassword] = useState('');
       const [authName, setAuthName] = useState('');
@@ -170,7 +166,6 @@
       const [newResetPassword, setNewResetPassword] = useState('');
       const [resetStep, setResetStep] = useState(1);
 
-      // ESTADOS DE RESEÑAS Y FORO
       const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
       const [forumTopics, setForumTopics] = useState(INITIAL_FORUM_TOPICS);
       const [activeTopic, setActiveTopic] = useState(null);
@@ -185,7 +180,6 @@
       const [newReviewRating, setNewReviewRating] = useState(10);
       const [newReviewText, setNewReviewText] = useState('');
 
-      // PERFIL Y FOTOS
       const [editBio, setEditBio] = useState(currentUser ? currentUser.bio : '');
       const [editPhotos, setEditPhotos] = useState(currentUser ? (currentUser.photos || [currentUser.avatar]) : []);
       const [editRadio, setEditRadio] = useState(currentUser?.socialLinks?.radio || '');
@@ -216,981 +210,79 @@
           setUserCity('Buenos Aires');
         }
       }, []);
+      function App() {
+      const [usersList, setUsersList] = useState(INITIAL_USERS);
+      const [currentUser, setCurrentUser] = useState(() => INITIAL_USERS[0]);
+      
+      const [activeTab, setActiveTab] = useState('cinema');
+      const [currentIndex, setCurrentIndex] = useState(0);
+
+      const [userCity, setUserCity] = useState('');
+      const [userCountryCode, setUserCountryCode] = useState('AR');
+
+      const [chatsList, setChatsList] = useState(INITIAL_CHATS);
+      const [activeChat, setActiveChat] = useState(null);
+      const [newMessageText, setNewMessageText] = useState('');
+      const [showMatchModal, setShowMatchModal] = useState(false);
+      const [matchedUser, setMatchedUser] = useState(null);
+
+      const [showAuthModal, setShowAuthModal] = useState(false);
+      const [authMode, setAuthMode] = useState('signup');
+      const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+
+      const [authEmail, setAuthEmail] = useState('');
+      const [authPassword, setAuthPassword] = useState('');
+      const [authName, setAuthName] = useState('');
+      const [authAge, setAuthAge] = useState(25);
+      const [authSex, setAuthSex] = useState('Masculino');
+      const [authLookingFor, setAuthLookingFor] = useState('Amigos Cinéfilos');
+      const [authWantCritic, setAuthWantCritic] = useState(false);
+      
+      const [forgotEmail, setForgotEmail] = useState('');
+      const [newResetPassword, setNewResetPassword] = useState('');
+      const [resetStep, setResetStep] = useState(1);
+
+      const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
+      const [forumTopics, setForumTopics] = useState(INITIAL_FORUM_TOPICS);
+      const [activeTopic, setActiveTopic] = useState(null);
+      const [showNewTopicModal, setShowNewTopicModal] = useState(false);
+
+      const [newTopicTitle, setNewTopicTitle] = useState('');
+      const [newTopicCategory, setNewTopicCategory] = useState('Cine de Autor');
+      const [newTopicContent, setNewTopicContent] = useState('');
+      const [newCommentText, setNewCommentText] = useState('');
+
+      const [newReviewMovie, setNewReviewMovie] = useState('');
+      const [newReviewRating, setNewReviewRating] = useState(10);
+      const [newReviewText, setNewReviewText] = useState('');
+
+      const [editBio, setEditBio] = useState(currentUser ? currentUser.bio : '');
+      const [editPhotos, setEditPhotos] = useState(currentUser ? (currentUser.photos || [currentUser.avatar]) : []);
+      const [editRadio, setEditRadio] = useState(currentUser?.socialLinks?.radio || '');
+      const [editTv, setEditTv] = useState(currentUser?.socialLinks?.tv || '');
 
       useEffect(() => {
-        if (currentUser) {
-          setEditBio(currentUser.bio || '');
-          setEditPhotos(currentUser.photos || (currentUser.avatar ? [currentUser.avatar] : []));
-          setEditRadio(currentUser.socialLinks?.radio || '');
-          setEditTv(currentUser.socialLinks?.tv || '');
-        }
-      }, [currentUser]);
-
-      const getCountryName = () => {
-        const found = COUNTRY_CODES.find(c => c.code === userCountryCode);
-        return found ? found.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
-      };
-
-      const openGoogleEngine = (customQueryFormat = 'cartelera de cines en {city} {country}') => {
-        const cleanCity = userCity.trim() || 'Buenos Aires';
-        const country = getCountryName();
-        const query = customQueryFormat.replace('{city}', cleanCity).replace('{country}', country);
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=es`, '_blank');
-      };
-
-      const handleMatchUser = (candidate) => {
-        if (!currentUser) {
-          setShowAuthModal(true);
-          return;
-        }
-
-        setMatchedUser(candidate);
-        setShowMatchModal(true);
-
-        const existingChat = chatsList.find(c => c.userId === candidate.id);
-        if (!existingChat) {
-          const newChat = {
-            id: 'chat_' + candidate.id,
-            userId: candidate.id,
-            userName: candidate.name,
-            userAvatar: candidate.avatar,
-            messages: [
-              { id: 'm_init', sender: candidate.name, text: `¡Hola ${currentUser.name}! Hicimos match en Plottwisme 🍿 ¿Qué película vemos?`, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
-            ]
-          };
-          setChatsList([newChat, ...chatsList]);
-        }
-      };
-
-      const handleSendMessage = (e) => {
-        e.preventDefault();
-        if (!newMessageText.trim() || !activeChat) return;
-
-        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        const newMsg = {
-          id: 'msg_' + Date.now(),
-          sender: currentUser.name,
-          text: newMessageText,
-          time: timeStr
-        };
-
-        const updatedChats = chatsList.map(chat => {
-          if (chat.id === activeChat.id) {
-            const updated = { ...chat, messages: [...chat.messages, newMsg] };
-            setActiveChat(updated);
-            return updated;
-          }
-          return chat;
-        });
-
-        setChatsList(updatedChats);
-        setNewMessageText('');
-      };
-
-      const handleImageCompressionAndAdd = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const maxPhotosAllowed = currentUser?.isPremium ? 10 : 3;
-        if (editPhotos.length >= maxPhotosAllowed) {
-          alert(`⚠️ Tu plan actual permite un máximo de ${maxPhotosAllowed} fotos. ¡Actualiza a Premium para tener hasta 10 fotos!`);
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 500;
-            const MAX_HEIGHT = 500;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-            } else {
-              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
-            setEditPhotos([...editPhotos, compressedDataUrl]);
-          };
-          img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-      };
-
-      const handleRemovePhoto = (indexToRemove) => {
-        setEditPhotos(editPhotos.filter((_, idx) => idx !== indexToRemove));
-      };
-
-      const handleDeleteUser = (userId) => {
-        if (window.confirm('⚠️ ¿Estás seguro de eliminar a este usuario permanentemente?')) {
-          setUsersList(usersList.filter(u => u.id !== userId));
-        }
-      };
-
-      const handleSanctionUser = (userId) => {
-        if (window.confirm('🚫 ¿Suspender a este usuario?')) {
-          setUsersList(usersList.map(u => u.id === userId ? { ...u, roleLabel: 'Sancionado ⛔' } : u));
-        }
-      };
-
-      const handleDeletePhoto = (userId, photoIndex) => {
-        if (window.confirm('🗑️ ¿Eliminar esta foto por incumplir normas?')) {
-          setUsersList(usersList.map(u => {
-            if (u.id === userId) {
-              const updatedPhotos = (u.photos || [u.avatar]).filter((_, i) => i !== photoIndex);
-              return { ...u, photos: updatedPhotos, avatar: updatedPhotos[0] || 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80' };
-            }
-            return u;
-          }));
-        }
-      };
-
-      const handleToggleCriticBadge = (userId) => {
-        setUsersList(usersList.map(u => {
-          if (u.id === userId) {
-            const nextVal = !u.isCritic;
-            return { 
-              ...u, 
-              isCritic: nextVal, 
-              roleLabel: nextVal ? 'Cinéfilo Pro & Crítico' : 'Cinéfilo Estándar',
-              criticRequested: false 
-            };
-          }
-          return u;
-        }));
-      };
-
-      const handleAuthSubmit = (e) => {
-        e.preventDefault();
-        if (authMode === 'signup') {
-          if (Number(authAge) < 18) {
-            alert('🚫 Acceso denegado: Debes ser mayor de 18 años para registrarte en Plottwisme.');
-            return;
-          }
-
-          const existing = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase());
-          if (existing) {
-            alert('⚠️ Este email ya está registrado. Intenta iniciar sesión.');
-            return;
-          }
-          const defaultAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80';
-          const newUser = {
-            id: 'u_' + Date.now(),
-            name: authName,
-            email: authEmail,
-            password: authPassword,
-            age: Number(authAge),
-            sex: authSex,
-            lookingFor: authLookingFor,
-            location: `${userCity || 'Ciudad'}, ${getCountryName()}`,
-            distanceKm: 5.0,
-            role: 'general',
-            roleLabel: authWantCritic ? 'Solicitud Crítico Pendiente' : 'Cinéfilo Estándar',
-            isPremium: false,
-            isCritic: false,
-            criticRequested: authWantCritic,
-            verified: false,
-            bio: '¡Hola! Soy cinéfilo en Plottwisme.',
-            photos: [defaultAvatar],
-            avatar: defaultAvatar,
-            socialLinks: {}
-          };
-          setUsersList([...usersList, newUser]);
-          setCurrentUser(newUser);
-          alert(authWantCritic ? '🎉 ¡Cuenta creada! Solicitud de crítico enviada al Administrador.' : '🎉 ¡Cuenta creada con éxito!');
-        } else {
-          const found = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase() && u.password === authPassword);
-          if (!found) {
-            alert('❌ Credenciales incorrectas.');
-            return;
-          }
-          setCurrentUser(found);
-          alert(`👋 ¡Bienvenido de nuevo, ${found.name}!`);
-        }
-        setShowAuthModal(false);
-        setAuthEmail('');
-        setAuthPassword('');
-      };
-
-      const handleForgotSubmit = (e) => {
-        e.preventDefault();
-        if (resetStep === 1) {
-          const found = usersList.find(u => u.email.toLowerCase() === forgotEmail.toLowerCase());
-          if (!found) {
-            alert('❌ No se encontró ninguna cuenta registrada con este correo electrónico.');
-            return;
-          }
-          setResetStep(2);
-        } else {
-          if (!newResetPassword) {
-            alert('⚠️ Ingresa una nueva contraseña.');
-            return;
-          }
-          setUsersList(usersList.map(u => u.email.toLowerCase() === forgotEmail.toLowerCase() ? { ...u, password: newResetPassword } : u));
-          alert('✅ ¡Contraseña restablecida con éxito!');
-          setShowAuthModal(false);
-          setAuthMode('login');
-          setResetStep(1);
-          setForgotEmail('');
-          setNewResetPassword('');
-        }
-      };
-
-      const handleLogout = () => {
-        setCurrentUser(null);
-        setActiveTab('cinema');
-        alert('Sesión cerrada.');
-      };
-
-      const maxDistance = currentUser?.isPremium ? 500 : 100;
-      const filteredCandidates = useMemo(() => {
-        return usersList.filter(u => u.email !== currentUser?.email && u.distanceKm <= maxDistance);
-      }, [usersList, currentUser, maxDistance]);
-
-      const currentCandidate = filteredCandidates[currentIndex];
-
-      const handleUpgradePlan = (isPrem) => {
-        if (!currentUser) {
-          setShowAuthModal(true);
-          return;
-        }
-        const updated = { 
-          ...currentUser, 
-          isPremium: isPrem, 
-          roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar' 
-        };
-        setCurrentUser(updated);
-        setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
-        setShowSubscriptionModal(false);
-        alert(isPrem ? '⭐ ¡Felicidades! Ahora eres Premium ($4.99 USD/mes).' : 'Cambiado a plan Estándar.');
-      };
-
-      const handleSaveProfile = (e) => {
-        e.preventDefault();
-        if (!currentUser) return;
-        const primaryAvatar = editPhotos.length > 0 ? editPhotos[0] : 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80';
-        const updated = {
-          ...currentUser,
-          bio: editBio,
-          photos: editPhotos,
-          avatar: primaryAvatar,
-          socialLinks: { radio: editRadio, tv: editTv }
-        };
-        setCurrentUser(updated);
-        setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
-        alert('✅ ¡Perfil actualizado correctamente!');
-      };
-
-      const handlePublishReview = (e) => {
-        e.preventDefault();
-        if (!currentUser?.isCritic) {
-          alert('🔒 Solo los usuarios con Insignia de Crítico pueden publicar reseñas.');
-          return;
-        }
-        if (!newReviewMovie || !newReviewText) return;
-        const newRev = {
-          id: 'r_' + Date.now(),
-          author: currentUser.name,
-          movieTitle: newReviewMovie,
-          rating: Number(newReviewRating),
-          content: newReviewText,
-          mediaOutlet: currentUser.socialLinks?.radio || currentUser.roleLabel,
-          date: new Date().toISOString().split('T')[0]
-        };
-        setReviewsList([newRev, ...reviewsList]);
-        setNewReviewMovie('');
-        setNewReviewText('');
-        alert('📝 ¡Reseña publicada!');
-      };
-
-      const handleCreateTopic = (e) => {
-        e.preventDefault();
-        if (!currentUser) { setShowAuthModal(true); return; }
-        if (!newTopicTitle || !newTopicContent) return;
-        const newTopic = {
-          id: 'f_' + Date.now(),
-          title: newTopicTitle,
-          category: newTopicCategory,
-          author: currentUser.name,
-          date: new Date().toISOString().split('T')[0],
-          repliesCount: 0,
-          content: newTopicContent,
-          comments: []
-        };
-        setForumTopics([newTopic, ...forumTopics]);
-        setNewTopicTitle('');
-        setNewTopicContent('');
-        setShowNewTopicModal(false);
-        alert('💬 ¡Debate creado!');
-      };
-
-      const handleAddComment = (e) => {
-        e.preventDefault();
-        if (!currentUser || !newCommentText || !activeTopic) return;
-        const comment = {
-          id: 'c_' + Date.now(),
-          author: currentUser.name,
-          date: new Date().toISOString().split('T')[0],
-          text: newCommentText
-        };
-        const updatedTopics = forumTopics.map(t => {
-          if (t.id === activeTopic.id) {
-            const updatedComments = [...t.comments, comment];
-            const updatedT = { ...t, comments: updatedComments, repliesCount: updatedComments.length };
-            setActiveTopic(updatedT);
-            return updatedT;
-          }
-          return t;
-        });
-        setForumTopics(updatedTopics);
-        setNewCommentText('');
-      };
-
-      return (
-        <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
-          
-          <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
-            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
-              
-              <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }}>
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center font-bold text-xl text-slate-950">P</div>
-                <div>
-                  <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
-                  <p className="text-[10px] uppercase text-slate-400 font-bold">
-                    {currentUser ? (currentUser.isPremium ? '⭐ Premium (500km • 10 Fotos)' : '👤 Estándar (100km • 3 Fotos)') : '🌐 Invitado'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
-                <span className="text-amber-500 font-bold whitespace-nowrap">📍 Cartelera:</span>
-                <input 
-                  type="text" 
-                  value={userCity} 
-                  onChange={(e) => setUserCity(e.target.value)} 
-                  placeholder="Tu Ciudad"
-                  className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-32 text-amber-300 focus:outline-none capitalize text-xs" 
-                />
-
-                {currentUser?.role === 'admin' && (
-                  <>
-                    <span className="text-slate-600">|</span>
-                    <span className="text-amber-500 font-bold whitespace-nowrap">🌎 País:</span>
-                    <select 
-                      value={userCountryCode} 
-                      onChange={(e) => setUserCountryCode(e.target.value)}
-                      className="bg-slate-900 text-amber-300 font-bold rounded-lg px-2 py-1 text-xs border border-amber-500/30 focus:outline-none cursor-pointer"
-                    >
-                      {COUNTRY_CODES.map(c => (
-                        <option key={c.code} value={c.code}>{c.name}</option>
-                      ))}
-                    </select>
-                  </>
-                )}
-              </div>
-
-              {/* NAV AJUSTADO CON FLEX-WRAP PARA QUE NUNCA SE ESCONDAN LOS BOTONES */}
-              <nav className="flex flex-wrap items-center justify-center gap-1.5 p-1.5 rounded-2xl border border-slate-800 bg-slate-900">
-                <button onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
-                <button onClick={() => { setActiveTab('forums'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>💬 Foros</button>
-                <button onClick={() => { setActiveTab('radar'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
-                <button onClick={() => { setActiveTab('chats'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'chats' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>💬 Chats ({chatsList.length})</button>
-                <button onClick={() => { setActiveTab('critics'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>📰 Críticos</button>
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                const { latitude, longitude } = position.coords;
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+                const data = await response.json();
+                const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Mi Ubicación';
+                const countryCode = data.address.country_code ? data.address.country_code.toUpperCase() : 'AR';
                 
-                {currentUser && (
-                  <button onClick={() => { setActiveTab('profile'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>👤 Perfil</button>
-                )}
-
-                {currentUser?.role === 'admin' && (
-                  <button onClick={() => { setActiveTab('admin'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/50'}`}>
-                    🛡️ Admin
-                  </button>
-                )}
-
-                {currentUser ? (
-                  <button onClick={handleLogout} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">
-                    🚪 Salir
-                  </button>
-                ) : (
-                  <button onClick={() => { setAuthMode('signup'); setResetStep(1); setShowAuthModal(true); }} className="px-3 py-1.5 rounded-xl text-xs font-black bg-amber-500 text-slate-950 hover:bg-amber-400 whitespace-nowrap">
-                    ✨ Crear Cuenta
-                  </button>
-                )}
-              </nav>
-            </div>
-          </header>
-
-          <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
-            
-            {activeTab === 'cinema' && (
-              <div className="space-y-8">
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/30 p-8 shadow-2xl">
-                  <div className="max-w-2xl space-y-4">
-                    <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-3 py-1 rounded-md uppercase tracking-wider">
-                      Motor Oficial Geolocalizado
-                    </span>
-                    <h2 className="text-3xl font-black text-white leading-tight">
-                      Cartelera en Tiempo Real para <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
-                    </h2>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      Accede instantáneamente al panel interactivo oficial con las películas, complejos, horarios y salas disponibles hoy en tu zona.
-                    </p>
-                    <div className="pt-2">
-                      <button 
-                        onClick={() => openGoogleEngine()} 
-                        className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
-                      >
-                        <span>🏛️ Abrir Cartelera de {userCity || 'tu ciudad'}</span>
-                        <span>↗</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-black text-white flex items-center gap-2">
-                    <span>⚡ Buscador Directo por Categoría en</span>
-                    <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
-                  </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {SEARCH_CATEGORIES.map(cat => (
-                      <div 
-                        key={cat.id} 
-                        onClick={() => openGoogleEngine(cat.queryFormat)}
-                        className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 shadow-lg group flex flex-col justify-between space-y-4"
-                      >
-                        <div>
-                          <h4 className="font-bold text-white group-hover:text-amber-400 transition-colors text-sm">{cat.label}</h4>
-                          <p className="text-xs text-slate-400 mt-1">Sincroniza salas y funciones en tiempo real.</p>
-                        </div>
-                        <div className="text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t border-slate-800">
-                          <span>Consultar Google</span>
-                          <span>↗</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'forums' && (
-              <div className="space-y-6 max-w-4xl mx-auto">
-                {activeTopic ? (
-                  <div className="space-y-6">
-                    <button onClick={() => setActiveTopic(null)} className="bg-slate-900 border border-slate-800 text-amber-400 hover:text-amber-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all">
-                      <span>← Volver a los debates</span>
-                    </button>
-
-                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
-                        <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase">
-                          {activeTopic.category}
-                        </span>
-                        <span className="text-xs text-slate-400">Por <b>{activeTopic.author}</b> • {activeTopic.date}</span>
-                      </div>
-                      <h2 className="text-2xl font-black text-white">{activeTopic.title}</h2>
-                      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{activeTopic.content}</p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-black text-amber-500">💬 Respuestas ({activeTopic.comments.length})</h3>
-
-                      {activeTopic.comments.map(c => (
-                        <div key={c.id} className="bg-slate-900/80 border border-slate-800/80 p-4 rounded-2xl space-y-2">
-                          <div className="flex justify-between items-center text-xs text-slate-400">
-                            <span className="font-bold text-white">{c.author}</span>
-                            <span>{c.date}</span>
-                          </div>
-                          <p className="text-xs text-slate-300 leading-relaxed">{c.text}</p>
-                        </div>
-                      ))}
-
-                      <form onSubmit={handleAddComment} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-                        <textarea rows="3" value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} placeholder={currentUser ? "Escribe tu respuesta..." : "Inicia sesión para responder..."} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500" required disabled={!currentUser} />
-                        <button type="submit" disabled={!currentUser} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider disabled:opacity-50">
-                          Publicar Respuesta
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
-                      <div>
-                        <h2 className="text-2xl font-black text-white">💬 Foros de Discusión Cinéfila</h2>
-                        <p className="text-xs text-slate-400 mt-1">Intercambiá opiniones y teorías con la comunidad.</p>
-                      </div>
-                      <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
-                        ✍️ Crear Nuevo Debate
-                      </button>
-                    </div>
-
-                    <div className="space-y-4">
-                      {forumTopics.map(topic => (
-                        <div key={topic.id} onClick={() => setActiveTopic(topic)} className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all space-y-3 group">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">{topic.category}</span>
-                            <span className="text-slate-500 text-[10px]">{topic.date}</span>
-                          </div>
-                          <h3 className="text-base font-bold text-white group-hover:text-amber-400 transition-colors">{topic.title}</h3>
-                          <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800">
-                            <span>Por <b>{topic.author}</b></span>
-                            <span className="text-amber-500 font-bold">💬 {topic.repliesCount} respuestas</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* RADAR DE MATCHES */}
-            {activeTab === 'radar' && (
-              <div className="flex flex-col items-center space-y-4">
-                <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold">
-                  📡 Radio activo: {currentUser?.isPremium ? '500 km (Plan Premium ⭐)' : '100 km (Plan Estándar 👤)'}
-                </div>
-
-                {currentCandidate ? (
-                  <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-                    <div className="relative h-96 w-full bg-slate-950">
-                      <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
-                        <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location} • Aprox. {currentCandidate.distanceKm} km</p>
-                      </div>
-                    </div>
-                    <div className="p-6 space-y-4">
-                      <p className="text-xs italic text-slate-300">"{currentCandidate.bio}"</p>
-                      <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
-                        <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
-                        <button onClick={() => { handleMatchUser(currentCandidate); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-110 transition-all">🍿</button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
-                    <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay más perfiles en tu radio de {currentUser?.isPremium ? '500km' : '100km'}.</h3>
-                    <p className="text-xs text-slate-400">¡Actualiza a Premium para expandir tu radar o espera nuevos cinéfilos!</p>
-                    <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Vista</button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* SECCIÓN DE CHATS ENTRE USUARIOS CON MATCH */}
-            {activeTab === 'chats' && (
-              <div className="max-w-4xl mx-auto space-y-6">
-                <h2 className="text-2xl font-black text-white">💬 Mis Conversaciones & Matches</h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900 border border-slate-800 rounded-3xl p-4 min-h-[450px]">
-                  <div className="border-r border-slate-800 pr-3 space-y-2">
-                    <h3 className="text-xs font-bold text-amber-500 uppercase px-2">Chats Activos</h3>
-                    {chatsList.length === 0 ? (
-                      <p className="text-xs text-slate-400 p-2">Aún no tienes matches. ¡Ve al Radar y haz Match con otros cinéfilos!</p>
-                    ) : (
-                      chatsList.map(chat => (
-                        <div 
-                          key={chat.id} 
-                          onClick={() => setActiveChat(chat)}
-                          className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all ${activeChat?.id === chat.id ? 'bg-amber-500/20 border border-amber-500/50' : 'hover:bg-slate-800/60'}`}
-                        >
-                          <img src={chat.userAvatar} alt={chat.userName} className="w-12 h-12 rounded-full object-cover border border-amber-500/30" />
-                          <div className="overflow-hidden flex-1">
-                            <h4 className="font-bold text-white text-xs truncate">{chat.userName}</h4>
-                            <p className="text-[10px] text-slate-400 truncate">{chat.messages[chat.messages.length - 1]?.text || 'Nuevo match'}</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  <div className="md:col-span-2 flex flex-col justify-between bg-slate-950 rounded-2xl border border-slate-800 p-4">
-                    {activeChat ? (
-                      <>
-                        <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
-                          <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover" />
-                          <div>
-                            <h3 className="font-bold text-white text-sm">{activeChat.userName}</h3>
-                            <span className="text-[10px] text-emerald-400 font-bold">🟢 Match Activo en Plottwisme</span>
-                          </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto space-y-3 py-4 max-h-[300px] px-1">
-                          {activeChat.messages.map(msg => {
-                            const isMe = msg.sender === currentUser?.name;
-                            return (
-                              <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                <div className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-amber-500 text-slate-950 font-medium' : 'bg-slate-900 border border-slate-800 text-slate-100'}`}>
-                                  {msg.text}
-                                </div>
-                                <span className="text-[9px] text-slate-500 mt-1 px-1">{msg.time}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        <form onSubmit={handleSendMessage} className="flex gap-2 pt-3 border-t border-slate-800">
-                          <input 
-                            type="text" 
-                            value={newMessageText} 
-                            onChange={(e) => setNewMessageText(e.target.value)} 
-                            placeholder="Escribe un mensaje para coordinar una función..." 
-                            className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" 
-                            required 
-                          />
-                          <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider">
-                            Enviar
-                          </button>
-                        </form>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-center py-20 space-y-2">
-                        <div className="text-3xl">🍿</div>
-                        <p className="text-xs text-slate-400">Selecciona un chat de la lista izquierda para comenzar a conversar.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'critics' && (
-              <div className="space-y-6 max-w-3xl mx-auto">
-                <h2 className="text-2xl font-black">📰 Panel de Críticos & Medios</h2>
-                
-                {currentUser?.isCritic ? (
-                  <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-                    <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña en la Red (Insignia Verificada 🌟)</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <label className="block mb-1 text-slate-400">Película:</label>
-                        <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Película..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
-                      </div>
-                      <div>
-                        <label className="block mb-1 text-slate-400">Calificación (1-10):</label>
-                        <input type="number" min="1" max="10" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
-                      </div>
-                    </div>
-                    <div className="text-xs">
-                      <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
-                      <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu reseña..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña</button>
-                  </form>
-                ) : (
-                  <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2 text-xs">
-                    <p className="text-amber-400 font-bold">🔒 Necesitas la Insignia de Crítico para publicar reseñas oficiales.</p>
-                  </div>
-                )}
-
-                <div className="space-y-4 pt-2">
-                  {reviewsList.map(rev => (
-                    <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
-                      <div className="flex justify-between items-start text-xs">
-                        <div>
-                          <span className="font-bold text-amber-500 flex items-center gap-1">
-                            {rev.author} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">🌟 Crítico</span>
-                          </span>
-                          <p className="text-[10px] text-slate-400">🎙️ {rev.mediaOutlet}</p>
-                        </div>
-                        <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
-                      </div>
-                      <h4 className="text-base font-black">{rev.movieTitle}</h4>
-                      <p className="text-xs text-slate-300 leading-relaxed">{rev.content}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* PERFIL */}
-            {activeTab === 'profile' && currentUser && (
-              <div className="max-w-xl mx-auto space-y-6">
-                <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-4">
-                    <div>
-                      <h2 className="text-xl font-black">{currentUser.name}</h2>
-                      <p className="text-xs text-amber-500">{currentUser.roleLabel} {currentUser.isCritic ? '🌟' : ''}</p>
-                    </div>
-                    <button type="button" onClick={() => setShowSubscriptionModal(true)} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
-                      {currentUser.isPremium ? '⭐ Premium ($4.99)' : '🚀 Ver Planes'}
-                    </button>
-                  </div>
-
-                  <div className="space-y-4 text-xs">
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <label className="font-bold text-amber-400">
-                          📸 Tus Fotos ({editPhotos.length} / {currentUser?.isPremium ? '10 máx' : '3 máx'}):
-                        </label>
-                        <span className="text-[10px] text-slate-400">Se comprimen automáticamente</span>
-                      </div>
-
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                        {editPhotos.map((photo, idx) => (
-                          <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
-                            <img src={photo} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
-                            <button 
-                              type="button" 
-                              onClick={() => handleRemovePhoto(idx)} 
-                              className="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-90 hover:opacity-100 shadow"
-                            >
-                              ✕
-                            </button>
-                            {idx === 0 && (
-                              <span className="absolute bottom-1 left-1 bg-amber-500 text-slate-950 font-black text-[9px] px-1.5 py-0.5 rounded">
-                                Principal
-                              </span>
-                            )}
-                          </div>
-                        ))}
-
-                        {editPhotos.length < (currentUser?.isPremium ? 10 : 3) && (
-                          <label className="aspect-square rounded-2xl border-2 border-dashed border-slate-700 hover:border-amber-500 bg-slate-950/50 flex flex-col items-center justify-center cursor-pointer transition-all text-slate-400 hover:text-amber-400">
-                            <span className="text-2xl font-bold">+</span>
-                            <span className="text-[10px] mt-1">Subir Foto</span>
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              onChange={handleImageCompressionAndAdd} 
-                              className="hidden" 
-                            />
-                          </label>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 text-slate-400">Biografía:</label>
-                      <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
-                    </div>
-                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil</button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {/* PANEL ADMIN */}
-            {activeTab === 'admin' && currentUser?.role === 'admin' && (
-              <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <div>
-                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador General</h2>
-                    <p className="text-xs text-amber-400 mt-1">Control total de usuarios, insignias y país/ciudad global.</p>
-                  </div>
-                  <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
-                    Acceso Restringido
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <p className="text-xs text-slate-400">Usuarios Totales</p>
-                    <p className="text-2xl font-black text-white mt-1">{usersList.length}</p>
-                  </div>
-                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <p className="text-xs text-slate-400">Hilos en Foros</p>
-                    <p className="text-2xl font-black text-white mt-1">{forumTopics.length}</p>
-                  </div>
-                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <p className="text-xs text-slate-400">Seguridad Rol</p>
-                    <p className="text-sm font-black text-emerald-400 mt-1">Protegido 🟢</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-bold text-sm text-amber-500">Moderación de Usuarios, Fotos e Insignias de Crítico:</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {usersList.map(u => {
-                      const userPhotos = u.photos || [u.avatar];
-                      return (
-                        <div key={u.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
-                          <div className="flex gap-3 items-start">
-                            <img src={u.avatar} alt="Avatar" className="w-16 h-16 rounded-xl object-cover border border-slate-700" />
-                            <div>
-                              <p className="font-bold text-white text-sm">
-                                {u.name} {u.isCritic && '🌟'} <span className="text-slate-500 font-normal">({u.age}a)</span>
-                              </p>
-                              <p className="text-xs text-amber-400">{u.roleLabel} • {u.location}</p>
-                              <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-1 overflow-x-auto py-1">
-                            {userPhotos.map((p, pIdx) => (
-                              <div key={pIdx} className="relative group shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-slate-700">
-                                <img src={p} alt="mini" className="w-full h-full object-cover" />
-                                <button onClick={() => handleDeletePhoto(u.id, pIdx)} className="absolute inset-0 bg-rose-900/80 text-white text-[9px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Borrar foto">
-                                  ✕
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                          
-                          <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
-                            <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                              {u.isCritic ? '🌟 Quitar Insignia de Crítico' : '✨ Otorgar Insignia de Crítico'}
-                            </button>
-                            
-                            {u.role !== 'admin' && (
-                              <div className="flex gap-2">
-                                <button onClick={() => handleSanctionUser(u.id)} className="flex-1 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-orange-500/30">
-                                  ⛔ Sancionar
-                                </button>
-                                <button onClick={() => handleDeleteUser(u.id)} className="flex-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
-                                  🗑️ Eliminar
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-          </main>
-
-          {showMatchModal && matchedUser && (
-            <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl animate-bounce-in">
-                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 p-1">
-                  <img src={matchedUser.avatar} alt="Match" className="w-full h-full rounded-full object-cover" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black text-amber-400">🍿 ¡Es un Match Cinéfilo!</h3>
-                  <p className="text-xs text-slate-300 mt-2">A <b>{matchedUser.name}</b> también le interesa el cine. ¡Ya pueden chatear!</p>
-                </div>
-                <div className="flex flex-col gap-2 pt-2">
-                  <button 
-                    onClick={() => {
-                      setShowMatchModal(false);
-                      const chat = chatsList.find(c => c.userId === matchedUser.id);
-                      if (chat) setActiveChat(chat);
-                      setActiveTab('chats');
-                    }}
-                    className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider"
-                  >
-                    💬 Abrir Chat Ahora
-                  </button>
-                  <button 
-                    onClick={() => setShowMatchModal(false)}
-                    className="w-full bg-slate-800 text-slate-300 font-bold py-2.5 rounded-xl text-xs"
-                  >
-                    Seguir Buscando
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showSubscriptionModal && (
-            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">🚀 Planes de Suscripción Plottwisme</h3>
-                  <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
-                </div>
-
-                <div className="space-y-4 text-xs">
-                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-2">
-                    <h4 className="font-bold text-slate-300 text-sm">👤 Plan Estándar (Gratis)</h4>
-                    <p className="text-slate-400">• Radio de radar de búsqueda: <b>100 km</b></p>
-                    <p className="text-slate-400">• Matches: <b>Limitado a 1 por semana</b></p>
-                    <p className="text-slate-400">• Cuadrícula de fotos de perfil: <b>Hasta 3 fotos</b></p>
-                    <button onClick={() => handleUpgradePlan(false)} className="w-full mt-2 bg-slate-800 text-slate-300 font-bold py-2 rounded-xl">Seleccionar Estándar</button>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-amber-500/20 to-slate-950 border border-amber-500/50 p-4 rounded-2xl space-y-2">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-bold text-amber-400 text-sm">⭐ Plan Premium</h4>
-                      <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-0.5 rounded-lg text-xs">$4.99 USD / mes</span>
-                    </div>
-                    <p className="text-slate-300">• Radio de radar ampliado: <b>500 km</b></p>
-                    <p className="text-slate-300">• Matches: <b>Ilimitados</b></p>
-                    <p className="text-slate-300">• Cuadrícula de fotos de perfil: <b>Hasta 10 fotos</b></p>
-                    <button onClick={() => handleUpgradePlan(true)} className="w-full mt-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">Obtener Premium por $4.99 USD</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showAuthModal && (
-            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">
-                    {authMode === 'signup' && '✨ Crear Cuenta en Plottwisme'}
-                    {authMode === 'login' && '🔑 Iniciar Sesión'}
-                    {authMode === 'forgot' && '🔄 Recuperar Contraseña'}
-                  </h3>
-                  <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
-                </div>
-
-                {authMode === 'signup' && (
-                  <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
-                    <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Nombre Completo:</label>
-                      <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Ej: Juan Pérez" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Edad (+18):</label>
-                        <input type="number" min="18" max="99" value={authAge} onChange={(e) => setAuthAge(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                      </div>
-                      <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Género / Sexualidad:</label>
-                        <select value={authSex} onChange={(e) => setAuthSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
-                          {SEXUALITIES_OPTIONS.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-white">¿Solicitar Insignia de Crítico?</p>
-                        <p className="text-[10px] text-slate-400">Permite postularte para publicar reseñas oficiales.</p>
-                      </div>
-                      <input type="checkbox" checked={authWantCritic} onChange={(e) => setAuthWantCritic(e.target.checked)} className="w-4 h-4 accent-amber-500 cursor-pointer" />
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
-                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Contraseña:</label>
-                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-
-                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Registrarme
-                    </button>
-                  </form>
-                )}
-
-                {authMode === 'login' && (
-                  <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
-                    <div>
-                      <label className="block mb
+                setUserCity(city);
+                if (COUNTRY_CODES.some(c => c.code === countryCode)) {
+                  setUserCountryCode(countryCode);
+                }
+              } catch (e) {
+                setUserCity('Buenos Aires');
+              }
+            },
+            () => { setUserCity('Buenos Aires'); }
+          );
+        } else {
+          setUserCity('Buenos Aires');
+        }
+      }, []);
