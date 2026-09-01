@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plottwisme - Red Social Cinéfila Global</title>
+  <title>Plottwisme - Red Social Cinéfila & Citas</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -47,7 +47,7 @@
 <body class="antialiased bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
   <div id="root">
     <div class="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
-      ⏳ Sintonizando Plottwisme Cloud Pro...
+      ⏳ Sintonizando Plottwisme Dating Cloud...
     </div>
   </div>
 
@@ -66,7 +66,7 @@
         loading: "⏳ Cargando Plottwisme...",
         cinema: "🎬 Cartelera",
         forums: "💬 Foros",
-        radar: "🎯 Radar Pro",
+        radar: "🎯 Radar Citas",
         chats: "💬 Chats",
         critics: "📰 Críticos",
         profile: "👤 Perfil",
@@ -76,15 +76,15 @@
         login: "🔑 Iniciar Sesión",
         cityPlaceholder: "Tu Ciudad",
         country: "País:",
-        engineTitle: "Motor Oficial Geolocalizado en la Nube Pro",
+        engineTitle: "Motor Oficial Geolocalizado en la Nube",
         cinemaRealtime: "Cartelera en Tiempo Real para",
         cinemaSubtitle: "Accede instantáneamente al panel interactivo oficial con las películas, complejos, horarios y salas disponibles hoy en tu zona.",
         openCinema: "Abrir Cartelera de",
         directSearch: "Buscador Directo por Categoría en",
         consultGoogle: "Consultar Google",
         activeChats: "Chats Activos",
-        noChats: "Aún no tienes matches. ¡Ve al Radar Pro y haz Match al instante!",
-        sendPlaceholder: "Escribe un mensaje para coordinar una función...",
+        noChats: "Aún no tienes matches. ¡Ve al Radar Citas y haz Match al instante!",
+        sendPlaceholder: "Escribe un mensaje para coordinar una cita...",
         sendBtn: "Enviar",
         matchTitle: "¡Es un Match Cinéfilo!",
         openChatNow: "💬 Abrir Chat Ahora",
@@ -94,7 +94,7 @@
         loading: "⏳ Loading Plottwisme...",
         cinema: "🎬 Now Playing",
         forums: "💬 Forums",
-        radar: "🎯 Radar Pro",
+        radar: "🎯 Radar Dating",
         chats: "💬 Chats",
         critics: "📰 Critics",
         profile: "👤 Profile",
@@ -104,15 +104,15 @@
         login: "🔑 Login",
         cityPlaceholder: "Your City",
         country: "Country:",
-        engineTitle: "Official Cloud Geolocated Engine Pro",
+        engineTitle: "Official Cloud Geolocated Engine",
         cinemaRealtime: "Real-Time Showtimes for",
         cinemaSubtitle: "Instantly access the official interactive panel featuring movies, theaters, schedules, and screening rooms available today in your area.",
         openCinema: "Open Showtimes for",
         directSearch: "Direct Category Search in",
         consultGoogle: "Check Google",
         activeChats: "Active Chats",
-        noChats: "No matches yet. Go to Radar Pro and match instantly!",
-        sendPlaceholder: "Type a message to coordinate a screening...",
+        noChats: "No matches yet. Go to Radar Dating and match instantly!",
+        sendPlaceholder: "Type a message to coordinate a date...",
         sendBtn: "Send",
         matchTitle: "It's a Cinephile Match!",
         openChatNow: "💬 Open Chat Now",
@@ -122,7 +122,7 @@
         loading: "⏳ Carregando Plottwisme...",
         cinema: "🎬 Estreias",
         forums: "💬 Fóruns",
-        radar: "🎯 Radar Pro",
+        radar: "🎯 Radar Encontros",
         chats: "💬 Chats",
         critics: "📰 Críticos",
         profile: "👤 Perfil",
@@ -132,15 +132,15 @@
         login: "🔑 Entrar",
         cityPlaceholder: "Sua Cidade",
         country: "País:",
-        engineTitle: "Mecanismo Oficial em Nuvem Pro",
+        engineTitle: "Mecanismo Oficial em Nuvem",
         cinemaRealtime: "Programação em Tempo Real para",
         cinemaSubtitle: "Acesse instantaneamente o painel interativo oficial com filmes, cinemas, horários e salas disponíveis hoje na sua região.",
         openCinema: "Abrir Cinemas de",
         directSearch: "Busca Direta por Categoria em",
         consultGoogle: "Consultar Google",
         activeChats: "Chats Ativos",
-        noChats: "Ainda não há matches. Vá para o Radar Pro e dê Match instantaneamente!",
-        sendPlaceholder: "Digite uma mensagem para combinar uma sessão...",
+        noChats: "Ainda não há matches. Vá para o Radar e dê Match instantaneamente!",
+        sendPlaceholder: "Digite uma mensagem para combinar um encontro...",
         sendBtn: "Enviar",
         matchTitle: "É um Match Cinéfilo!",
         openChatNow: "💬 Abrir Chat Agora",
@@ -199,7 +199,7 @@
       const [authName, setAuthName] = useState('');
       const [authAge, setAuthAge] = useState(25);
       const [authSex, setAuthSex] = useState('Masculino');
-      const [authLookingFor, setAuthLookingFor] = useState('Amigos Cinéfilos');
+      const [authLookingFor, setAuthLookingFor] = useState('Cita / Pareja & Amigos');
       const [authWantCritic, setAuthWantCritic] = useState(false);
       
       const [forgotEmail, setForgotEmail] = useState('');
@@ -362,7 +362,7 @@
             userName: candidate.name,
             userAvatar: candidate.avatar,
             messages: [
-              { id: 'm_init', sender: candidate.name, text: `¡Hola ${currentUser.name}! Match Cinéfilo 🍿`, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
+              { id: 'm_init', sender: candidate.name, text: `¡Hola ${currentUser.name}! Match para Cita 🍿🍷`, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
             ]
           };
           setChatsList([newChat, ...chatsList]);
@@ -394,14 +394,14 @@
         setNewMessageText('');
       };
 
-      // Compresión robusta y directa a Firestore (Opción A)
-      const handleImageCompressionAndAdd = (e) => {
+      // Conversor ultraligero optimizado para fotos reales desde galería o cámara móvil
+      const handleRealPhotoUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         const maxPhotosAllowed = currentUser?.isPremium ? 10 : 3;
         if (editPhotos.length >= maxPhotosAllowed) {
-          alert(`⚠️ Max ${maxPhotosAllowed} photos allowed.`);
+          alert(`⚠️ Máximo ${maxPhotosAllowed} fotos permitidas.`);
           return;
         }
 
@@ -410,15 +410,14 @@
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 500;
-            const MAX_HEIGHT = 500;
+            const MAX_SIZE = 800; // Resolución perfecta para citas en alta calidad y peso liviano
             let width = img.width;
             let height = img.height;
 
             if (width > height) {
-              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+              if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
             } else {
-              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+              if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
             }
 
             canvas.width = width;
@@ -426,8 +425,9 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
-            setEditPhotos([...editPhotos, compressedDataUrl]);
+            // Comesión optimizada JPEG al 85% para excelente nitidez de rostros y peso menor a 150kb
+            const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            setEditPhotos(prev => [...prev, optimizedDataUrl]);
           };
           img.src = event.target.result;
         };
@@ -566,7 +566,7 @@
               isCritic: authWantCritic,
               criticRequested: authWantCritic,
               verified: false,
-              bio: 'Cinephile.',
+              bio: 'Buscando citas y charlas de cine.',
               photos: [defaultAvatar],
               avatar: defaultAvatar,
               socialLinks: {}
@@ -697,9 +697,9 @@
             avatar: primaryAvatar,
             socialLinks: { radio: editRadio, tv: editTv }
           });
-          alert('✅ ¡Perfil actualizado en la nube con éxito!');
+          alert('✅ ¡Fotos reales y perfil guardados en la nube con éxito!');
         } catch(err) {
-          alert('Error al guardar perfil.');
+          alert('Error al guardar perfil. Comprueba que las fotos no sean demasiado pesadas.');
         }
       };
 
@@ -820,7 +820,7 @@
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
-                      {currentUser ? (isAdmin ? '🛡️ Admin Pro' : currentUser.isPremium ? '⭐ Premium' : '👤 Standard') : '🌐 Guest'}
+                      {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium' : '👤 Standard') : '🌐 Guest'}
                     </p>
                   </div>
                 </div>
@@ -1006,7 +1006,7 @@
                   <div className="space-y-6">
                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
                       <div>
-                        <h2 className="text-2xl font-black text-white">💬 Foros de Discusión Pro</h2>
+                        <h2 className="text-2xl font-black text-white">💬 Foros de Discusión</h2>
                         <p className="text-xs text-slate-400 mt-1">Comparte tus teorías con cinéfilos y valora con 🍿.</p>
                       </div>
                       <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
@@ -1046,21 +1046,21 @@
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold">
-                  🎯 Radar Pro: Match Dinámico e Inicial Habilitado
+                  🎯 Radar Citas: Match Cinéfilo Activo
                 </div>
 
                 {currentCandidate ? (
                   <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
                     <div className="relative h-96 w-full bg-slate-950">
                       <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor || 'Cinéfilo'}</div>
+                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor || 'Cita / Pareja'}</div>
                       <div className="absolute bottom-4 left-4 right-4">
                         <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age || 25}</h2>
                         <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location || 'Oberá'} • Match Directo 🍿</p>
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
-                      <p className="text-xs italic text-slate-300">"{currentCandidate.bio || 'Amante del buen cine.'}"</p>
+                      <p className="text-xs italic text-slate-300">"{currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
                       <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
                         <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
                         <button onClick={() => { handleMatchUser(currentCandidate); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-110 transition-all">🍿</button>
@@ -1079,7 +1079,7 @@
 
             {activeTab === 'chats' && (
               <div className="max-w-4xl mx-auto space-y-6">
-                <h2 className="text-2xl font-black text-white">💬 Chats & Matches</h2>
+                <h2 className="text-2xl font-black text-white">💬 Chats & Matches de Citas</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900 border border-slate-800 rounded-3xl p-4 min-h-[450px]">
                   <div className="border-r border-slate-800 pr-3 space-y-2">
@@ -1155,7 +1155,7 @@
 
             {activeTab === 'critics' && (
               <div className="space-y-6 max-w-3xl mx-auto">
-                <h2 className="text-2xl font-black">📰 Críticos & Medios Pro</h2>
+                <h2 className="text-2xl font-black">📰 Críticos & Medios</h2>
                 
                 {currentUser?.isCritic ? (
                   <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
@@ -1229,30 +1229,32 @@
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="font-bold text-amber-400">
-                          📸 Fotos Cloud ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
+                          📸 Mis Fotos Reales ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
                         </label>
                       </div>
 
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
                         {editPhotos.map((photo, idx) => (
                           <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
-                            <img src={photo} alt="Foto" className="w-full h-full object-cover" />
+                            <img src={photo} alt="Foto real" className="w-full h-full object-cover" />
                             <button type="button" onClick={() => handleRemovePhoto(idx)} className="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow">✕</button>
                           </div>
                         ))}
 
                         {editPhotos.length < (currentUser?.isPremium ? 10 : 3) && (
-                          <label className="aspect-square rounded-2xl border-2 border-dashed border-slate-700 hover:border-amber-500 bg-slate-950/50 flex flex-col items-center justify-center cursor-pointer text-slate-400 hover:text-amber-400">
+                          <label className="aspect-square rounded-2xl border-2 border-dashed border-amber-500/50 hover:border-amber-500 bg-amber-500/10 flex flex-col items-center justify-center cursor-pointer text-amber-400 transition-all hover:scale-105">
                             <span className="text-2xl font-bold">+</span>
-                            <input type="file" accept="image/*" onChange={handleImageCompressionAndAdd} className="hidden" />
+                            <span className="text-[10px] font-bold mt-1">Subir Foto</span>
+                            <input type="file" accept="image/*" onChange={handleRealPhotoUpload} className="hidden" />
                           </label>
                         )}
                       </div>
+                      <p className="text-[10px] text-slate-400">📸 Sube tus fotos reales directamente desde tu galería o cámara del celular. ¡Se optimizan automáticamente para lucir impecables!</p>
                     </div>
 
                     <div>
                       <label className="block mb-1 text-slate-400">Biografía:</label>
-                      <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                      <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Cuéntanos sobre ti y tus películas favoritas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
                     </div>
 
                     {currentUser.isCritic && (
@@ -1269,7 +1271,7 @@
                       </div>
                     )}
 
-                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil Pro Cloud</button>
+                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil en la Nube</button>
                   </div>
                 </form>
               </div>
@@ -1279,7 +1281,7 @@
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div>
-                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador Pro Cloud</h2>
+                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador Cloud</h2>
                     <p className="text-xs text-amber-400 mt-1">Control total en la nube: otorga Premium, insignia de crítico, modera fotos y expulsa usuarios.</p>
                   </div>
                   <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
@@ -1304,7 +1306,7 @@
                         </div>
 
                         <div>
-                          <p className="text-[10px] font-bold text-slate-400 mb-1">Fotos del usuario (haz clic en ✕ para borrar inapropiadas):</p>
+                          <p className="text-[10px] font-bold text-slate-400 mb-1">Fotos reales del usuario (haz clic en ✕ para borrar inapropiadas):</p>
                           <div className="flex gap-1 overflow-x-auto py-1">
                             {userPhotos.map((p, pIdx) => (
                               <div key={pIdx} className="relative group shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-slate-700 bg-slate-900">
@@ -1369,7 +1371,7 @@
                     <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe tu planteo para debatir con la comunidad..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
                   <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                    Publicar Debate Pro
+                    Publicar Debate Cloud
                   </button>
                 </form>
               </div>
@@ -1401,7 +1403,7 @@
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">🚀 Planes Cloud Pro</h3>
+                  <h3 className="text-lg font-black text-white">🚀 Planes Cloud</h3>
                   <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 font-bold">✖</button>
                 </div>
                 <div className="space-y-4 text-xs">
@@ -1423,8 +1425,8 @@
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-white">
-                    {authMode === 'signup' && '✨ Crear Cuenta Cloud Pro'}
-                    {authMode === 'login' && '🔑 Iniciar Sesión Cloud Pro'}
+                    {authMode === 'signup' && '✨ Crear Cuenta en la Nube'}
+                    {authMode === 'login' && '🔑 Iniciar Sesión en la Nube'}
                     {authMode === 'forgot' && '🔄 Recuperar Contraseña'}
                   </h3>
                   <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 font-bold text-lg">✖</button>
@@ -1470,7 +1472,7 @@
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Registrarme en la Nube Pro
+                      Registrarme en la Nube
                     </button>
                   </form>
                 )}
@@ -1491,7 +1493,7 @@
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Ingresar a la Nube Pro
+                      Ingresar a la Nube
                     </button>
                   </form>
                 )}
