@@ -10,11 +10,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
-  <!-- Firebase SDKs Modernos (Modular) -->
+  <!-- Firebase SDKs Modernos (Modular con Storage, Auth y Firestore) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+    import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDHdoWQUZDNjxfvq7Rfl4Hvgpp8z-DoDMo",
@@ -29,9 +30,11 @@
     const app = initializeApp(firebaseConfig);
     window.db = getFirestore(app);
     window.auth = getAuth(app);
+    window.storage = getStorage(app);
     window.FirebaseFns = {
       signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged,
-      collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp
+      collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp,
+      ref, uploadString, getDownloadURL
     };
   </script>
 
@@ -47,7 +50,7 @@
 <body class="antialiased bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
   <div id="root">
     <div class="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
-      ⏳ Conectando con Plottwisme Cloud...
+      ⏳ Sintonizando Plottwisme Cloud Pro...
     </div>
   </div>
 
@@ -66,7 +69,7 @@
         loading: "⏳ Cargando Plottwisme...",
         cinema: "🎬 Cartelera",
         forums: "💬 Foros",
-        radar: "🎯 Radar",
+        radar: "🎯 Radar Pro",
         chats: "💬 Chats",
         critics: "📰 Críticos",
         profile: "👤 Perfil",
@@ -76,14 +79,14 @@
         login: "🔑 Iniciar Sesión",
         cityPlaceholder: "Tu Ciudad",
         country: "País:",
-        engineTitle: "Motor Oficial Geolocalizado en la Nube",
+        engineTitle: "Motor Oficial Geolocalizado en la Nube Pro",
         cinemaRealtime: "Cartelera en Tiempo Real para",
         cinemaSubtitle: "Accede instantáneamente al panel interactivo oficial con las películas, complejos, horarios y salas disponibles hoy en tu zona.",
         openCinema: "Abrir Cartelera de",
         directSearch: "Buscador Directo por Categoría en",
         consultGoogle: "Consultar Google",
         activeChats: "Chats Activos",
-        noChats: "Aún no tienes matches. ¡Ve al Radar y haz Match con otros cinéfilos!",
+        noChats: "Aún no tienes matches. ¡Ve al Radar Pro y haz Match al instante!",
         sendPlaceholder: "Escribe un mensaje para coordinar una función...",
         sendBtn: "Enviar",
         matchTitle: "¡Es un Match Cinéfilo!",
@@ -94,7 +97,7 @@
         loading: "⏳ Loading Plottwisme...",
         cinema: "🎬 Now Playing",
         forums: "💬 Forums",
-        radar: "🎯 Radar",
+        radar: "🎯 Radar Pro",
         chats: "💬 Chats",
         critics: "📰 Critics",
         profile: "👤 Profile",
@@ -104,14 +107,14 @@
         login: "🔑 Login",
         cityPlaceholder: "Your City",
         country: "Country:",
-        engineTitle: "Official Cloud Geolocated Engine",
+        engineTitle: "Official Cloud Geolocated Engine Pro",
         cinemaRealtime: "Real-Time Showtimes for",
         cinemaSubtitle: "Instantly access the official interactive panel featuring movies, theaters, schedules, and screening rooms available today in your area.",
         openCinema: "Open Showtimes for",
         directSearch: "Direct Category Search in",
         consultGoogle: "Check Google",
         activeChats: "Active Chats",
-        noChats: "No matches yet. Go to Radar and match with fellow cinephiles!",
+        noChats: "No matches yet. Go to Radar Pro and match instantly!",
         sendPlaceholder: "Type a message to coordinate a screening...",
         sendBtn: "Send",
         matchTitle: "It's a Cinephile Match!",
@@ -122,7 +125,7 @@
         loading: "⏳ Carregando Plottwisme...",
         cinema: "🎬 Estreias",
         forums: "💬 Fóruns",
-        radar: "🎯 Radar",
+        radar: "🎯 Radar Pro",
         chats: "💬 Chats",
         critics: "📰 Críticos",
         profile: "👤 Perfil",
@@ -132,14 +135,14 @@
         login: "🔑 Entrar",
         cityPlaceholder: "Sua Cidade",
         country: "País:",
-        engineTitle: "Mecanismo Oficial em Nuvem",
+        engineTitle: "Mecanismo Oficial em Nuvem Pro",
         cinemaRealtime: "Programação em Tempo Real para",
         cinemaSubtitle: "Acesse instantaneamente o painel interativo oficial com filmes, cinemas, horários e salas disponíveis hoje na sua região.",
         openCinema: "Abrir Cinemas de",
         directSearch: "Busca Direta por Categoria em",
         consultGoogle: "Consultar Google",
         activeChats: "Chats Ativos",
-        noChats: "Ainda não há matches. Vá para o Radar e dê Match com outros cinéfilos!",
+        noChats: "Ainda não há matches. Vá para o Radar Pro e dê Match instantaneamente!",
         sendPlaceholder: "Digite uma mensagem para combinar uma sessão...",
         sendBtn: "Enviar",
         matchTitle: "É um Match Cinéfilo!",
@@ -230,14 +233,12 @@
         if (!window.db) return;
         const { collection, onSnapshot } = window.FirebaseFns;
 
-        // Escuchar usuarios en la nube
         const unsubUsers = onSnapshot(collection(window.db, "users"), (snapshot) => {
           let loadedUsers = [];
           snapshot.forEach(docSnap => {
             loadedUsers.push({ id: docSnap.id, ...docSnap.data() });
           });
 
-          // Garantizar que el admin maestro siempre esté presente
           const adminExists = loadedUsers.some(u => u.email?.toLowerCase() === 'marbuttice@gmail.com');
           if (!adminExists) {
             const defaultAdmin = {
@@ -279,7 +280,6 @@
           }
         });
 
-        // Escuchar Foros en la nube
         const unsubForums = onSnapshot(collection(window.db, "forums"), (snapshot) => {
           let loadedForums = [];
           snapshot.forEach(docSnap => {
@@ -288,7 +288,6 @@
           setForumTopics(loadedForums);
         });
 
-        // Escuchar Reseñas en la nube
         const unsubReviews = onSnapshot(collection(window.db, "reviews"), (snapshot) => {
           let loadedReviews = [];
           snapshot.forEach(docSnap => {
@@ -368,7 +367,7 @@
             userName: candidate.name,
             userAvatar: candidate.avatar,
             messages: [
-              { id: 'm_init', sender: candidate.name, text: `¡Hola ${currentUser.name}! Match 🍿`, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
+              { id: 'm_init', sender: candidate.name, text: `¡Hola ${currentUser.name}! Match Cinéfilo 🍿`, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
             ]
           };
           setChatsList([newChat, ...chatsList]);
@@ -400,7 +399,8 @@
         setNewMessageText('');
       };
 
-      const handleImageCompressionAndAdd = (e) => {
+      // Subida de fotos profesional con Firebase Storage Cloud
+      const handleImageCompressionAndAdd = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -411,12 +411,12 @@
         }
 
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
           const img = new Image();
-          img.onload = () => {
+          img.onload = async () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 500;
-            const MAX_HEIGHT = 500;
+            const MAX_WIDTH = 600;
+            const MAX_HEIGHT = 600;
             let width = img.width;
             let height = img.height;
 
@@ -431,8 +431,19 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
-            setEditPhotos([...editPhotos, compressedDataUrl]);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            
+            try {
+              // Subida a Firebase Storage
+              const storageRef = window.FirebaseFns.ref(window.storage, `users_photos/${currentUser.id}_${Date.now()}.jpg`);
+              await window.FirebaseFns.uploadString(storageRef, compressedDataUrl, 'data_url');
+              const downloadURL = await window.FirebaseFns.getDownloadURL(storageRef);
+              
+              setEditPhotos([...editPhotos, downloadURL]);
+            } catch (err) {
+              // Fallback directo en caso de cuota de storage
+              setEditPhotos([...editPhotos, compressedDataUrl]);
+            }
           };
           img.src = event.target.result;
         };
@@ -651,7 +662,7 @@
           }
           setResetStep(2);
         } else {
-          alert('✅ Solicitud procesada. Revisa tu correo o contacta al administrador.');
+          alert('✅ Solicitud procesada.');
           setShowAuthModal(false);
           setAuthMode('login');
           setResetStep(1);
@@ -668,10 +679,11 @@
         alert('Sesión cerrada.');
       };
 
-      const maxDistance = currentUser?.isPremium ? 500 : 100;
+      // Radar con Match Amigable e Inicial (Compatible para conectar rápido)
+      const maxDistance = currentUser?.isPremium ? 1000 : 500;
       const filteredCandidates = useMemo(() => {
-        return usersList.filter(u => u.email !== currentUser?.email && u.distanceKm <= maxDistance);
-      }, [usersList, currentUser, maxDistance]);
+        return usersList.filter(u => u.email !== currentUser?.email);
+      }, [usersList, currentUser]);
 
       const currentCandidate = filteredCandidates[currentIndex];
 
@@ -686,7 +698,7 @@
             roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
           });
           setShowSubscriptionModal(false);
-          alert(isPrem ? '⭐ ¡Actualizado a Premium en la nube!' : 'Cambiado a Estándar.');
+          alert(isPrem ? '⭐ ¡Actualizado a Premium!' : 'Cambiado a Estándar.');
         } catch(err) {
           alert('Error al actualizar plan.');
         }
@@ -703,7 +715,7 @@
             avatar: primaryAvatar,
             socialLinks: { radio: editRadio, tv: editTv }
           });
-          alert('✅ ¡Perfil y fotos actualizados en la nube!');
+          alert('✅ ¡Perfil y Storage Cloud actualizados!');
         } catch(err) {
           alert('Error al guardar perfil.');
         }
@@ -719,7 +731,9 @@
           rating: Number(newReviewRating),
           content: newReviewText,
           mediaOutlet: currentUser.socialLinks?.radio || currentUser.socialLinks?.tv || currentUser.roleLabel,
-          date: new Date().toISOString().split('T')[0]
+          date: new Date().toISOString().split('T')[0],
+          likes: 0,
+          likedBy: []
         };
         try {
           await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "reviews", 'r_' + Date.now()), newRev);
@@ -729,6 +743,21 @@
         } catch(err) {
           alert('Error al publicar reseña.');
         }
+      };
+
+      const handleLikeReview = async (rev) => {
+        if (!currentUser) { setShowAuthModal(true); return; }
+        const likedBy = rev.likedBy || [];
+        const alreadyLiked = likedBy.includes(currentUser.email);
+        const newLikedBy = alreadyLiked ? likedBy.filter(e => e !== currentUser.email) : [...likedBy, currentUser.email];
+        const newLikes = alreadyLiked ? (rev.likes || 1) - 1 : (rev.likes || 0) + 1;
+
+        try {
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "reviews", rev.id), {
+            likes: newLikes,
+            likedBy: newLikedBy
+          });
+        } catch(e) {}
       };
 
       const handleCreateTopic = async (e) => {
@@ -743,17 +772,34 @@
           date: new Date().toISOString().split('T')[0],
           repliesCount: 0,
           content: newTopicContent,
-          comments: []
+          comments: [],
+          likes: 0,
+          likedBy: []
         };
         try {
           await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "forums", topicId), newTopic);
           setNewTopicTitle('');
           setNewTopicContent('');
           setShowNewTopicModal(false);
-          alert('💬 ¡Debate creado en la nube!');
+          alert('💬 ¡Debate creado con éxito!');
         } catch(err) {
           alert('Error al crear debate.');
         }
+      };
+
+      const handleLikeTopic = async (topic) => {
+        if (!currentUser) { setShowAuthModal(true); return; }
+        const likedBy = topic.likedBy || [];
+        const alreadyLiked = likedBy.includes(currentUser.email);
+        const newLikedBy = alreadyLiked ? likedBy.filter(e => e !== currentUser.email) : [...likedBy, currentUser.email];
+        const newLikes = alreadyLiked ? (topic.likes || 1) - 1 : (topic.likes || 0) + 1;
+
+        try {
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "forums", topic.id), {
+            likes: newLikes,
+            likedBy: newLikedBy
+          });
+        } catch(e) {}
       };
 
       const handleAddComment = async (e) => {
@@ -765,7 +811,7 @@
           date: new Date().toISOString().split('T')[0],
           text: newCommentText
         };
-        const updatedComments = [...activeTopic.comments, comment];
+        const updatedComments = [...(activeTopic.comments || []), comment];
         try {
           await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "forums", activeTopic.id), {
             comments: updatedComments,
@@ -792,7 +838,7 @@
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
-                      {currentUser ? (isAdmin ? '🛡️ Admin Cloud' : currentUser.isPremium ? '⭐ Premium' : '👤 Standard') : '🌐 Guest'}
+                      {currentUser ? (isAdmin ? '🛡️ Admin Pro' : currentUser.isPremium ? '⭐ Premium' : '👤 Standard') : '🌐 Guest'}
                     </p>
                   </div>
                 </div>
@@ -915,7 +961,7 @@
                       >
                         <div>
                           <h4 className="font-bold text-white group-hover:text-amber-400 transition-colors text-sm">{cat.label}</h4>
-                          <p className="text-xs text-slate-400 mt-1">Cloud sync active.</p>
+                          <p className="text-xs text-slate-400 mt-1">Cloud Storage active.</p>
                         </div>
                         <div className="text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t border-slate-800">
                           <span>{t.consultGoogle}</span>
@@ -945,6 +991,12 @@
                       </div>
                       <h2 className="text-2xl font-black text-white">{activeTopic.title}</h2>
                       <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{activeTopic.content}</p>
+                      
+                      <div className="flex items-center gap-4 pt-2">
+                        <button onClick={() => handleLikeTopic(activeTopic)} className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs font-bold text-amber-400 hover:bg-slate-800">
+                          <span>🍿</span> <span>{activeTopic.likes || 0} Me gusta</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="space-y-4">
@@ -972,8 +1024,8 @@
                   <div className="space-y-6">
                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
                       <div>
-                        <h2 className="text-2xl font-black text-white">💬 Foros de Discusión Cloud</h2>
-                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías con cinéfilos sincronizados globalmente.</p>
+                        <h2 className="text-2xl font-black text-white">💬 Foros de Discusión Pro</h2>
+                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías con cinéfilos y valora con 🍿.</p>
                       </div>
                       <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
                         ✍️ Nuevo Debate
@@ -982,18 +1034,23 @@
 
                     <div className="space-y-4">
                       {forumTopics.length === 0 ? (
-                        <p className="text-xs text-slate-400 text-center py-6">Aún no hay debates en la nube. ¡Sé el primero en abrir uno!</p>
+                        <p className="text-xs text-slate-400 text-center py-6">Aún no hay debates. ¡Sé el primero en abrir uno!</p>
                       ) : (
                         forumTopics.map(topic => (
-                          <div key={topic.id} onClick={() => setActiveTopic(topic)} className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all space-y-3 group">
+                          <div key={topic.id} className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl transition-all space-y-3 group">
                             <div className="flex justify-between items-center text-xs">
                               <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">{topic.category}</span>
                               <span className="text-slate-500 text-[10px]">{topic.date}</span>
                             </div>
-                            <h3 className="text-base font-bold text-white group-hover:text-amber-400 transition-colors">{topic.title}</h3>
+                            <h3 onClick={() => setActiveTopic(topic)} className="text-base font-bold text-white group-hover:text-amber-400 transition-colors cursor-pointer">{topic.title}</h3>
                             <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800">
                               <span>Por <b>{topic.author}</b></span>
-                              <span className="text-amber-500 font-bold">💬 {topic.repliesCount || 0}</span>
+                              <div className="flex items-center gap-3">
+                                <button onClick={() => handleLikeTopic(topic)} className="flex items-center gap-1 hover:text-amber-400 font-bold">
+                                  <span>🍿</span> <span>{topic.likes || 0}</span>
+                                </button>
+                                <span className="text-amber-500 font-bold cursor-pointer" onClick={() => setActiveTopic(topic)}>💬 {topic.repliesCount || 0}</span>
+                              </div>
                             </div>
                           </div>
                         ))
@@ -1007,21 +1064,21 @@
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold">
-                  📡 Radar Cloud: {currentUser?.isPremium ? '500 km (Premium ⭐)' : '100 km (Standard 👤)'}
+                  🎯 Radar Pro: Match Dinámico e Inicial Habilitado
                 </div>
 
                 {currentCandidate ? (
                   <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
                     <div className="relative h-96 w-full bg-slate-950">
                       <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor}</div>
+                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor || 'Cinéfilo'}</div>
                       <div className="absolute bottom-4 left-4 right-4">
-                        <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age}</h2>
-                        <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location} • {currentCandidate.distanceKm} km</p>
+                        <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age || 25}</h2>
+                        <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location || 'Oberá'} • Match Directo 🍿</p>
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
-                      <p className="text-xs italic text-slate-300">"{currentCandidate.bio}"</p>
+                      <p className="text-xs italic text-slate-300">"{currentCandidate.bio || 'Amante del buen cine.'}"</p>
                       <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
                         <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
                         <button onClick={() => { handleMatchUser(currentCandidate); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-110 transition-all">🍿</button>
@@ -1071,7 +1128,7 @@
                           <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover" />
                           <div>
                             <h3 className="font-bold text-white text-sm">{activeChat.userName}</h3>
-                            <span className="text-[10px] text-emerald-400 font-bold">🟢 Online Cloud</span>
+                            <span className="text-[10px] text-emerald-400 font-bold">🟢 Online Cloud Storage</span>
                           </div>
                         </div>
 
@@ -1116,11 +1173,11 @@
 
             {activeTab === 'critics' && (
               <div className="space-y-6 max-w-3xl mx-auto">
-                <h2 className="text-2xl font-black">📰 Críticos & Medios Cloud</h2>
+                <h2 className="text-2xl font-black">📰 Críticos & Medios Pro</h2>
                 
                 {currentUser?.isCritic ? (
                   <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-                    <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña en la Nube (Insignia 🌟)</h3>
+                    <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña Oficial (Insignia 🌟)</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div>
                         <label className="block mb-1 text-slate-400">Película:</label>
@@ -1160,6 +1217,12 @@
                         </div>
                         <h4 className="text-base font-black">{rev.movieTitle}</h4>
                         <p className="text-xs text-slate-300 leading-relaxed">{rev.content}</p>
+
+                        <div className="flex items-center gap-4 pt-2 border-t border-slate-800 text-xs">
+                          <button onClick={() => handleLikeReview(rev)} className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 font-bold text-amber-400 hover:bg-slate-800">
+                            <span>🍿</span> <span>{rev.likes || 0} Me gusta</span>
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
@@ -1184,7 +1247,7 @@
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="font-bold text-amber-400">
-                          📸 Fotos Cloud ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
+                          📸 Fotos Storage Cloud ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
                         </label>
                       </div>
 
@@ -1224,7 +1287,7 @@
                       </div>
                     )}
 
-                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil en la Nube</button>
+                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil Pro Cloud</button>
                   </div>
                 </form>
               </div>
@@ -1234,7 +1297,7 @@
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div>
-                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador Cloud</h2>
+                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador Pro Cloud</h2>
                     <p className="text-xs text-amber-400 mt-1">Control total en la nube: otorga Premium, insignia de crítico, modera fotos y expulsa usuarios.</p>
                   </div>
                   <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
@@ -1324,7 +1387,7 @@
                     <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe tu planteo para debatir con la comunidad..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
                   <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                    Publicar Debate Cloud
+                    Publicar Debate Pro
                   </button>
                 </form>
               </div>
@@ -1356,7 +1419,7 @@
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">🚀 Planes Cloud</h3>
+                  <h3 className="text-lg font-black text-white">🚀 Planes Cloud Pro</h3>
                   <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 font-bold">✖</button>
                 </div>
                 <div className="space-y-4 text-xs">
@@ -1378,8 +1441,8 @@
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-white">
-                    {authMode === 'signup' && '✨ Crear Cuenta Cloud'}
-                    {authMode === 'login' && '🔑 Iniciar Sesión Cloud'}
+                    {authMode === 'signup' && '✨ Crear Cuenta Cloud Pro'}
+                    {authMode === 'login' && '🔑 Iniciar Sesión Cloud Pro'}
                     {authMode === 'forgot' && '🔄 Recuperar Contraseña'}
                   </h3>
                   <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 font-bold text-lg">✖</button>
@@ -1425,7 +1488,7 @@
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Registrarme en la Nube
+                      Registrarme en la Nube Pro
                     </button>
                   </form>
                 )}
@@ -1446,7 +1509,7 @@
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Ingresar a la Nube
+                      Ingresar a la Nube Pro
                     </button>
                   </form>
                 )}
