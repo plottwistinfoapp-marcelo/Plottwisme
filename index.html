@@ -48,6 +48,7 @@
         admin: "🛡️ Admin",
         logout: "🚪 Salir",
         signup: "✨ Crear Cuenta",
+        login: "🔑 Iniciar Sesión",
         cityPlaceholder: "Tu Ciudad",
         country: "País:",
         engineTitle: "Motor Oficial Geolocalizado",
@@ -75,6 +76,7 @@
         admin: "🛡️ Admin",
         logout: "🚪 Logout",
         signup: "✨ Sign Up",
+        login: "🔑 Login",
         cityPlaceholder: "Your City",
         country: "Country:",
         engineTitle: "Official Geolocated Engine",
@@ -102,6 +104,7 @@
         admin: "🛡️ Admin",
         logout: "🚪 Sair",
         signup: "✨ Criar Conta",
+        login: "🔑 Entrar",
         cityPlaceholder: "Sua Cidade",
         country: "País:",
         engineTitle: "Mecanismo Oficial Geolocalizado",
@@ -468,7 +471,7 @@
 
           const existing = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase());
           if (existing) {
-            alert('⚠️ Email already registered.');
+            alert('⚠️ Este email ya está registrado. Por favor, ve a "Iniciar Sesión" con tu contraseña.');
             return;
           }
           const defaultAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80';
@@ -499,11 +502,11 @@
         } else {
           const found = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase() && u.password === authPassword);
           if (!found) {
-            alert('❌ Invalid credentials.');
+            alert('❌ Credenciales incorrectas. Verifica tu email y contraseña.');
             return;
           }
           setCurrentUser(found);
-          alert(`👋 Welcome back, ${found.name}!`);
+          alert(`👋 ¡Bienvenido de nuevo, ${found.name}!`);
         }
         setShowAuthModal(false);
         setAuthEmail('');
@@ -718,9 +721,14 @@
                     {t.logout}
                   </button>
                 ) : (
-                  <button onClick={() => { setAuthMode('signup'); setResetStep(1); setShowAuthModal(true); }} className="px-3 py-1.5 rounded-xl text-xs font-black bg-amber-500 text-slate-950 hover:bg-amber-400 whitespace-nowrap">
-                    {t.signup}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={() => { setAuthMode('login'); setResetStep(1); setShowAuthModal(true); }} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-amber-400 border border-amber-500/30 hover:bg-slate-700 whitespace-nowrap">
+                      {t.login}
+                    </button>
+                    <button onClick={() => { setAuthMode('signup'); setResetStep(1); setShowAuthModal(true); }} className="px-3 py-1.5 rounded-xl text-xs font-black bg-amber-500 text-slate-950 hover:bg-amber-400 whitespace-nowrap">
+                      {t.signup}
+                    </button>
+                  </div>
                 )}
               </nav>
             </div>
@@ -1132,26 +1140,124 @@
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">{authMode === 'signup' ? 'Registro' : 'Ingreso'}</h3>
-                  <button onClick={() => setShowAuthModal(false)} className="text-slate-400 font-bold">✖</button>
+                  <h3 className="text-lg font-black text-white">
+                    {authMode === 'signup' && '✨ Crear Cuenta en Plottwisme'}
+                    {authMode === 'login' && '🔑 Iniciar Sesión'}
+                    {authMode === 'forgot' && '🔄 Recuperar Contraseña'}
+                  </h3>
+                  <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 font-bold text-lg">✖</button>
                 </div>
-                <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
-                  {authMode === 'signup' && (
+
+                {authMode === 'signup' && (
+                  <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
                     <div>
-                      <label className="block mb-1 text-slate-400">Nombre:</label>
-                      <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <label className="block mb-1 text-slate-400 font-bold">Nombre Completo:</label>
+                      <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Ej: Juan Pérez" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                     </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block mb-1 text-slate-400 font-bold">Edad (+18):</label>
+                        <input type="number" min="18" max="99" value={authAge} onChange={(e) => setAuthAge(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      </div>
+                      <div>
+                        <label className="block mb-1 text-slate-400 font-bold">Género / Sexualidad:</label>
+                        <select value={authSex} onChange={(e) => setAuthSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                          {SEXUALITIES_OPTIONS.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-white">¿Solicitar Insignia de Crítico?</p>
+                        <p className="text-[10px] text-slate-400">Permite postularte para publicar reseñas oficiales.</p>
+                      </div>
+                      <input type="checkbox" checked={authWantCritic} onChange={(e) => setAuthWantCritic(e.target.checked)} className="w-4 h-4 accent-amber-500 cursor-pointer" />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
+                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 text-slate-400 font-bold">Contraseña:</label>
+                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    </div>
+
+                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
+                      Registrarme
+                    </button>
+                  </form>
+                )}
+
+                {authMode === 'login' && (
+                  <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
+                    <div>
+                      <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
+                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-slate-400 font-bold">Contraseña:</label>
+                        <button type="button" onClick={() => { setAuthMode('forgot'); setResetStep(1); }} className="text-amber-400 font-bold hover:underline text-[11px]">¿Olvidaste tu contraseña?</button>
+                      </div>
+                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    </div>
+
+                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
+                      Ingresar
+                    </button>
+                  </form>
+                )}
+
+                {authMode === 'forgot' && (
+                  <form onSubmit={handleForgotSubmit} className="space-y-4 text-xs">
+                    {resetStep === 1 ? (
+                      <>
+                        <p className="text-slate-300 leading-relaxed">Ingresa el correo electrónico asociado a tu cuenta para restablecer tu contraseña.</p>
+                        <div>
+                          <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
+                          <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                        </div>
+                        <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
+                          Verificar Correo
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-emerald-300">
+                          ✅ ¡Correo verificado con éxito! Ingresa tu nueva contraseña para <b>{forgotEmail}</b>.
+                        </div>
+                        <div>
+                          <label className="block mb-1 text-slate-400 font-bold">Nueva Contraseña:</label>
+                          <input type="password" value={newResetPassword} onChange={(e) => setNewResetPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                        </div>
+                        <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
+                          Guardar Nueva Contraseña
+                        </button>
+                      </>
+                    )}
+
+                    <div className="text-center pt-2">
+                      <button type="button" onClick={() => { setAuthMode('login'); setResetStep(1); }} className="text-slate-400 hover:text-white font-bold underline">
+                        ← Volver al inicio de sesión
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                <div className="text-center pt-2 border-t border-slate-800 text-xs">
+                  {authMode === 'signup' && (
+                    <p className="text-slate-400">¿Ya tienes cuenta? <button onClick={() => { setAuthMode('login'); setResetStep(1); }} className="text-amber-400 font-bold underline">Inicia Sesión</button></p>
                   )}
-                  <div>
-                    <label className="block mb-1 text-slate-400">Email:</label>
-                    <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                  </div>
-                  <div>
-                    <label className="block mb-1 text-slate-400">Contraseña:</label>
-                    <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                  </div>
-                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Enviar</button>
-                </form>
+                  {authMode === 'login' && (
+                    <p className="text-slate-400">¿No tienes cuenta? <button onClick={() => { setAuthMode('signup'); setResetStep(1); }} className="text-amber-400 font-bold underline">Regístrate gratis</button></p>
+                  )}
+                </div>
               </div>
             </div>
           )}
