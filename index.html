@@ -72,6 +72,18 @@
       }
     ];
 
+    const INITIAL_CHATS = [
+      {
+        id: 'chat_u2',
+        userId: 'u2',
+        userName: 'Elena Montero',
+        userAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
+        messages: [
+          { id: 'm1', sender: 'Elena Montero', text: '¡Hola Marcelo! Vi que te encanta el cine de autor. ¿Viste la última de Villeneuve?', time: '10:15' }
+        ]
+      }
+    ];
+
     const INITIAL_REVIEWS = [
       {
         id: 'r1',
@@ -113,16 +125,7 @@
     ];
 
     const SEXUALITIES_OPTIONS = [
-      'Masculino',
-      'Femenino',
-      'No Binario',
-      'Género Fluido',
-      'Pansexual',
-      'Queer',
-      'Bisexual',
-      'Homosexual',
-      'Heterosexual',
-      'Otro'
+      'Masculino', 'Femenino', 'No Binario', 'Género Fluido', 'Pansexual', 'Queer', 'Bisexual', 'Homosexual', 'Heterosexual', 'Otro'
     ];
 
     const SEARCH_CATEGORIES = [
@@ -142,7 +145,14 @@
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
 
-      // MODALES ('signup', 'login', 'forgot')
+      // ESTADOS CHAT Y MATCHES
+      const [chatsList, setChatsList] = useState(INITIAL_CHATS);
+      const [activeChat, setActiveChat] = useState(null);
+      const [newMessageText, setNewMessageText] = useState('');
+      const [showMatchModal, setShowMatchModal] = useState(false);
+      const [matchedUser, setMatchedUser] = useState(null);
+
+      // MODALES AUTENTICACIÓN
       const [showAuthModal, setShowAuthModal] = useState(false);
       const [authMode, setAuthMode] = useState('signup');
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -156,10 +166,9 @@
       const [authLookingFor, setAuthLookingFor] = useState('Amigos Cinéfilos');
       const [authWantCritic, setAuthWantCritic] = useState(false);
       
-      // ESTADOS RECUPERACIÓN CONTRASEÑA
       const [forgotEmail, setForgotEmail] = useState('');
       const [newResetPassword, setNewResetPassword] = useState('');
-      const [resetStep, setResetStep] = useState(1); // 1: Pedir email, 2: Ingresar nueva clave
+      const [resetStep, setResetStep] = useState(1);
 
       // ESTADOS DE RESEÑAS Y FORO
       const [reviewsList, setReviewsList] = useState(INITIAL_REVIEWS);
@@ -182,7 +191,6 @@
       const [editRadio, setEditRadio] = useState(currentUser?.socialLinks?.radio || '');
       const [editTv, setEditTv] = useState(currentUser?.socialLinks?.tv || '');
 
-      // AUTO-DETECTAR UBICACIÓN REAL
       useEffect(() => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -218,12 +226,6 @@
         }
       }, [currentUser]);
 
-      useEffect(() => {
-        if (activeTab === 'admin' && currentUser?.role !== 'admin') {
-          setActiveTab('cinema');
-        }
-      }, [activeTab, currentUser]);
-
       const getCountryName = () => {
         const found = COUNTRY_CODES.find(c => c.code === userCountryCode);
         return found ? found.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
@@ -236,7 +238,55 @@
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=es`, '_blank');
       };
 
-      // COMPRESIÓN Y GESTIÓN DE FOTOS MÚLTIPLES
+      const handleMatchUser = (candidate) => {
+        if (!currentUser) {
+          setShowAuthModal(true);
+          return;
+        }
+
+        setMatchedUser(candidate);
+        setShowMatchModal(true);
+
+        const existingChat = chatsList.find(c => c.userId === candidate.id);
+        if (!existingChat) {
+          const newChat = {
+            id: 'chat_' + candidate.id,
+            userId: candidate.id,
+            userName: candidate.name,
+            userAvatar: candidate.avatar,
+            messages: [
+              { id: 'm_init', sender: candidate.name, text: `¡Hola ${currentUser.name}! Hicimos match en Plottwisme 🍿 ¿Qué película vemos?`, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
+            ]
+          };
+          setChatsList([newChat, ...chatsList]);
+        }
+      };
+
+      const handleSendMessage = (e) => {
+        e.preventDefault();
+        if (!newMessageText.trim() || !activeChat) return;
+
+        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const newMsg = {
+          id: 'msg_' + Date.now(),
+          sender: currentUser.name,
+          text: newMessageText,
+          time: timeStr
+        };
+
+        const updatedChats = chatsList.map(chat => {
+          if (chat.id === activeChat.id) {
+            const updated = { ...chat, messages: [...chat.messages, newMsg] };
+            setActiveChat(updated);
+            return updated;
+          }
+          return chat;
+        });
+
+        setChatsList(updatedChats);
+        setNewMessageText('');
+      };
+
       const handleImageCompressionAndAdd = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -280,7 +330,6 @@
         setEditPhotos(editPhotos.filter((_, idx) => idx !== indexToRemove));
       };
 
-      // MODERACIÓN ADMIN
       const handleDeleteUser = (userId) => {
         if (window.confirm('⚠️ ¿Estás seguro de eliminar a este usuario permanentemente?')) {
           setUsersList(usersList.filter(u => u.id !== userId));
@@ -320,7 +369,6 @@
         }));
       };
 
-      // REGISTRO E INICIO DE SESIÓN
       const handleAuthSubmit = (e) => {
         e.preventDefault();
         if (authMode === 'signup') {
@@ -373,7 +421,6 @@
         setAuthPassword('');
       };
 
-      // MANEJO DE RECUPERACIÓN DE CONTRASEÑA
       const handleForgotSubmit = (e) => {
         e.preventDefault();
         if (resetStep === 1) {
@@ -382,14 +429,14 @@
             alert('❌ No se encontró ninguna cuenta registrada con este correo electrónico.');
             return;
           }
-          setResetStep(2); // Pasamos al paso de cambiar la contraseña
+          setResetStep(2);
         } else {
           if (!newResetPassword) {
             alert('⚠️ Ingresa una nueva contraseña.');
             return;
           }
           setUsersList(usersList.map(u => u.email.toLowerCase() === forgotEmail.toLowerCase() ? { ...u, password: newResetPassword } : u));
-          alert('✅ ¡Contraseña restablecida con éxito! Ya puedes iniciar sesión con tu nueva clave.');
+          alert('✅ ¡Contraseña restablecida con éxito!');
           setShowAuthModal(false);
           setAuthMode('login');
           setResetStep(1);
@@ -424,7 +471,7 @@
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
         setShowSubscriptionModal(false);
-        alert(isPrem ? '⭐ ¡Felicidades! Ahora eres Premium ($4.99 USD/mes) - Hasta 10 fotos y 500km de radio.' : 'Cambiado a plan Estándar.');
+        alert(isPrem ? '⭐ ¡Felicidades! Ahora eres Premium ($4.99 USD/mes).' : 'Cambiado a plan Estándar.');
       };
 
       const handleSaveProfile = (e) => {
@@ -551,10 +598,12 @@
                 )}
               </div>
 
-              <nav className="flex items-center gap-1 p-1 rounded-2xl border border-slate-800 bg-slate-900 overflow-x-auto max-w-full">
+              {/* NAV AJUSTADO CON FLEX-WRAP PARA QUE NUNCA SE ESCONDAN LOS BOTONES */}
+              <nav className="flex flex-wrap items-center justify-center gap-1.5 p-1.5 rounded-2xl border border-slate-800 bg-slate-900">
                 <button onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎬 Cartelera</button>
                 <button onClick={() => { setActiveTab('forums'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>💬 Foros</button>
                 <button onClick={() => { setActiveTab('radar'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>🎯 Radar</button>
+                <button onClick={() => { setActiveTab('chats'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'chats' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>💬 Chats ({chatsList.length})</button>
                 <button onClick={() => { setActiveTab('critics'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>📰 Críticos</button>
                 
                 {currentUser && (
@@ -707,7 +756,7 @@
               </div>
             )}
 
-            {/* RADAR */}
+            {/* RADAR DE MATCHES */}
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold">
@@ -728,7 +777,7 @@
                       <p className="text-xs italic text-slate-300">"{currentCandidate.bio}"</p>
                       <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
                         <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
-                        <button onClick={() => { alert(`🍿 ¡Match enviado a ${currentCandidate.name}!`); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20">🍿</button>
+                        <button onClick={() => { handleMatchUser(currentCandidate); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-110 transition-all">🍿</button>
                       </div>
                     </div>
                   </div>
@@ -740,6 +789,83 @@
                     <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Vista</button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* SECCIÓN DE CHATS ENTRE USUARIOS CON MATCH */}
+            {activeTab === 'chats' && (
+              <div className="max-w-4xl mx-auto space-y-6">
+                <h2 className="text-2xl font-black text-white">💬 Mis Conversaciones & Matches</h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900 border border-slate-800 rounded-3xl p-4 min-h-[450px]">
+                  <div className="border-r border-slate-800 pr-3 space-y-2">
+                    <h3 className="text-xs font-bold text-amber-500 uppercase px-2">Chats Activos</h3>
+                    {chatsList.length === 0 ? (
+                      <p className="text-xs text-slate-400 p-2">Aún no tienes matches. ¡Ve al Radar y haz Match con otros cinéfilos!</p>
+                    ) : (
+                      chatsList.map(chat => (
+                        <div 
+                          key={chat.id} 
+                          onClick={() => setActiveChat(chat)}
+                          className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all ${activeChat?.id === chat.id ? 'bg-amber-500/20 border border-amber-500/50' : 'hover:bg-slate-800/60'}`}
+                        >
+                          <img src={chat.userAvatar} alt={chat.userName} className="w-12 h-12 rounded-full object-cover border border-amber-500/30" />
+                          <div className="overflow-hidden flex-1">
+                            <h4 className="font-bold text-white text-xs truncate">{chat.userName}</h4>
+                            <p className="text-[10px] text-slate-400 truncate">{chat.messages[chat.messages.length - 1]?.text || 'Nuevo match'}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="md:col-span-2 flex flex-col justify-between bg-slate-950 rounded-2xl border border-slate-800 p-4">
+                    {activeChat ? (
+                      <>
+                        <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+                          <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover" />
+                          <div>
+                            <h3 className="font-bold text-white text-sm">{activeChat.userName}</h3>
+                            <span className="text-[10px] text-emerald-400 font-bold">🟢 Match Activo en Plottwisme</span>
+                          </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto space-y-3 py-4 max-h-[300px] px-1">
+                          {activeChat.messages.map(msg => {
+                            const isMe = msg.sender === currentUser?.name;
+                            return (
+                              <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                <div className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-amber-500 text-slate-950 font-medium' : 'bg-slate-900 border border-slate-800 text-slate-100'}`}>
+                                  {msg.text}
+                                </div>
+                                <span className="text-[9px] text-slate-500 mt-1 px-1">{msg.time}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <form onSubmit={handleSendMessage} className="flex gap-2 pt-3 border-t border-slate-800">
+                          <input 
+                            type="text" 
+                            value={newMessageText} 
+                            onChange={(e) => setNewMessageText(e.target.value)} 
+                            placeholder="Escribe un mensaje para coordinar una función..." 
+                            className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" 
+                            required 
+                          />
+                          <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider">
+                            Enviar
+                          </button>
+                        </form>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-center py-20 space-y-2">
+                        <div className="text-3xl">🍿</div>
+                        <p className="text-xs text-slate-400">Selecciona un chat de la lista izquierda para comenzar a conversar.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -769,7 +895,6 @@
                 ) : (
                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2 text-xs">
                     <p className="text-amber-400 font-bold">🔒 Necesitas la Insignia de Crítico para publicar reseñas oficiales.</p>
-                    <p className="text-slate-400">Puedes solicitarla desde tu registro o perfil.</p>
                   </div>
                 )}
 
@@ -808,7 +933,6 @@
                   </div>
 
                   <div className="space-y-4 text-xs">
-                    
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="font-bold text-amber-400">
@@ -904,11 +1028,6 @@
                               </p>
                               <p className="text-xs text-amber-400">{u.roleLabel} • {u.location}</p>
                               <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
-                              {u.criticRequested && (
-                                <span className="inline-block mt-1 bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] px-2 py-0.5 rounded font-bold">
-                                  ⚠️ Solicitó Insignia de Crítico
-                                </span>
-                              )}
                             </div>
                           </div>
 
@@ -949,7 +1068,39 @@
 
           </main>
 
-          {/* MODAL SUSCRIPCIÓN */}
+          {showMatchModal && matchedUser && (
+            <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl animate-bounce-in">
+                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 p-1">
+                  <img src={matchedUser.avatar} alt="Match" className="w-full h-full rounded-full object-cover" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-amber-400">🍿 ¡Es un Match Cinéfilo!</h3>
+                  <p className="text-xs text-slate-300 mt-2">A <b>{matchedUser.name}</b> también le interesa el cine. ¡Ya pueden chatear!</p>
+                </div>
+                <div className="flex flex-col gap-2 pt-2">
+                  <button 
+                    onClick={() => {
+                      setShowMatchModal(false);
+                      const chat = chatsList.find(c => c.userId === matchedUser.id);
+                      if (chat) setActiveChat(chat);
+                      setActiveTab('chats');
+                    }}
+                    className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider"
+                  >
+                    💬 Abrir Chat Ahora
+                  </button>
+                  <button 
+                    onClick={() => setShowMatchModal(false)}
+                    className="w-full bg-slate-800 text-slate-300 font-bold py-2.5 rounded-xl text-xs"
+                  >
+                    Seguir Buscando
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {showSubscriptionModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
@@ -982,7 +1133,6 @@
             </div>
           )}
 
-          {/* MODAL AUTENTICACIÓN (LOGIN, REGISTRO Y RECUPERACIÓN DE CONTRASEÑA) */}
           {showAuthModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -995,7 +1145,6 @@
                   <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
                 </div>
 
-                {/* VISTA 1: REGISTRO */}
                 {authMode === 'signup' && (
                   <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
                     <div>
@@ -1020,7 +1169,7 @@
                     <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
                       <div>
                         <p className="font-bold text-white">¿Solicitar Insignia de Crítico?</p>
-                        <p className="text-[10px] text-slate-400">Permite postularte para publicar reseñas oficiales tras aprobación.</p>
+                        <p className="text-[10px] text-slate-400">Permite postularte para publicar reseñas oficiales.</p>
                       </div>
                       <input type="checkbox" checked={authWantCritic} onChange={(e) => setAuthWantCritic(e.target.checked)} className="w-4 h-4 accent-amber-500 cursor-pointer" />
                     </div>
@@ -1041,122 +1190,7 @@
                   </form>
                 )}
 
-                {/* VISTA 2: INICIO DE SESIÓN */}
                 {authMode === 'login' && (
                   <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
                     <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
-                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="text-slate-400 font-bold">Contraseña:</label>
-                        <button type="button" onClick={() => { setAuthMode('forgot'); setResetStep(1); }} className="text-amber-400 font-bold hover:underline text-[11px]">¿Olvidaste tu contraseña?</button>
-                      </div>
-                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-
-                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Ingresar
-                    </button>
-                  </form>
-                )}
-
-                {/* VISTA 3: RECUPERACIÓN DE CONTRASEÑA */}
-                {authMode === 'forgot' && (
-                  <form onSubmit={handleForgotSubmit} className="space-y-4 text-xs">
-                    {resetStep === 1 ? (
-                      <>
-                        <p className="text-slate-300 leading-relaxed">Ingresa el correo electrónico asociado a tu cuenta para verificar tu identidad y restablecer tu contraseña.</p>
-                        <div>
-                          <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
-                          <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                        </div>
-                        <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                          Verificar Correo
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-emerald-300">
-                          ✅ ¡Correo verificado con éxito! Ingresa tu nueva contraseña para <b>{forgotEmail}</b>.
-                        </div>
-                        <div>
-                          <label className="block mb-1 text-slate-400 font-bold">Nueva Contraseña:</label>
-                          <input type="password" value={newResetPassword} onChange={(e) => setNewResetPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                        </div>
-                        <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                          Guardar Nueva Contraseña
-                        </button>
-                      </>
-                    )}
-
-                    <div className="text-center pt-2">
-                      <button type="button" onClick={() => { setAuthMode('login'); setResetStep(1); }} className="text-slate-400 hover:text-white font-bold underline">
-                        ← Volver al inicio de sesión
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                <div className="text-center pt-2 border-t border-slate-800 text-xs">
-                  {authMode === 'signup' && (
-                    <p className="text-slate-400">¿Ya tienes cuenta? <button onClick={() => { setAuthMode('login'); setResetStep(1); }} className="text-amber-400 font-bold underline">Inicia Sesión</button></p>
-                  )}
-                  {authMode === 'login' && (
-                    <p className="text-slate-400">¿No tienes cuenta? <button onClick={() => { setAuthMode('signup'); setResetStep(1); }} className="text-amber-400 font-bold underline">Regístrate gratis</button></p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showNewTopicModal && (
-            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">💬 Nuevo Debate Cinéfilo</h3>
-                  <button onClick={() => setShowNewTopicModal(false)} className="text-slate-400 hover:text-white font-bold text-lg">✖</button>
-                </div>
-
-                <form onSubmit={handleCreateTopic} className="space-y-4 text-xs">
-                  <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Título del Debate:</label>
-                    <input type="text" value={newTopicTitle} onChange={(e) => setNewTopicTitle(e.target.value)} placeholder="Ej: ¿Qué opinan de...?" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                  </div>
-                  <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Categoría:</label>
-                    <select value={newTopicCategory} onChange={(e) => setNewTopicCategory(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
-                      <option value="Cine de Autor">Cine de Autor</option>
-                      <option value="Debates Clásicos">Debates Clásicos</option>
-                      <option value="Teorías & Spoilers">Teorías & Spoilers</option>
-                      <option value="Estrenos">Estrenos</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Contenido:</label>
-                    <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe el tema..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                  </div>
-                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase">Publicar Debate</button>
-                </form>
-              </div>
-            </div>
-          )}
-
-        </div>
-      );
-    }
-
-    try {
-      const rootElement = document.getElementById('root');
-      if (rootElement) {
-        const root = ReactDOM.createRoot(rootElement);
-        root.render(<App />);
-      }
-    } catch (e) {
-      console.error("Error al montar la aplicación:", e);
-    }
-  </script>
-</body>
-</html>
+                      <label className="block mb
