@@ -234,20 +234,45 @@
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=es`, '_blank');
       };
 
-      // MANEJADOR DE SUBIDA RÁPIDA DE FOTO LOCAL (FILE READER)
-      const handleImageUpload = (e) => {
+      // 📸 COMPRESIÓN AUTOMÁTICA DE IMÁGENES POR CÓDIGO (Redimensiona y baja el peso de forma transparente)
+      const handleImageCompressionAndUpload = (e) => {
         const file = e.target.files[0];
-        if (file) {
-          if (file.size > 2 * 1024 * 1024) {
-            alert('⚠️ La imagen es muy pesada. Intenta subir una foto menor a 2MB.');
-            return;
-          }
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setEditAvatar(reader.result);
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 400; // Ancho máximo optimizado para avatar
+            const MAX_HEIGHT = 400; // Alto máximo optimizado
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Comprimir a JPEG con calidad 0.7 (reduce drásticamente el peso sin perder calidad visual)
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            setEditAvatar(compressedDataUrl);
           };
-          reader.readAsDataURL(file);
-        }
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
       };
 
       // ACCIONES DE MODERACIÓN (ADMIN)
@@ -743,7 +768,7 @@
               </div>
             )}
 
-            {/* PERFIL (CON BOTÓN DE SUBIDA RÁPIDA DE FOTO DESDE DISPOSITIVO) */}
+            {/* PERFIL (CON COMPRESIÓN AUTOMÁTICA DE IMAGEN) */}
             {activeTab === 'profile' && currentUser && (
               <div className="max-w-xl mx-auto space-y-6">
                 <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
@@ -759,17 +784,18 @@
 
                   <div className="space-y-4 text-xs">
                     
-                    {/* PREVISUALIZACIÓN Y SELECTOR DE ARCHIVO LOCAL */}
+                    {/* SELECTOR DE ARCHIVO CON COMPRESIÓN AUTOMÁTICA */}
                     <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
                       <img src={editAvatar} alt="Avatar preview" className="w-20 h-20 rounded-2xl object-cover border border-amber-500/40" />
                       <div className="space-y-2 flex-1 w-full text-center sm:text-left">
-                        <label className="block font-bold text-amber-400">📸 Subir foto desde tu dispositivo:</label>
+                        <label className="block font-bold text-amber-400">📸 Seleccionar foto (Se comprime sola):</label>
                         <input 
                           type="file" 
                           accept="image/*" 
-                          onChange={handleImageUpload} 
+                          onChange={handleImageCompressionAndUpload} 
                           className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" 
                         />
+                        <p className="text-[10px] text-slate-500">Cualquier foto pesada se optimiza automáticamente al instante.</p>
                       </div>
                     </div>
 
