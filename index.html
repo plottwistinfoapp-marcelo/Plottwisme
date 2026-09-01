@@ -142,69 +142,13 @@
         verified: true,
         bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
         photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
-        socialLinks: { twitter: '@marbuttice', radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
-      },
-      {
-        id: 'u2',
-        name: 'Elena Montero',
-        email: 'elena@gmail.com',
-        password: '123',
-        age: 24,
-        sex: 'Femenino',
-        lookingFor: 'Amigos Cinéfilos',
-        location: 'Posadas, Misiones, Argentina',
-        distanceKm: 85.0,
-        role: 'general',
-        roleLabel: 'Cinéfila Pro & Crítica',
-        isPremium: false,
-        isCritic: true,
-        criticRequested: false,
-        verified: true,
-        bio: 'Directora de cortos amateur y crítica de cine asiático y de autor.',
-        photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80'],
-        socialLinks: { twitter: '@elenamonterok', radio: 'Columnista Radio LT3', tv: 'Canal 12 Misiones' }
+        socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
       }
     ];
 
-    const INITIAL_CHATS = [
-      {
-        id: 'chat_u2',
-        userId: 'u2',
-        userName: 'Elena Montero',
-        userAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80',
-        messages: [
-          { id: 'm1', sender: 'Elena Montero', text: '¡Hola Marcelo! Vi que te encanta el cine de autor. ¿Viste la última de Villeneuve?', time: '10:15' }
-        ]
-      }
-    ];
-
-    const INITIAL_REVIEWS = [
-      {
-        id: 'r1',
-        author: 'Elena Montero',
-        movieTitle: 'Cine de Autor & Estrenos',
-        rating: 9,
-        content: 'Excelente programación en salas locales este fin de semana.',
-        mediaOutlet: 'Columnista Radio LT3 / Canal 12 Misiones',
-        date: '2026-08-31'
-      }
-    ];
-
-    const INITIAL_FORUM_TOPICS = [
-      {
-        id: 'f1',
-        title: '¿Cuál es el mejor Plot Twist de la historia del cine?',
-        category: 'Debates Clásicos',
-        author: 'Marcelo Buttice',
-        date: '2026-08-30',
-        repliesCount: 2,
-        content: 'Abran debate: entre El Sexto Sentido, Club de la Pelea y Los Sospechosos de Siempre... ¿cuál les causó más impacto?',
-        comments: [
-          { id: 'c1', author: 'Elena Montero', date: '2026-08-30', text: '¡Sin dudas Los Sospechosos de Siempre!' },
-          { id: 'c2', author: 'Marcelo Buttice', date: '2026-08-31', text: 'Coincido plenamente.' }
-        ]
-      }
-    ];
+    const INITIAL_CHATS = [];
+    const INITIAL_REVIEWS = [];
+    const INITIAL_FORUM_TOPICS = [];
 
     const COUNTRY_CODES = [
       { code: 'AR', name: 'Argentina 🇦🇷' },
@@ -423,19 +367,13 @@
       };
 
       const handleDeleteUser = (userId) => {
-        if (window.confirm('⚠️ Delete user?')) {
+        if (window.confirm('⚠️ ¿Expulsar / eliminar este usuario permanentemente?')) {
           setUsersList(usersList.filter(u => u.id !== userId));
         }
       };
 
-      const handleSanctionUser = (userId) => {
-        if (window.confirm('🚫 Suspend user?')) {
-          setUsersList(usersList.map(u => u.id === userId ? { ...u, roleLabel: 'Sancionado ⛔' } : u));
-        }
-      };
-
       const handleDeletePhoto = (userId, photoIndex) => {
-        if (window.confirm('🗑️ Delete photo?')) {
+        if (window.confirm('🗑️ ¿Eliminar esta foto por inapropiada?')) {
           setUsersList(usersList.map(u => {
             if (u.id === userId) {
               const updatedPhotos = (u.photos || [u.avatar]).filter((_, i) => i !== photoIndex);
@@ -461,6 +399,25 @@
         }));
       };
 
+      const handleToggleAdminPremium = (userId) => {
+        setUsersList(usersList.map(u => {
+          if (u.id === userId) {
+            const nextPrem = !u.isPremium;
+            const updatedUser = {
+              ...u,
+              isPremium: nextPrem,
+              roleLabel: nextPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
+            };
+            if (currentUser && currentUser.id === updatedUser.id) {
+              setCurrentUser(updatedUser);
+            }
+            return updatedUser;
+          }
+          return u;
+        }));
+        alert('✅ Estado Premium actualizado para el usuario.');
+      };
+
       const handleAuthSubmit = (e) => {
         e.preventDefault();
         if (authMode === 'signup') {
@@ -471,10 +428,13 @@
 
           const existing = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase());
           if (existing) {
-            alert('⚠️ Este email ya está registrado. Por favor, ve a "Iniciar Sesión" con tu contraseña.');
+            alert('⚠️ Este email ya está registrado. Por favor, ve a "Iniciar Sesión".');
             return;
           }
           const defaultAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80';
+          
+          const isAdminEmail = authEmail.toLowerCase().trim() === 'marbuttice@gmail.com';
+
           const newUser = {
             id: 'u_' + Date.now(),
             name: authName,
@@ -485,12 +445,12 @@
             lookingFor: authLookingFor,
             location: `${userCity || 'City'}, ${getCountryName()}`,
             distanceKm: 5.0,
-            role: 'general',
-            roleLabel: 'Cinéfilo Estándar',
-            isPremium: false,
-            isCritic: false,
+            role: isAdminEmail ? 'admin' : 'general',
+            roleLabel: isAdminEmail ? 'Administrador General' : (authWantCritic ? 'Solicitud Crítico Pendiente' : 'Cinéfilo Estándar'),
+            isPremium: isAdminEmail ? true : false,
+            isCritic: isAdminEmail ? true : authWantCritic,
             criticRequested: authWantCritic,
-            verified: false,
+            verified: isAdminEmail ? true : false,
             bio: 'Cinephile.',
             photos: [defaultAvatar],
             avatar: defaultAvatar,
@@ -498,15 +458,24 @@
           };
           setUsersList([...usersList, newUser]);
           setCurrentUser(newUser);
-          alert('🎉 Account created!');
+          alert('🎉 ¡Cuenta creada con éxito!');
         } else {
           const found = usersList.find(u => u.email.toLowerCase() === authEmail.toLowerCase() && u.password === authPassword);
           if (!found) {
-            alert('❌ Credenciales incorrectas. Verifica tu email y contraseña.');
+            alert('❌ Credenciales incorrectas.');
             return;
           }
-          setCurrentUser(found);
-          alert(`👋 ¡Bienvenido de nuevo, ${found.name}!`);
+
+          let loggedUser = { ...found };
+          if (loggedUser.email.toLowerCase().trim() === 'marbuttice@gmail.com') {
+            loggedUser.role = 'admin';
+            loggedUser.roleLabel = 'Administrador General';
+            loggedUser.isCritic = true;
+            loggedUser.isPremium = true;
+          }
+
+          setCurrentUser(loggedUser);
+          alert(`👋 ¡Bienvenido de nuevo, ${loggedUser.name}!`);
         }
         setShowAuthModal(false);
         setAuthEmail('');
@@ -576,7 +545,7 @@
         };
         setCurrentUser(updated);
         setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
-        alert('✅ Profile updated!');
+        alert('✅ ¡Perfil y redes sociales actualizados!');
       };
 
       const handlePublishReview = (e) => {
@@ -589,13 +558,13 @@
           movieTitle: newReviewMovie,
           rating: Number(newReviewRating),
           content: newReviewText,
-          mediaOutlet: currentUser.socialLinks?.radio || currentUser.roleLabel,
+          mediaOutlet: currentUser.socialLinks?.radio || currentUser.socialLinks?.tv || currentUser.roleLabel,
           date: new Date().toISOString().split('T')[0]
         };
         setReviewsList([newRev, ...reviewsList]);
         setNewReviewMovie('');
         setNewReviewText('');
-        alert('📝 Review published!');
+        alert('📝 ¡Reseña publicada con éxito!');
       };
 
       const handleCreateTopic = (e) => {
@@ -641,6 +610,8 @@
         setNewCommentText('');
       };
 
+      const isAdmin = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
+
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
@@ -653,7 +624,7 @@
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
-                      {currentUser ? (currentUser.isPremium ? '⭐ Premium' : '👤 Standard') : '🌐 Guest'}
+                      {currentUser ? (isAdmin ? '🛡️ Admin' : currentUser.isPremium ? '⭐ Premium' : '👤 Standard') : '🌐 Guest'}
                     </p>
                   </div>
                 </div>
@@ -682,7 +653,7 @@
                   className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-32 text-amber-300 focus:outline-none capitalize text-xs" 
                 />
 
-                {currentUser?.role === 'admin' && (
+                {isAdmin && (
                   <>
                     <span className="text-slate-600">|</span>
                     <span className="text-amber-500 font-bold whitespace-nowrap">{t.country}</span>
@@ -710,9 +681,9 @@
                   <button onClick={() => { setActiveTab('profile'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>{t.profile}</button>
                 )}
 
-                {currentUser?.role === 'admin' && (
+                {isAdmin && (
                   <button onClick={() => { setActiveTab('admin'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/50'}`}>
-                    {t.admin}
+                    🛡️ Panel Admin
                   </button>
                 )}
 
@@ -977,11 +948,11 @@
                 
                 {currentUser?.isCritic ? (
                   <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-                    <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña (🌟)</h3>
+                    <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña de Película (Insignia 🌟)</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div>
                         <label className="block mb-1 text-slate-400">Película:</label>
-                        <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Película..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                        <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Oppenheimer..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
                       </div>
                       <div>
                         <label className="block mb-1 text-slate-400">Puntaje (1-10):</label>
@@ -989,33 +960,37 @@
                       </div>
                     </div>
                     <div className="text-xs">
-                      <label className="block mb-1 text-slate-400">Análisis:</label>
-                      <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
+                      <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu análisis..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                     </div>
-                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar</button>
+                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña</button>
                   </form>
                 ) : (
                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2 text-xs">
-                    <p className="text-amber-400 font-bold">🔒 Requiere Insignia de Crítico.</p>
+                    <p className="text-amber-400 font-bold">🔒 Necesitas la Insignia de Crítico otorgada por el Administrador para publicar reseñas.</p>
                   </div>
                 )}
 
                 <div className="space-y-4 pt-2">
-                  {reviewsList.map(rev => (
-                    <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
-                      <div className="flex justify-between items-start text-xs">
-                        <div>
-                          <span className="font-bold text-amber-500 flex items-center gap-1">
-                            {rev.author} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">🌟 Crítico</span>
-                          </span>
-                          <p className="text-[10px] text-slate-400">🎙️ {rev.mediaOutlet}</p>
+                  {reviewsList.length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center py-6">Aún no hay reseñas publicadas. ¡Sé el primero en escribir una!</p>
+                  ) : (
+                    reviewsList.map(rev => (
+                      <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
+                        <div className="flex justify-between items-start text-xs">
+                          <div>
+                            <span className="font-bold text-amber-500 flex items-center gap-1">
+                              {rev.author} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">🌟 Crítico</span>
+                            </span>
+                            <p className="text-[10px] text-slate-400">🎙️ Medio / Red: {rev.mediaOutlet || 'Independiente'}</p>
+                          </div>
+                          <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
                         </div>
-                        <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
+                        <h4 className="text-base font-black">{rev.movieTitle}</h4>
+                        <p className="text-xs text-slate-300 leading-relaxed">{rev.content}</p>
                       </div>
-                      <h4 className="text-base font-black">{rev.movieTitle}</h4>
-                      <p className="text-xs text-slate-300 leading-relaxed">{rev.content}</p>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -1026,7 +1001,7 @@
                   <div className="flex justify-between items-center border-b border-slate-800 pb-4">
                     <div>
                       <h2 className="text-xl font-black">{currentUser.name}</h2>
-                      <p className="text-xs text-amber-500">{currentUser.roleLabel}</p>
+                      <p className="text-xs text-amber-500">{currentUser.roleLabel} {currentUser.isCritic ? '🌟' : ''}</p>
                     </div>
                     <button type="button" onClick={() => setShowSubscriptionModal(true)} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
                       {currentUser.isPremium ? '⭐ Premium' : '🚀 Planes'}
@@ -1062,32 +1037,88 @@
                       <label className="block mb-1 text-slate-400">Biografía:</label>
                       <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
                     </div>
-                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar</button>
+
+                    {currentUser.isCritic && (
+                      <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl space-y-3">
+                        <h4 className="font-bold text-amber-400">🎙️ Links de Redes / Medios (Crítico)</h4>
+                        <div>
+                          <label className="block mb-1 text-slate-400">Radio / Podcast / Medio:</label>
+                          <input type="text" value={editRadio} onChange={(e) => setEditRadio(e.target.value)} placeholder="Ej: Frecuencia Cine" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
+                        </div>
+                        <div>
+                          <label className="block mb-1 text-slate-400">TV / Canal / Web Link:</label>
+                          <input type="text" value={editTv} onChange={(e) => setEditTv(e.target.value)} placeholder="Ej: Canal 12 o enlace web" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
+                        </div>
+                      </div>
+                    )}
+
+                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil</button>
                   </div>
                 </form>
               </div>
             )}
 
-            {activeTab === 'admin' && currentUser?.role === 'admin' && (
+            {activeTab === 'admin' && isAdmin && (
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <h2 className="text-2xl font-black text-white">🛡️ Admin</h2>
+                  <div>
+                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador General</h2>
+                    <p className="text-xs text-amber-400 mt-1">Control total: otorga Premium, insignia de crítico, modera fotos y expulsa usuarios.</p>
+                  </div>
+                  <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
+                    Total Usuarios: {usersList.length}
+                  </span>
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {usersList.map(u => (
-                    <div key={u.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
-                      <div className="flex gap-3 items-start">
-                        <img src={u.avatar} alt="Avatar" className="w-14 h-14 rounded-xl object-cover" />
+                  {usersList.map(u => {
+                    const userPhotos = u.photos || [u.avatar];
+                    return (
+                      <div key={u.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
+                        <div className="flex gap-3 items-start">
+                          <img src={u.avatar} alt="Avatar" className="w-16 h-16 rounded-xl object-cover border border-slate-700" />
+                          <div className="overflow-hidden flex-1">
+                            <p className="font-bold text-white text-sm truncate">
+                              {u.name} {u.isCritic && '🌟'} {u.isPremium && '⭐'}
+                            </p>
+                            <p className="text-xs text-amber-400">{u.roleLabel}</p>
+                            <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
+                          </div>
+                        </div>
+
+                        {/* FOTOS DEL USUARIO PARA MODERAR / BORRAR */}
                         <div>
-                          <p className="font-bold text-white text-sm">{u.name} {u.isCritic && '🌟'}</p>
-                          <p className="text-xs text-amber-400">{u.roleLabel}</p>
+                          <p className="text-[10px] font-bold text-slate-400 mb-1">Fotos del usuario (haz clic en ✕ para borrar inapropiadas):</p>
+                          <div className="flex gap-1 overflow-x-auto py-1">
+                            {userPhotos.map((p, pIdx) => (
+                              <div key={pIdx} className="relative group shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-slate-700 bg-slate-900">
+                                <img src={p} alt="mini" className="w-full h-full object-cover" />
+                                <button onClick={() => handleDeletePhoto(u.id, pIdx)} className="absolute inset-0 bg-rose-900/90 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity font-bold" title="Borrar foto inapropiada">
+                                  ✕ Borrar
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
+                          <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                            {u.isCritic ? '🌟 Quitar Insignia de Crítico' : '✨ Otorgar Insignia de Crítico'}
+                          </button>
+
+                          <button onClick={() => handleToggleAdminPremium(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isPremium ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                            {u.isPremium ? '⭐ Quitar Plan Premium' : '⭐ Otorgar Plan Premium'}
+                          </button>
+                          
+                          {u.email.toLowerCase() !== 'marbuttice@gmail.com' && (
+                            <button onClick={() => handleDeleteUser(u.id)} className="w-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
+                              🗑️ Expulsar / Eliminar Usuario
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <button onClick={() => handleToggleCriticBadge(u.id)} className="w-full text-[10px] font-bold py-1.5 rounded-lg border bg-slate-800 text-slate-300 border-slate-700">
-                        {u.isCritic ? '🌟 Quitar Crítico' : '✨ Dar Crítico'}
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
