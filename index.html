@@ -10,6 +10,31 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
+  <!-- Firebase SDKs Modernos (Modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDHdoWQUZDNjxfvq7Rfl4Hvgpp8z-DoDMo",
+      authDomain: "plottwisme-c3124.firebaseapp.com",
+      projectId: "plottwisme-c3124",
+      storageBucket: "plottwisme-c3124.firebasestorage.app",
+      messagingSenderId: "571052328665",
+      appId: "1:571052328665:web:f1374ddb467313181ca0c8",
+      measurementId: "G-KYYQV3PN5F"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window.db = getFirestore(app);
+    window.auth = getAuth(app);
+    window.FirebaseFns = {
+      signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged,
+      collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp
+    };
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
@@ -22,7 +47,7 @@
 <body class="antialiased bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
   <div id="root">
     <div class="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
-      ⏳ Cargando Plottwisme...
+      ⏳ Conectando con Plottwisme Cloud...
     </div>
   </div>
 
@@ -51,7 +76,7 @@
         login: "🔑 Iniciar Sesión",
         cityPlaceholder: "Tu Ciudad",
         country: "País:",
-        engineTitle: "Motor Oficial Geolocalizado",
+        engineTitle: "Motor Oficial Geolocalizado en la Nube",
         cinemaRealtime: "Cartelera en Tiempo Real para",
         cinemaSubtitle: "Accede instantáneamente al panel interactivo oficial con las películas, complejos, horarios y salas disponibles hoy en tu zona.",
         openCinema: "Abrir Cartelera de",
@@ -79,7 +104,7 @@
         login: "🔑 Login",
         cityPlaceholder: "Your City",
         country: "Country:",
-        engineTitle: "Official Geolocated Engine",
+        engineTitle: "Official Cloud Geolocated Engine",
         cinemaRealtime: "Real-Time Showtimes for",
         cinemaSubtitle: "Instantly access the official interactive panel featuring movies, theaters, schedules, and screening rooms available today in your area.",
         openCinema: "Open Showtimes for",
@@ -107,7 +132,7 @@
         login: "🔑 Entrar",
         cityPlaceholder: "Sua Cidade",
         country: "País:",
-        engineTitle: "Mecanismo Oficial Geolocalizado",
+        engineTitle: "Mecanismo Oficial em Nuvem",
         cinemaRealtime: "Programação em Tempo Real para",
         cinemaSubtitle: "Acesse instantaneamente o painel interativo oficial com filmes, cinemas, horários e salas disponíveis hoje na sua região.",
         openCinema: "Abrir Cinemas de",
@@ -122,30 +147,6 @@
         keepSearching: "Continuar Buscando"
       }
     };
-
-    const INITIAL_USERS = [
-      {
-        id: 'u1',
-        name: 'Marcelo Buttice',
-        email: 'marbuttice@gmail.com',
-        password: 'admin',
-        age: 57,
-        sex: 'Masculino',
-        lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
-        location: 'Oberá, Misiones, Argentina',
-        distanceKm: 2.5,
-        role: 'admin',
-        roleLabel: 'Administrador General',
-        isPremium: true,
-        isCritic: true,
-        criticRequested: false,
-        verified: true,
-        bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
-        photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-        socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
-      }
-    ];
 
     const COUNTRY_CODES = [
       { code: 'AR', name: 'Argentina 🇦🇷' },
@@ -174,52 +175,8 @@
       const [lang, setLang] = useState(() => getBrowserLang());
       const t = TRANSLATIONS[lang] || TRANSLATIONS.es;
 
-      const [usersList, setUsersList] = useState(() => {
-        const saved = localStorage.getItem('plottwisme_users');
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (!parsed.some(u => u.email.toLowerCase() === 'marbuttice@gmail.com')) {
-              parsed.unshift(INITIAL_USERS[0]);
-            }
-            return parsed;
-          } catch (e) {
-            return INITIAL_USERS;
-          }
-        }
-        return INITIAL_USERS;
-      });
-
-      const [currentUser, setCurrentUser] = useState(() => {
-        const savedUser = localStorage.getItem('plottwisme_current_user');
-        if (savedUser) {
-          try {
-            const parsed = JSON.parse(savedUser);
-            if (parsed.email && parsed.email.toLowerCase().trim() === 'marbuttice@gmail.com') {
-              parsed.role = 'admin';
-              parsed.roleLabel = 'Administrador General';
-              parsed.isCritic = true;
-              parsed.isPremium = true;
-            }
-            return parsed;
-          } catch (e) {
-            return null;
-          }
-        }
-        return null;
-      });
-
-      useEffect(() => {
-        localStorage.setItem('plottwisme_users', JSON.stringify(usersList));
-      }, [usersList]);
-
-      useEffect(() => {
-        if (currentUser) {
-          localStorage.setItem('plottwisme_current_user', JSON.stringify(currentUser));
-        } else {
-          localStorage.removeItem('plottwisme_current_user');
-        }
-      }, [currentUser]);
+      const [usersList, setUsersList] = useState([]);
+      const [currentUser, setCurrentUser] = useState(null);
       
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
@@ -263,10 +220,89 @@
       const [newReviewRating, setNewReviewRating] = useState(10);
       const [newReviewText, setNewReviewText] = useState('');
 
-      const [editBio, setEditBio] = useState(currentUser ? currentUser.bio : '');
-      const [editPhotos, setEditPhotos] = useState(currentUser ? (currentUser.photos || [currentUser.avatar]) : []);
-      const [editRadio, setEditRadio] = useState(currentUser?.socialLinks?.radio || '');
-      const [editTv, setEditTv] = useState(currentUser?.socialLinks?.tv || '');
+      const [editBio, setEditBio] = useState('');
+      const [editPhotos, setEditPhotos] = useState([]);
+      const [editRadio, setEditRadio] = useState('');
+      const [editTv, setEditTv] = useState('');
+
+      // Sincronización en tiempo real con Cloud Firestore
+      useEffect(() => {
+        if (!window.db) return;
+        const { collection, onSnapshot } = window.FirebaseFns;
+
+        // Escuchar usuarios en la nube
+        const unsubUsers = onSnapshot(collection(window.db, "users"), (snapshot) => {
+          let loadedUsers = [];
+          snapshot.forEach(docSnap => {
+            loadedUsers.push({ id: docSnap.id, ...docSnap.data() });
+          });
+
+          // Garantizar que el admin maestro siempre esté presente
+          const adminExists = loadedUsers.some(u => u.email?.toLowerCase() === 'marbuttice@gmail.com');
+          if (!adminExists) {
+            const defaultAdmin = {
+              id: 'u1',
+              name: 'Marcelo Buttice',
+              email: 'marbuttice@gmail.com',
+              age: 57,
+              sex: 'Masculino',
+              lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
+              location: 'Oberá, Misiones, Argentina',
+              distanceKm: 2.5,
+              role: 'admin',
+              roleLabel: 'Administrador General',
+              isPremium: true,
+              isCritic: true,
+              verified: true,
+              bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
+              photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
+              socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
+            };
+            loadedUsers.unshift(defaultAdmin);
+            window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", "u1"), defaultAdmin).catch(()=>{});
+          }
+
+          setUsersList(loadedUsers);
+
+          if (window.auth?.currentUser) {
+            const currentDoc = loadedUsers.find(u => u.email?.toLowerCase() === window.auth.currentUser.email.toLowerCase());
+            if (currentDoc) {
+              if (currentDoc.email.toLowerCase() === 'marbuttice@gmail.com') {
+                currentDoc.role = 'admin';
+                currentDoc.roleLabel = 'Administrador General';
+                currentDoc.isCritic = true;
+                currentDoc.isPremium = true;
+              }
+              setCurrentUser(currentDoc);
+            }
+          }
+        });
+
+        // Escuchar Foros en la nube
+        const unsubForums = onSnapshot(collection(window.db, "forums"), (snapshot) => {
+          let loadedForums = [];
+          snapshot.forEach(docSnap => {
+            loadedForums.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          setForumTopics(loadedForums);
+        });
+
+        // Escuchar Reseñas en la nube
+        const unsubReviews = onSnapshot(collection(window.db, "reviews"), (snapshot) => {
+          let loadedReviews = [];
+          snapshot.forEach(docSnap => {
+            loadedReviews.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          setReviewsList(loadedReviews);
+        });
+
+        return () => {
+          unsubUsers();
+          unsubForums();
+          unsubReviews();
+        };
+      }, []);
 
       useEffect(() => {
         if (navigator.geolocation) {
@@ -407,181 +443,205 @@
         setEditPhotos(editPhotos.filter((_, idx) => idx !== indexToRemove));
       };
 
-      const handleDeleteUser = (userId) => {
-        if (window.confirm('⚠️ ¿Expulsar / eliminar este usuario permanentemente?')) {
-          setUsersList(usersList.filter(u => u.id !== userId));
-        }
-      };
-
-      const handleDeletePhoto = (userId, photoIndex) => {
-        if (window.confirm('🗑️ ¿Eliminar esta foto por inapropiada?')) {
-          setUsersList(usersList.map(u => {
-            if (u.id === userId) {
-              const updatedPhotos = (u.photos || [u.avatar]).filter((_, i) => i !== photoIndex);
-              return { ...u, photos: updatedPhotos, avatar: updatedPhotos[0] || 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80' };
-            }
-            return u;
-          }));
-        }
-      };
-
-      const handleToggleCriticBadge = (userId) => {
-        setUsersList(usersList.map(u => {
-          if (u.id === userId) {
-            const nextVal = !u.isCritic;
-            return { 
-              ...u, 
-              isCritic: nextVal, 
-              roleLabel: nextVal ? 'Cinéfilo Pro & Crítico' : 'Cinéfilo Estándar',
-              criticRequested: false 
-            };
+      const handleDeleteUser = async (userId) => {
+        if (window.confirm('⚠️ ¿Expulsar / eliminar este usuario de la nube permanentemente?')) {
+          try {
+            await window.FirebaseFns.deleteDoc(window.FirebaseFns.doc(window.db, "users", userId));
+            alert('✅ Usuario eliminado de la nube.');
+          } catch (err) {
+            alert('Error al eliminar usuario.');
           }
-          return u;
-        }));
+        }
       };
 
-      const handleToggleAdminPremium = (userId) => {
-        setUsersList(usersList.map(u => {
-          if (u.id === userId) {
-            const nextPrem = !u.isPremium;
-            const updatedUser = {
-              ...u,
+      const handleDeletePhoto = async (userId, photoIndex) => {
+        if (window.confirm('🗑️ ¿Eliminar esta foto por inapropiada?')) {
+          const targetUser = usersList.find(u => u.id === userId);
+          if (targetUser) {
+            const updatedPhotos = (targetUser.photos || [targetUser.avatar]).filter((_, i) => i !== photoIndex);
+            const newAvatar = updatedPhotos[0] || 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80';
+            try {
+              await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", userId), {
+                photos: updatedPhotos,
+                avatar: newAvatar
+              });
+              alert('✅ Foto moderada y eliminada.');
+            } catch (err) {
+              alert('Error al actualizar fotos.');
+            }
+          }
+        }
+      };
+
+      const handleToggleCriticBadge = async (userId) => {
+        const targetUser = usersList.find(u => u.id === userId);
+        if (targetUser) {
+          const nextVal = !targetUser.isCritic;
+          try {
+            await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", userId), {
+              isCritic: nextVal,
+              roleLabel: nextVal ? 'Cinéfilo Pro & Crítico' : 'Cinéfilo Estándar',
+              criticRequested: false
+            });
+            alert('✅ Insignia de crítico actualizada en la nube.');
+          } catch (err) {
+            alert('Error al actualizar crítico.');
+          }
+        }
+      };
+
+      const handleToggleAdminPremium = async (userId) => {
+        const targetUser = usersList.find(u => u.id === userId);
+        if (targetUser) {
+          const nextPrem = !targetUser.isPremium;
+          try {
+            await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", userId), {
               isPremium: nextPrem,
               roleLabel: nextPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
-            };
-            if (currentUser && currentUser.id === updatedUser.id) {
-              setCurrentUser(updatedUser);
-            }
-            return updatedUser;
+            });
+            alert('✅ Estatus Premium actualizado en la nube.');
+          } catch (err) {
+            alert('Error al actualizar premium.');
           }
-          return u;
-        }));
-        alert('✅ Estado Premium actualizado para el usuario.');
+        }
       };
 
-      const handleAuthSubmit = (e) => {
+      const handleAuthSubmit = async (e) => {
         e.preventDefault();
         const cleanEmail = authEmail.toLowerCase().trim();
         const isAdminEmail = cleanEmail === 'marbuttice@gmail.com';
 
-        if (authMode === 'signup') {
-          if (isAdminEmail) {
-            const adminUser = {
-              id: 'u1',
-              name: authName || 'Marcelo Buttice',
-              email: 'marbuttice@gmail.com',
-              password: authPassword || 'admin',
-              age: 57,
-              sex: 'Masculino',
-              lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
-              location: 'Oberá, Misiones, Argentina',
-              distanceKm: 2.5,
-              role: 'admin',
-              roleLabel: 'Administrador General',
-              isPremium: true,
-              isCritic: true,
-              criticRequested: false,
-              verified: true,
-              bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
-              photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
-              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-              socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
+        try {
+          if (authMode === 'signup') {
+            if (isAdminEmail) {
+              const adminUser = {
+                id: 'u1',
+                name: authName || 'Marcelo Buttice',
+                email: 'marbuttice@gmail.com',
+                age: 57,
+                sex: 'Masculino',
+                lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
+                location: 'Oberá, Misiones, Argentina',
+                distanceKm: 2.5,
+                role: 'admin',
+                roleLabel: 'Administrador General',
+                isPremium: true,
+                isCritic: true,
+                verified: true,
+                bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
+                photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
+                socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
+              };
+              
+              try {
+                await window.FirebaseFns.createUserWithEmailAndPassword(window.auth, cleanEmail, authPassword);
+              } catch(err) {}
+
+              await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", "u1"), adminUser);
+              setCurrentUser(adminUser);
+              alert('🛡️ ¡Acceso de Administrador autorizado en la nube!');
+              setShowAuthModal(false);
+              setAuthEmail('');
+              setAuthPassword('');
+              return;
+            }
+
+            if (Number(authAge) < 18) {
+              alert('🚫 +18 required.');
+              return;
+            }
+
+            const userCred = await window.FirebaseFns.createUserWithEmailAndPassword(window.auth, cleanEmail, authPassword);
+            const uid = userCred.user.uid;
+            const defaultAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80';
+            
+            const newUser = {
+              id: uid,
+              name: authName,
+              email: cleanEmail,
+              age: Number(authAge),
+              sex: authSex,
+              lookingFor: authLookingFor,
+              location: `${userCity || 'City'}, ${getCountryName()}`,
+              distanceKm: 5.0,
+              role: 'general',
+              roleLabel: authWantCritic ? 'Solicitud Crítico Pendiente' : 'Cinéfilo Estándar',
+              isPremium: false,
+              isCritic: authWantCritic,
+              criticRequested: authWantCritic,
+              verified: false,
+              bio: 'Cinephile.',
+              photos: [defaultAvatar],
+              avatar: defaultAvatar,
+              socialLinks: {}
             };
-            const filtered = usersList.filter(u => u.email.toLowerCase() !== 'marbuttice@gmail.com');
-            setUsersList([adminUser, ...filtered]);
-            setCurrentUser(adminUser);
-            alert('🛡️ ¡Acceso de Administrador autorizado con éxito!');
-            setShowAuthModal(false);
-            setAuthEmail('');
-            setAuthPassword('');
-            return;
-          }
 
-          if (Number(authAge) < 18) {
-            alert('🚫 +18 required.');
-            return;
-          }
+            await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", uid), newUser);
+            setCurrentUser(newUser);
+            alert('🎉 ¡Cuenta creada con éxito en la nube!');
+          } else {
+            let userCred;
+            try {
+              userCred = await window.FirebaseFns.signInWithEmailAndPassword(window.auth, cleanEmail, authPassword);
+            } catch (authErr) {
+              if (isAdminEmail) {
+                const adminUser = {
+                  id: 'u1',
+                  name: 'Marcelo Buttice',
+                  email: 'marbuttice@gmail.com',
+                  age: 57,
+                  sex: 'Masculino',
+                  lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
+                  location: 'Oberá, Misiones, Argentina',
+                  distanceKm: 2.5,
+                  role: 'admin',
+                  roleLabel: 'Administrador General',
+                  isPremium: true,
+                  isCritic: true,
+                  verified: true,
+                  bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
+                  photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
+                  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
+                  socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
+                };
+                await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", "u1"), adminUser, { merge: true });
+                setCurrentUser(adminUser);
+                alert('🛡️ ¡Bienvenido administrador!');
+                setShowAuthModal(false);
+                setAuthEmail('');
+                setAuthPassword('');
+                return;
+              } else {
+                throw authErr;
+              }
+            }
 
-          const existing = usersList.find(u => u.email.toLowerCase() === cleanEmail);
-          if (existing) {
-            alert('⚠️ Este email ya está registrado. Por favor, ve a "Iniciar Sesión".');
-            return;
+            const uid = userCred.user.uid;
+            const docSnap = await window.FirebaseFns.getDoc(window.FirebaseFns.doc(window.db, "users", uid));
+            if (docSnap.exists()) {
+              let loggedData = docSnap.data();
+              if (cleanEmail === 'marbuttice@gmail.com') {
+                loggedData.role = 'admin';
+                loggedData.roleLabel = 'Administrador General';
+                loggedData.isCritic = true;
+                loggedData.isPremium = true;
+              }
+              setCurrentUser(loggedData);
+              alert(`👋 ¡Bienvenido de nuevo, ${loggedData.name}!`);
+            } else {
+              alert('❌ Perfil no encontrado en la base de datos.');
+            }
           }
-          const defaultAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80';
-          
-          const newUser = {
-            id: 'u_' + Date.now(),
-            name: authName,
-            email: cleanEmail,
-            password: authPassword,
-            age: Number(authAge),
-            sex: authSex,
-            lookingFor: authLookingFor,
-            location: `${userCity || 'City'}, ${getCountryName()}`,
-            distanceKm: 5.0,
-            role: 'general',
-            roleLabel: authWantCritic ? 'Solicitud Crítico Pendiente' : 'Cinéfilo Estándar',
-            isPremium: false,
-            isCritic: authWantCritic,
-            criticRequested: authWantCritic,
-            verified: false,
-            bio: 'Cinephile.',
-            photos: [defaultAvatar],
-            avatar: defaultAvatar,
-            socialLinks: {}
-          };
-          setUsersList([...usersList, newUser]);
-          setCurrentUser(newUser);
-          alert('🎉 ¡Cuenta creada con éxito!');
-        } else {
-          let found = usersList.find(u => u.email.toLowerCase() === cleanEmail && u.password === authPassword);
-          
-          if (!found && isAdminEmail) {
-            found = {
-              id: 'u1',
-              name: 'Marcelo Buttice',
-              email: 'marbuttice@gmail.com',
-              password: authPassword,
-              age: 57,
-              sex: 'Masculino',
-              lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
-              location: 'Oberá, Misiones, Argentina',
-              distanceKm: 2.5,
-              role: 'admin',
-              roleLabel: 'Administrador General',
-              isPremium: true,
-              isCritic: true,
-              criticRequested: false,
-              verified: true,
-              bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
-              photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
-              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
-              socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
-            };
-          }
-
-          if (!found) {
-            alert('❌ Credenciales incorrectas. Verifica tu email y contraseña.');
-            return;
-          }
-
-          let loggedUser = { ...found };
-          if (loggedUser.email.toLowerCase().trim() === 'marbuttice@gmail.com') {
-            loggedUser.role = 'admin';
-            loggedUser.roleLabel = 'Administrador General';
-            loggedUser.isCritic = true;
-            loggedUser.isPremium = true;
-          }
-
-          setCurrentUser(loggedUser);
-          alert(`👋 ¡Bienvenido de nuevo, ${loggedUser.name}!`);
+          setShowAuthModal(false);
+          setAuthEmail('');
+          setAuthPassword('');
+        } catch (err) {
+          alert('⚠️ Error de autenticación: ' + (err.message || 'Verifica tus datos.'));
         }
-        setShowAuthModal(false);
-        setAuthEmail('');
-        setAuthPassword('');
       };
 
-      const handleForgotSubmit = (e) => {
+      const handleForgotSubmit = async (e) => {
         e.preventDefault();
         if (resetStep === 1) {
           const found = usersList.find(u => u.email.toLowerCase() === forgotEmail.toLowerCase());
@@ -591,22 +651,21 @@
           }
           setResetStep(2);
         } else {
-          if (!newResetPassword) return;
-          setUsersList(usersList.map(u => u.email.toLowerCase() === forgotEmail.toLowerCase() ? { ...u, password: newResetPassword } : u));
-          alert('✅ Password reset successfully!');
+          alert('✅ Solicitud procesada. Revisa tu correo o contacta al administrador.');
           setShowAuthModal(false);
           setAuthMode('login');
           setResetStep(1);
           setForgotEmail('');
-          setNewResetPassword('');
         }
       };
 
-      const handleLogout = () => {
+      const handleLogout = async () => {
+        try {
+          await window.FirebaseFns.signOut(window.auth);
+        } catch(e){}
         setCurrentUser(null);
-        localStorage.removeItem('plottwisme_current_user');
         setActiveTab('cinema');
-        alert('Logged out.');
+        alert('Sesión cerrada.');
       };
 
       const maxDistance = currentUser?.isPremium ? 500 : 100;
@@ -616,44 +675,45 @@
 
       const currentCandidate = filteredCandidates[currentIndex];
 
-      const handleUpgradePlan = (isPrem) => {
+      const handleUpgradePlan = async (isPrem) => {
         if (!currentUser) {
           setShowAuthModal(true);
           return;
         }
-        const updated = { 
-          ...currentUser, 
-          isPremium: isPrem, 
-          roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar' 
-        };
-        setCurrentUser(updated);
-        setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
-        setShowSubscriptionModal(false);
-        alert(isPrem ? '⭐ Upgraded to Premium!' : 'Switched to Standard.');
+        try {
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id), {
+            isPremium: isPrem,
+            roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
+          });
+          setShowSubscriptionModal(false);
+          alert(isPrem ? '⭐ ¡Actualizado a Premium en la nube!' : 'Cambiado a Estándar.');
+        } catch(err) {
+          alert('Error al actualizar plan.');
+        }
       };
 
-      const handleSaveProfile = (e) => {
+      const handleSaveProfile = async (e) => {
         e.preventDefault();
         if (!currentUser) return;
         const primaryAvatar = editPhotos.length > 0 ? editPhotos[0] : 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80';
-        const updated = {
-          ...currentUser,
-          bio: editBio,
-          photos: editPhotos,
-          avatar: primaryAvatar,
-          socialLinks: { radio: editRadio, tv: editTv }
-        };
-        setCurrentUser(updated);
-        setUsersList(usersList.map(u => u.email === updated.email ? updated : u));
-        alert('✅ ¡Perfil y redes sociales actualizados!');
+        try {
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id), {
+            bio: editBio,
+            photos: editPhotos,
+            avatar: primaryAvatar,
+            socialLinks: { radio: editRadio, tv: editTv }
+          });
+          alert('✅ ¡Perfil y fotos actualizados en la nube!');
+        } catch(err) {
+          alert('Error al guardar perfil.');
+        }
       };
 
-      const handlePublishReview = (e) => {
+      const handlePublishReview = async (e) => {
         e.preventDefault();
         if (!currentUser?.isCritic) return;
         if (!newReviewMovie || !newReviewText) return;
         const newRev = {
-          id: 'r_' + Date.now(),
           author: currentUser.name,
           movieTitle: newReviewMovie,
           rating: Number(newReviewRating),
@@ -661,18 +721,22 @@
           mediaOutlet: currentUser.socialLinks?.radio || currentUser.socialLinks?.tv || currentUser.roleLabel,
           date: new Date().toISOString().split('T')[0]
         };
-        setReviewsList([newRev, ...reviewsList]);
-        setNewReviewMovie('');
-        setNewReviewText('');
-        alert('📝 ¡Reseña publicada con éxito!');
+        try {
+          await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "reviews", 'r_' + Date.now()), newRev);
+          setNewReviewMovie('');
+          setNewReviewText('');
+          alert('📝 ¡Reseña publicada en la nube!');
+        } catch(err) {
+          alert('Error al publicar reseña.');
+        }
       };
 
-      const handleCreateTopic = (e) => {
+      const handleCreateTopic = async (e) => {
         e.preventDefault();
         if (!currentUser) { setShowAuthModal(true); return; }
         if (!newTopicTitle || !newTopicContent) return;
+        const topicId = 'f_' + Date.now();
         const newTopic = {
-          id: 'f_' + Date.now(),
           title: newTopicTitle,
           category: newTopicCategory,
           author: currentUser.name,
@@ -681,14 +745,18 @@
           content: newTopicContent,
           comments: []
         };
-        setForumTopics([newTopic, ...forumTopics]);
-        setNewTopicTitle('');
-        setNewTopicContent('');
-        setShowNewTopicModal(false);
-        alert('💬 ¡Debate creado con éxito!');
+        try {
+          await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "forums", topicId), newTopic);
+          setNewTopicTitle('');
+          setNewTopicContent('');
+          setShowNewTopicModal(false);
+          alert('💬 ¡Debate creado en la nube!');
+        } catch(err) {
+          alert('Error al crear debate.');
+        }
       };
 
-      const handleAddComment = (e) => {
+      const handleAddComment = async (e) => {
         e.preventDefault();
         if (!currentUser || !newCommentText || !activeTopic) return;
         const comment = {
@@ -697,17 +765,17 @@
           date: new Date().toISOString().split('T')[0],
           text: newCommentText
         };
-        const updatedTopics = forumTopics.map(t => {
-          if (t.id === activeTopic.id) {
-            const updatedComments = [...t.comments, comment];
-            const updatedT = { ...t, comments: updatedComments, repliesCount: updatedComments.length };
-            setActiveTopic(updatedT);
-            return updatedT;
-          }
-          return t;
-        });
-        setForumTopics(updatedTopics);
-        setNewCommentText('');
+        const updatedComments = [...activeTopic.comments, comment];
+        try {
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "forums", activeTopic.id), {
+            comments: updatedComments,
+            repliesCount: updatedComments.length
+          });
+          setActiveTopic({ ...activeTopic, comments: updatedComments, repliesCount: updatedComments.length });
+          setNewCommentText('');
+        } catch(err) {
+          alert('Error al responder.');
+        }
       };
 
       const isAdmin = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
@@ -724,7 +792,7 @@
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
-                      {currentUser ? (isAdmin ? '🛡️ Admin' : currentUser.isPremium ? '⭐ Premium' : '👤 Standard') : '🌐 Guest'}
+                      {currentUser ? (isAdmin ? '🛡️ Admin Cloud' : currentUser.isPremium ? '⭐ Premium' : '👤 Standard') : '🌐 Guest'}
                     </p>
                   </div>
                 </div>
@@ -847,7 +915,7 @@
                       >
                         <div>
                           <h4 className="font-bold text-white group-hover:text-amber-400 transition-colors text-sm">{cat.label}</h4>
-                          <p className="text-xs text-slate-400 mt-1">Real-time sync.</p>
+                          <p className="text-xs text-slate-400 mt-1">Cloud sync active.</p>
                         </div>
                         <div className="text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t border-slate-800">
                           <span>{t.consultGoogle}</span>
@@ -880,9 +948,9 @@
                     </div>
 
                     <div className="space-y-4">
-                      <h3 className="text-lg font-black text-amber-500">💬 Respuestas ({activeTopic.comments.length})</h3>
+                      <h3 className="text-lg font-black text-amber-500">💬 Respuestas ({activeTopic.comments?.length || 0})</h3>
 
-                      {activeTopic.comments.map(c => (
+                      {(activeTopic.comments || []).map(c => (
                         <div key={c.id} className="bg-slate-900/80 border border-slate-800/80 p-4 rounded-2xl space-y-2">
                           <div className="flex justify-between items-center text-xs text-slate-400">
                             <span className="font-bold text-white">{c.author}</span>
@@ -904,8 +972,8 @@
                   <div className="space-y-6">
                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
                       <div>
-                        <h2 className="text-2xl font-black text-white">💬 Foros de Discusión</h2>
-                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías con cinéfilos del mundo.</p>
+                        <h2 className="text-2xl font-black text-white">💬 Foros de Discusión Cloud</h2>
+                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías con cinéfilos sincronizados globalmente.</p>
                       </div>
                       <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
                         ✍️ Nuevo Debate
@@ -914,7 +982,7 @@
 
                     <div className="space-y-4">
                       {forumTopics.length === 0 ? (
-                        <p className="text-xs text-slate-400 text-center py-6">Aún no hay debates creados. ¡Sé el primero en abrir uno!</p>
+                        <p className="text-xs text-slate-400 text-center py-6">Aún no hay debates en la nube. ¡Sé el primero en abrir uno!</p>
                       ) : (
                         forumTopics.map(topic => (
                           <div key={topic.id} onClick={() => setActiveTopic(topic)} className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all space-y-3 group">
@@ -925,7 +993,7 @@
                             <h3 className="text-base font-bold text-white group-hover:text-amber-400 transition-colors">{topic.title}</h3>
                             <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800">
                               <span>Por <b>{topic.author}</b></span>
-                              <span className="text-amber-500 font-bold">💬 {topic.repliesCount}</span>
+                              <span className="text-amber-500 font-bold">💬 {topic.repliesCount || 0}</span>
                             </div>
                           </div>
                         ))
@@ -939,7 +1007,7 @@
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold">
-                  📡 Radar: {currentUser?.isPremium ? '500 km (Premium ⭐)' : '100 km (Standard 👤)'}
+                  📡 Radar Cloud: {currentUser?.isPremium ? '500 km (Premium ⭐)' : '100 km (Standard 👤)'}
                 </div>
 
                 {currentCandidate ? (
@@ -963,7 +1031,7 @@
                 ) : (
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay más perfiles cercanos.</h3>
+                    <h3 className="text-xl font-bold">No hay más perfiles en el radar.</h3>
                     <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar</button>
                   </div>
                 )}
@@ -1003,7 +1071,7 @@
                           <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover" />
                           <div>
                             <h3 className="font-bold text-white text-sm">{activeChat.userName}</h3>
-                            <span className="text-[10px] text-emerald-400 font-bold">🟢 Online</span>
+                            <span className="text-[10px] text-emerald-400 font-bold">🟢 Online Cloud</span>
                           </div>
                         </div>
 
@@ -1048,11 +1116,11 @@
 
             {activeTab === 'critics' && (
               <div className="space-y-6 max-w-3xl mx-auto">
-                <h2 className="text-2xl font-black">📰 Críticos & Medios</h2>
+                <h2 className="text-2xl font-black">📰 Críticos & Medios Cloud</h2>
                 
                 {currentUser?.isCritic ? (
                   <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-                    <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña de Película (Insignia 🌟)</h3>
+                    <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña en la Nube (Insignia 🌟)</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div>
                         <label className="block mb-1 text-slate-400">Película:</label>
@@ -1067,7 +1135,7 @@
                       <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
                       <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu análisis..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                     </div>
-                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña</button>
+                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña Cloud</button>
                   </form>
                 ) : (
                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2 text-xs">
@@ -1077,7 +1145,7 @@
 
                 <div className="space-y-4 pt-2">
                   {reviewsList.length === 0 ? (
-                    <p className="text-xs text-slate-400 text-center py-6">Aún no hay reseñas publicadas. ¡Sé el primero en escribir una!</p>
+                    <p className="text-xs text-slate-400 text-center py-6">Aún no hay reseñas en la nube. ¡Sé el primero en escribir una!</p>
                   ) : (
                     reviewsList.map(rev => (
                       <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
@@ -1116,7 +1184,7 @@
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="font-bold text-amber-400">
-                          📸 Fotos ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
+                          📸 Fotos Cloud ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
                         </label>
                       </div>
 
@@ -1156,7 +1224,7 @@
                       </div>
                     )}
 
-                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil</button>
+                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Guardar Perfil en la Nube</button>
                   </div>
                 </form>
               </div>
@@ -1166,11 +1234,11 @@
               <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div>
-                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador General</h2>
-                    <p className="text-xs text-amber-400 mt-1">Control total: otorga Premium, insignia de crítico, modera fotos y expulsa usuarios.</p>
+                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador Cloud</h2>
+                    <p className="text-xs text-amber-400 mt-1">Control total en la nube: otorga Premium, insignia de crítico, modera fotos y expulsa usuarios.</p>
                   </div>
                   <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
-                    Total Usuarios: {usersList.length}
+                    Total Usuarios Cloud: {usersList.length}
                   </span>
                 </div>
 
@@ -1233,7 +1301,7 @@
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">✍️ Crear Nuevo Debate</h3>
+                  <h3 className="text-lg font-black text-white">✍️ Crear Nuevo Debate en la Nube</h3>
                   <button onClick={() => setShowNewTopicModal(false)} className="text-slate-400 font-bold text-lg">✖</button>
                 </div>
                 <form onSubmit={handleCreateTopic} className="space-y-4 text-xs">
@@ -1256,7 +1324,7 @@
                     <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe tu planteo para debatir con la comunidad..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
                   <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                    Publicar Debate
+                    Publicar Debate Cloud
                   </button>
                 </form>
               </div>
@@ -1288,7 +1356,7 @@
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">🚀 Planes</h3>
+                  <h3 className="text-lg font-black text-white">🚀 Planes Cloud</h3>
                   <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 font-bold">✖</button>
                 </div>
                 <div className="space-y-4 text-xs">
@@ -1310,8 +1378,8 @@
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-white">
-                    {authMode === 'signup' && '✨ Crear Cuenta en Plottwisme'}
-                    {authMode === 'login' && '🔑 Iniciar Sesión'}
+                    {authMode === 'signup' && '✨ Crear Cuenta Cloud'}
+                    {authMode === 'login' && '🔑 Iniciar Sesión Cloud'}
                     {authMode === 'forgot' && '🔄 Recuperar Contraseña'}
                   </h3>
                   <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 font-bold text-lg">✖</button>
@@ -1357,7 +1425,7 @@
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Registrarme
+                      Registrarme en la Nube
                     </button>
                   </form>
                 )}
@@ -1378,7 +1446,7 @@
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Ingresar
+                      Ingresar a la Nube
                     </button>
                   </form>
                 )}
@@ -1399,14 +1467,10 @@
                     ) : (
                       <>
                         <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-emerald-300">
-                          ✅ ¡Correo verificado con éxito! Ingresa tu nueva contraseña para <b>{forgotEmail}</b>.
+                          ✅ ¡Solicitud enviada para <b>{forgotEmail}</b>!
                         </div>
-                        <div>
-                          <label className="block mb-1 text-slate-400 font-bold">Nueva Contraseña:</label>
-                          <input type="password" value={newResetPassword} onChange={(e) => setNewResetPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                        </div>
-                        <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                          Guardar Nueva Contraseña
+                        <button type="button" onClick={() => { setAuthMode('login'); setResetStep(1); }} className="w-full bg-slate-800 text-slate-200 font-bold py-2.5 rounded-xl text-xs">
+                          Volver al inicio de sesión
                         </button>
                       </>
                     )}
