@@ -10,12 +10,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
-  <!-- Firebase SDKs Modernos (Modular con Storage, Auth y Firestore) -->
+  <!-- Firebase SDKs (Auth y Firestore Cloud) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-    import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDHdoWQUZDNjxfvq7Rfl4Hvgpp8z-DoDMo",
@@ -30,11 +29,9 @@
     const app = initializeApp(firebaseConfig);
     window.db = getFirestore(app);
     window.auth = getAuth(app);
-    window.storage = getStorage(app);
     window.FirebaseFns = {
       signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged,
-      collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp,
-      ref, uploadString, getDownloadURL
+      collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp
     };
   </script>
 
@@ -206,7 +203,6 @@
       const [authWantCritic, setAuthWantCritic] = useState(false);
       
       const [forgotEmail, setForgotEmail] = useState('');
-      const [newResetPassword, setNewResetPassword] = useState('');
       const [resetStep, setResetStep] = useState(1);
 
       const [reviewsList, setReviewsList] = useState([]);
@@ -228,7 +224,6 @@
       const [editRadio, setEditRadio] = useState('');
       const [editTv, setEditTv] = useState('');
 
-      // Sincronización en tiempo real con Cloud Firestore
       useEffect(() => {
         if (!window.db) return;
         const { collection, onSnapshot } = window.FirebaseFns;
@@ -399,8 +394,8 @@
         setNewMessageText('');
       };
 
-      // Subida de fotos profesional con Firebase Storage Cloud
-      const handleImageCompressionAndAdd = async (e) => {
+      // Compresión robusta y directa a Firestore (Opción A)
+      const handleImageCompressionAndAdd = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -411,12 +406,12 @@
         }
 
         const reader = new FileReader();
-        reader.onload = async (event) => {
+        reader.onload = (event) => {
           const img = new Image();
-          img.onload = async () => {
+          img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 600;
-            const MAX_HEIGHT = 600;
+            const MAX_WIDTH = 500;
+            const MAX_HEIGHT = 500;
             let width = img.width;
             let height = img.height;
 
@@ -431,19 +426,8 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            
-            try {
-              // Subida a Firebase Storage
-              const storageRef = window.FirebaseFns.ref(window.storage, `users_photos/${currentUser.id}_${Date.now()}.jpg`);
-              await window.FirebaseFns.uploadString(storageRef, compressedDataUrl, 'data_url');
-              const downloadURL = await window.FirebaseFns.getDownloadURL(storageRef);
-              
-              setEditPhotos([...editPhotos, downloadURL]);
-            } catch (err) {
-              // Fallback directo en caso de cuota de storage
-              setEditPhotos([...editPhotos, compressedDataUrl]);
-            }
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            setEditPhotos([...editPhotos, compressedDataUrl]);
           };
           img.src = event.target.result;
         };
@@ -679,8 +663,6 @@
         alert('Sesión cerrada.');
       };
 
-      // Radar con Match Amigable e Inicial (Compatible para conectar rápido)
-      const maxDistance = currentUser?.isPremium ? 1000 : 500;
       const filteredCandidates = useMemo(() => {
         return usersList.filter(u => u.email !== currentUser?.email);
       }, [usersList, currentUser]);
@@ -715,7 +697,7 @@
             avatar: primaryAvatar,
             socialLinks: { radio: editRadio, tv: editTv }
           });
-          alert('✅ ¡Perfil y Storage Cloud actualizados!');
+          alert('✅ ¡Perfil actualizado en la nube con éxito!');
         } catch(err) {
           alert('Error al guardar perfil.');
         }
@@ -961,7 +943,7 @@
                       >
                         <div>
                           <h4 className="font-bold text-white group-hover:text-amber-400 transition-colors text-sm">{cat.label}</h4>
-                          <p className="text-xs text-slate-400 mt-1">Cloud Storage active.</p>
+                          <p className="text-xs text-slate-400 mt-1">Cloud Sync Active.</p>
                         </div>
                         <div className="text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t border-slate-800">
                           <span>{t.consultGoogle}</span>
@@ -1128,7 +1110,7 @@
                           <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover" />
                           <div>
                             <h3 className="font-bold text-white text-sm">{activeChat.userName}</h3>
-                            <span className="text-[10px] text-emerald-400 font-bold">🟢 Online Cloud Storage</span>
+                            <span className="text-[10px] text-emerald-400 font-bold">🟢 Online Cloud Sync</span>
                           </div>
                         </div>
 
@@ -1247,7 +1229,7 @@
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="font-bold text-amber-400">
-                          📸 Fotos Storage Cloud ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
+                          📸 Fotos Cloud ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
                         </label>
                       </div>
 
