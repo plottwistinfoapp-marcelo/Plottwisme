@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Plottwisme - Red Social Cinéfila & Citas</title>
   
+  <!-- Configuración de PWA para que se pueda instalar como App en el teléfono -->
+  <meta name="theme-color" content="#020617" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Plottwisme" />
+  
+  <!-- Manifiesto embebido para instalación directa -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Plottwisme - Red Social Cinéfila & Citas","short_name":"Plottwisme","start_url":".","display":"standalone","background_color":"#020617","theme_color":"#020617","icons":[{"src":"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=512&auto=format&fit=crop&q=80","sizes":"512x512","type":"image/jpeg","purpose":"any maskable"}]}'>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -196,7 +206,6 @@
       const [authMode, setAuthMode] = useState('signup');
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-      // Campos de Registro
       const [authEmail, setAuthEmail] = useState('');
       const [authPassword, setAuthPassword] = useState('');
       const [authName, setAuthName] = useState('');
@@ -224,7 +233,6 @@
       const [newReviewRating, setNewReviewRating] = useState(10);
       const [newReviewText, setNewReviewText] = useState('');
 
-      // Campos de Edición de Perfil
       const [editPublicBio, setEditPublicBio] = useState('');
       const [editDatingBio, setEditDatingBio] = useState('');
       const [editSex, setEditSex] = useState('Masculino');
@@ -687,7 +695,6 @@
         alert('Sesión cerrada.');
       };
 
-      // FILTRADO DE DISTANCIA Y GUSTOS SEXUALES PARA EL RADAR DE CITAS
       const filteredCandidates = useMemo(() => {
         const others = usersList.filter(u => u.email !== currentUser?.email);
         
@@ -698,13 +705,11 @@
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
         return others.filter(u => {
-          // Filtro de distancia
           if (!isAdmin) {
             const dist = u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 150) + 5;
             if (dist > effectiveRadius) return false;
           }
 
-          // Filtro opcional de preferencias sexuales del usuario actual si las configuró
           if (currentUser?.interestedIn && currentUser.interestedIn !== 'Todos / Cualquiera') {
             const myPref = currentUser.interestedIn.toLowerCase();
             const candidateSex = (u.sex || 'Masculino').toLowerCase();
@@ -1132,7 +1137,6 @@
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
-                      {/* Biografía de Citas (Visible solo en Matches) */}
                       <div className="bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-2xl">
                         <p className="text-[10px] uppercase font-bold text-rose-400 mb-1">💬 Descripción exclusiva para Citas:</p>
                         <p className="text-xs italic text-slate-200">"{currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
