@@ -78,7 +78,7 @@
         country: "País:",
         engineTitle: "Motor Oficial Geolocalizado en la Nube",
         cinemaRealtime: "Cartelera en Tiempo Real para",
-        cinemaSubtitle: "Accede instantáneamente al panel interactivo oficial con las películas, complejos, horarios y salas disponibles hoy en tu zona.",
+        cinemaSubtitle: "Accede instantáneamente al panel interactivo oficial con las películas, complejos, horarios y salas disponibles hoy en tu zona y radio seleccionado.",
         openCinema: "Abrir Cartelera de",
         directSearch: "Buscador Directo por Categoría en",
         consultGoogle: "Consultar Google",
@@ -106,7 +106,7 @@
         country: "Country:",
         engineTitle: "Official Cloud Geolocated Engine",
         cinemaRealtime: "Real-Time Showtimes for",
-        cinemaSubtitle: "Instantly access the official interactive panel featuring movies, theaters, schedules, and screening rooms available today in your area.",
+        cinemaSubtitle: "Instantly access the official interactive panel featuring movies, theaters, schedules, and screening rooms available today in your area and selected radius.",
         openCinema: "Open Showtimes for",
         directSearch: "Direct Category Search in",
         consultGoogle: "Check Google",
@@ -134,7 +134,7 @@
         country: "País:",
         engineTitle: "Mecanismo Oficial em Nuvem",
         cinemaRealtime: "Programação em Tempo Real para",
-        cinemaSubtitle: "Acesse instantaneamente o painel interativo oficial com filmes, cinemas, horários e salas disponíveis hoje na sua região.",
+        cinemaSubtitle: "Acesse instantaneamente o painel interativo oficial com filmes, cinemas, horários e salas disponíveis hoje na sua região e raio selecionado.",
         openCinema: "Abrir Cinemas de",
         directSearch: "Busca Direta por Categoria em",
         consultGoogle: "Consultar Google",
@@ -165,9 +165,9 @@
     ];
 
     const SEARCH_CATEGORIES = [
-      { id: 'all', label: '🎬 Cartelera Completa', queryFormat: 'cartelera cines {city} {country}' },
-      { id: 'today', label: '🍿 Funciones Hoy', queryFormat: 'horarios de cine hoy en {city} {country}' },
-      { id: 'theaters', label: '🏛️ Salas & Cines Cercanos', queryFormat: 'cines cerca de {city} {country}' },
+      { id: 'all', label: '🎬 Cartelera Completa', queryFormat: 'cartelera cines {city} {country} radio {radius}km' },
+      { id: 'today', label: '🍿 Funciones Hoy', queryFormat: 'horarios de cine hoy en {city} {country} zona {radius}km' },
+      { id: 'theaters', label: '🏛️ Salas & Cines Cercanos', queryFormat: 'cines a {radius}km de {city} {country}' },
       { id: 'premieres', label: '⭐ Estrenos de la Semana', queryFormat: 'estrenos de cine en {city} {country}' }
     ];
 
@@ -183,6 +183,9 @@
 
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
+      
+      // Control deslizante de radio en kilómetros ajustable por el usuario
+      const [searchRadiusKm, setSearchRadiusKm] = useState(50);
 
       const [chatsList, setChatsList] = useState([]);
       const [activeChat, setActiveChat] = useState(null);
@@ -341,7 +344,10 @@
       const openGoogleEngine = (customQueryFormat = 'cartelera de cines en {city} {country}') => {
         const cleanCity = userCity.trim() || 'Buenos Aires';
         const country = getCountryName();
-        const query = customQueryFormat.replace('{city}', cleanCity).replace('{country}', country);
+        const query = customQueryFormat
+          .replace('{city}', cleanCity)
+          .replace('{country}', country)
+          .replace('{radius}', searchRadiusKm);
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=${lang}`, '_blank');
       };
 
@@ -668,25 +674,25 @@
         alert('Sesión cerrada.');
       };
 
-      // FILTRADO DE DISTANCIA INTELIGENTE PARA EL RADAR DE CITAS
+      // FILTRADO DE DISTANCIA INTELIGENTE PARA EL RADAR (Respeta el slider y la membresía)
       const filteredCandidates = useMemo(() => {
         const others = usersList.filter(u => u.email !== currentUser?.email);
         
-        // Si no hay usuario logueado o es el Admin General (marbuttice@gmail.com), ve el mundo entero
         const emailCheck = currentUser?.email?.toLowerCase().trim();
         const isAdmin = emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
-        if (isAdmin) return others;
+        
+        // Límite máximo permitido según el rol
+        const maxLimit = isAdmin ? 10000 : (currentUser?.isPremium ? 500 : 100);
 
-        // Si es usuario Premium -> Rango de hasta 500 km
-        // Si es usuario Estándar (o invitado) -> Rango de hasta 100 km
-        const maxDistance = currentUser?.isPremium ? 500 : 100;
+        // La distancia efectiva es el mínimo entre el slider elegido por el usuario y su límite máximo
+        const effectiveRadius = Math.min(searchRadiusKm, maxLimit);
 
         return others.filter(u => {
-          // Simulamos una distancia basada en la cercanía de ciudad o un valor aleatorio de referencia
-          const dist = u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 200) + 10;
-          return dist <= maxDistance;
+          if (isAdmin) return true;
+          const dist = u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 150) + 5;
+          return dist <= effectiveRadius;
         });
-      }, [usersList, currentUser]);
+      }, [usersList, currentUser, searchRadiusKm]);
 
       const currentCandidate = filteredCandidates[currentIndex];
 
@@ -701,7 +707,7 @@
             roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
           });
           setShowSubscriptionModal(false);
-          alert(isPrem ? '⭐ ¡Actualizado a Premium! (Rango ampliado a 500 km)' : 'Cambiado a Estándar.');
+          alert(isPrem ? '⭐ ¡Actualizado a Premium! Ahora puedes ajustar tu radar y cartelera hasta 500 km.' : 'Cambiado a Estándar.');
         } catch(err) {
           alert('Error al actualizar plan.');
         }
@@ -828,6 +834,7 @@
       };
 
       const isAdmin = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
+      const maxAllowedSlider = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 100);
 
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
@@ -841,7 +848,7 @@
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
-                      {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium (500km)' : '👤 Standard (100km)') : '🌐 Guest'}
+                      {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium (Máx 500km)' : '👤 Standard (Máx 100km)') : '🌐 Guest (Máx 100km)'}
                     </p>
                   </div>
                 </div>
@@ -860,20 +867,36 @@
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-2xl text-xs w-full lg:w-auto justify-center">
-                <span className="text-amber-500 font-bold whitespace-nowrap">📍 {t.cityPlaceholder}:</span>
-                <input 
-                  type="text" 
-                  value={userCity} 
-                  onChange={(e) => setUserCity(e.target.value)} 
-                  placeholder={t.cityPlaceholder}
-                  className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-32 text-amber-300 focus:outline-none capitalize text-xs" 
-                />
+              {/* Selector de Ciudad + Control Deslizante de Kilómetros */}
+              <div className="flex flex-wrap items-center gap-3 bg-amber-500/10 border border-amber-500/30 px-3 py-2 rounded-2xl text-xs w-full lg:w-auto justify-center">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad:</span>
+                  <input 
+                    type="text" 
+                    value={userCity} 
+                    onChange={(e) => setUserCity(e.target.value)} 
+                    placeholder={t.cityPlaceholder}
+                    className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs" 
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 border-l border-amber-500/30 pl-3">
+                  <span className="text-amber-400 font-bold whitespace-nowrap">🎯 Radio: <b className="text-white">{searchRadiusKm} km</b></span>
+                  <input 
+                    type="range" 
+                    min="10" 
+                    max={maxAllowedSlider} 
+                    step="10"
+                    value={searchRadiusKm} 
+                    onChange={(e) => setSearchRadiusKm(Number(e.target.value))}
+                    className="w-24 sm:w-28 accent-amber-500 cursor-pointer"
+                    title={`Ajustar radio (Máx: ${maxAllowedSlider} km)`}
+                  />
+                </div>
 
                 {isAdmin && (
                   <>
                     <span className="text-slate-600">|</span>
-                    <span className="text-amber-500 font-bold whitespace-nowrap">{t.country}</span>
                     <select 
                       value={userCountryCode} 
                       onChange={(e) => setUserCountryCode(e.target.value)}
@@ -929,7 +952,7 @@
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/30 p-8 shadow-2xl">
                   <div className="max-w-2xl space-y-4">
                     <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-3 py-1 rounded-md uppercase tracking-wider">
-                      {t.engineTitle}
+                      {t.engineTitle} • Radio actual: {searchRadiusKm} km
                     </span>
                     <h2 className="text-3xl font-black text-white leading-tight">
                       {t.cinemaRealtime} <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
@@ -939,10 +962,10 @@
                     </p>
                     <div className="pt-2">
                       <button 
-                        onClick={() => openGoogleEngine()} 
+                        onClick={() => openGoogleEngine('cartelera cines {city} {country} radio {radius}km')} 
                         className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
                       >
-                        <span>🏛️ {t.openCinema} {userCity || 'tu ciudad'}</span>
+                        <span>🏛️ {t.openCinema} {userCity || 'tu ciudad'} ({searchRadiusKm} km)</span>
                         <span>↗</span>
                       </button>
                     </div>
@@ -964,7 +987,7 @@
                       >
                         <div>
                           <h4 className="font-bold text-white group-hover:text-amber-400 transition-colors text-sm">{cat.label}</h4>
-                          <p className="text-xs text-slate-400 mt-1">Cloud Sync Active.</p>
+                          <p className="text-xs text-slate-400 mt-1">Radio: {searchRadiusKm} km</p>
                         </div>
                         <div className="text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t border-slate-800">
                           <span>{t.consultGoogle}</span>
@@ -1067,7 +1090,8 @@
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold text-center">
-                  🎯 Radar Citas: {isAdmin ? '🌍 Vista Global Administrador (Mundo Entero)' : currentUser?.isPremium ? '⭐ Rango Premium (Hasta 500 km)' : '👤 Rango Estándar (Hasta 100 km)'}
+                  🎯 Radar Citas: Mostrando perfiles en un radio de <b className="text-white">{searchRadiusKm} km</b> 
+                  {!currentUser?.isPremium && !isAdmin && " (Máx Estándar: 100 km)"}
                 </div>
 
                 {currentCandidate ? (
@@ -1091,10 +1115,8 @@
                 ) : (
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay más perfiles en tu radio actual.</h3>
-                    {!currentUser?.isPremium && !isAdmin && (
-                      <p className="text-xs text-slate-400">¡Actualiza a Premium para ampliar tu radar a 500 km y encontrar más cinéfilos!</p>
-                    )}
+                    <h3 className="text-xl font-bold">No hay perfiles en un radio de {searchRadiusKm} km.</h3>
+                    <p className="text-xs text-slate-400">Prueba aumentando el radio arriba en la barra deslizante {currentUser?.isPremium ? '' : 'o pásate a Premium para buscar hasta 500 km'}.</p>
                     <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
                   </div>
                 )}
@@ -1430,11 +1452,11 @@
                 </div>
                 <div className="space-y-4 text-xs">
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <h4 className="font-bold text-slate-300 text-sm">Estándar (Gratis - Hasta 100 km)</h4>
+                    <h4 className="font-bold text-slate-300 text-sm">Estándar (Gratis - Radar y Cartelera hasta 100 km)</h4>
                     <button onClick={() => handleUpgradePlan(false)} className="w-full mt-2 bg-slate-800 text-slate-300 font-bold py-2 rounded-xl">Elegir</button>
                   </div>
                   <div className="bg-amber-500/20 border border-amber-500/50 p-4 rounded-2xl">
-                    <h4 className="font-bold text-amber-400 text-sm">⭐ Premium ($4.99/mes - Hasta 500 km)</h4>
+                    <h4 className="font-bold text-amber-400 text-sm">⭐ Premium ($4.99/mes - Radar y Cartelera hasta 500 km)</h4>
                     <button onClick={() => handleUpgradePlan(true)} className="w-full mt-2 bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase">Obtener</button>
                   </div>
                 </div>
