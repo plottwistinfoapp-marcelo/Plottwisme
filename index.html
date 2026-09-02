@@ -221,7 +221,6 @@
 
       const [editBio, setEditBio] = useState('');
       const [editPhotos, setEditPhotos] = useState([]);
-      const [newPhotoUrlInput, setNewPhotoUrlInput] = useState('');
       const [editRadio, setEditRadio] = useState('');
       const [editTv, setEditTv] = useState('');
 
@@ -395,17 +394,50 @@
         setNewMessageText('');
       };
 
-      // Adición por URL directa o enlace web de la foto (Simple, rápido y sin fallas móviles)
-      const handleAddPhotoUrl = (e) => {
-        e.preventDefault();
-        if (!newPhotoUrlInput.trim()) return;
+      // Selector de archivos nativo optimizado (Convierte la foto elegida directamente a imagen liviana local)
+      const handleFileSelected = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
         const maxPhotosAllowed = currentUser?.isPremium ? 10 : 3;
         if (editPhotos.length >= maxPhotosAllowed) {
           alert(`⚠️ Máximo ${maxPhotosAllowed} fotos permitidas.`);
           return;
         }
-        setEditPhotos([...editPhotos, newPhotoUrlInput.trim()]);
-        setNewPhotoUrlInput('');
+
+        const reader = new FileReader();
+        reader.onload = (uploadEvent) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 600;
+            const MAX_HEIGHT = 600;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            setEditPhotos([...editPhotos, compressedDataUrl]);
+          };
+          img.src = uploadEvent.target.result;
+        };
+        reader.readAsDataURL(file);
       };
 
       const handleRemovePhoto = (indexToRemove) => {
@@ -1216,19 +1248,14 @@
                         ))}
                       </div>
 
-                      <div className="flex gap-2">
-                        <input 
-                          type="url" 
-                          value={newPhotoUrlInput} 
-                          onChange={(e) => setNewPhotoUrlInput(e.target.value)} 
-                          placeholder="Pega aquí el enlace web de tu foto (URL de Imgur, WhatsApp, etc.)..." 
-                          className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 text-xs focus:outline-none focus:border-amber-500" 
-                        />
-                        <button type="button" onClick={handleAddPhotoUrl} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs whitespace-nowrap shadow">
-                          Agregar Foto
-                        </button>
+                      {/* Botón selector de archivo nativo directo */}
+                      <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                        <label className="flex-1 cursor-pointer bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 px-4 rounded-xl text-center text-xs transition-all shadow-md">
+                          📁 Seleccionar Foto de la Galería
+                          <input type="file" accept="image/*" onChange={handleFileSelected} className="hidden" />
+                        </label>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1.5">💡 Tip: Puedes copiar el enlace de tu foto favorita (o subirla gratis a Imgur/PostImage) y pegarlo aquí para que aparezca instantáneamente en tu perfil de citas.</p>
+                      <p className="text-[10px] text-slate-400 mt-1.5">💡 Toca el botón para elegir una foto directamente desde tu celular o computadora. ¡Se sube al instante!</p>
                     </div>
 
                     <div>
