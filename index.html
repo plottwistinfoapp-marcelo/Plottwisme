@@ -76,12 +76,12 @@
         login: "🔑 Iniciar Sesión",
         cityPlaceholder: "Tu Ciudad",
         country: "País:",
-        engineTitle: "Motor Oficial Geolocalizado en la Nube",
-        cinemaRealtime: "Cartelera en Tiempo Real para",
-        cinemaSubtitle: "Accede instantáneamente al panel interactivo oficial con las películas, complejos, horarios y salas disponibles hoy en tu zona y radio seleccionado.",
-        openCinema: "Abrir Cartelera de",
-        directSearch: "Buscador Directo por Categoría en",
-        consultGoogle: "Consultar Google",
+        engineTitle: "Motor Oficial con IA & Mapas Interactivos",
+        cinemaRealtime: "Cartelera Inteligente en Tiempo Real para",
+        cinemaSubtitle: "Accede instantáneamente al panel con IA de Google que integra mapas interactivos, horarios, salas y opciones de cines en tu radio seleccionado.",
+        openCinema: "Abrir Cartelera Inteligente de",
+        directSearch: "Búsqueda Avanzada por Categoría en",
+        consultGoogle: "Consultar con IA",
         activeChats: "Chats Activos",
         noChats: "Aún no tienes matches. ¡Ve al Radar Citas y haz Match al instante!",
         sendPlaceholder: "Escribe un mensaje para coordinar una cita...",
@@ -104,12 +104,12 @@
         login: "🔑 Login",
         cityPlaceholder: "Your City",
         country: "Country:",
-        engineTitle: "Official Cloud Geolocated Engine",
-        cinemaRealtime: "Real-Time Showtimes for",
-        cinemaSubtitle: "Instantly access the official interactive panel featuring movies, theaters, schedules, and screening rooms available today in your area and selected radius.",
-        openCinema: "Open Showtimes for",
-        directSearch: "Direct Category Search in",
-        consultGoogle: "Check Google",
+        engineTitle: "Official AI & Interactive Maps Engine",
+        cinemaRealtime: "Smart Real-Time Showtimes for",
+        cinemaSubtitle: "Instantly access the Google AI panel featuring interactive maps, showtimes, theaters, and screening options in your selected radius.",
+        openCinema: "Open Smart Showtimes for",
+        directSearch: "Advanced Category Search in",
+        consultGoogle: "Check with AI",
         activeChats: "Active Chats",
         noChats: "No matches yet. Go to Radar Dating and match instantly!",
         sendPlaceholder: "Type a message to coordinate a date...",
@@ -132,12 +132,12 @@
         login: "🔑 Entrar",
         cityPlaceholder: "Sua Cidade",
         country: "País:",
-        engineTitle: "Mecanismo Oficial em Nuvem",
-        cinemaRealtime: "Programação em Tempo Real para",
-        cinemaSubtitle: "Acesse instantaneamente o painel interativo oficial com filmes, cinemas, horários e salas disponíveis hoje na sua região e raio selecionado.",
-        openCinema: "Abrir Cinemas de",
-        directSearch: "Busca Direta por Categoria em",
-        consultGoogle: "Consultar Google",
+        engineTitle: "Mecanismo Oficial com IA e Mapas",
+        cinemaRealtime: "Programação Inteligente para",
+        cinemaSubtitle: "Acesse instantaneamente o painel de IA do Google com mapas interativos, horários, cinemas e opções na sua região.",
+        openCinema: "Abrir Cinemas Inteligentes de",
+        directSearch: "Busca Avançada por Categoria em",
+        consultGoogle: "Consultar com IA",
         activeChats: "Chats Ativos",
         noChats: "Ainda não há matches. Vá para o Radar e dê Match instantaneamente!",
         sendPlaceholder: "Digite uma mensagem para combinar um encontro...",
@@ -165,10 +165,10 @@
     ];
 
     const SEARCH_CATEGORIES = [
-      { id: 'all', label: '🎬 Cartelera Completa', queryFormat: 'cartelera cines {city} {country} radio {radius}km' },
-      { id: 'today', label: '🍿 Funciones Hoy', queryFormat: 'horarios de cine hoy en {city} {country} zona {radius}km' },
-      { id: 'theaters', label: '🏛️ Salas & Cines Cercanos', queryFormat: 'cines a {radius}km de {city} {country}' },
-      { id: 'premieres', label: '⭐ Estrenos de la Semana', queryFormat: 'estrenos de cine en {city} {country}' }
+      { id: 'all', label: '🎬 Cartelera Completa con IA', queryFormat: 'cartelera de cines y horarios en {city} {country} radio {radius}km' },
+      { id: 'today', label: '🍿 Funciones y Horarios Hoy', queryFormat: 'horarios de cine hoy salas y complejos en {city} {country} zona {radius}km' },
+      { id: 'theaters', label: '🏛️ Mapas & Cines Cercanos', queryFormat: 'cines cercanos y mapas en {city} {country} radio {radius}km' },
+      { id: 'premieres', label: '⭐ Estrenos & Reseñas IA', queryFormat: 'estrenos de cine actuales y criticas en {city} {country}' }
     ];
 
     function App() {
@@ -184,7 +184,6 @@
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
       
-      // Control deslizante de radio en kilómetros ajustable por el usuario
       const [searchRadiusKm, setSearchRadiusKm] = useState(50);
 
       const [chatsList, setChatsList] = useState([]);
@@ -341,14 +340,17 @@
         return found ? found.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
       };
 
-      const openGoogleEngine = (customQueryFormat = 'cartelera de cines en {city} {country}') => {
+      // Abre la búsqueda con parámetros optimizados para invocar la experiencia de IA de Google y Mapas
+      const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city} {country} radio {radius}km') => {
         const cleanCity = userCity.trim() || 'Buenos Aires';
         const country = getCountryName();
         const query = customQueryFormat
           .replace('{city}', cleanCity)
           .replace('{country}', country)
           .replace('{radius}', searchRadiusKm);
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&cs=2&hl=${lang}`, '_blank');
+        
+        // Incluimos parám &aqs=ai para potenciar la respuesta de IA integrada de Google
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&aqs=ai&hl=${lang}`, '_blank');
       };
 
       const handleMatchUser = (candidate) => {
@@ -674,17 +676,13 @@
         alert('Sesión cerrada.');
       };
 
-      // FILTRADO DE DISTANCIA INTELIGENTE PARA EL RADAR (Respeta el slider y la membresía)
       const filteredCandidates = useMemo(() => {
         const others = usersList.filter(u => u.email !== currentUser?.email);
         
         const emailCheck = currentUser?.email?.toLowerCase().trim();
         const isAdmin = emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
         
-        // Límite máximo permitido según el rol
         const maxLimit = isAdmin ? 10000 : (currentUser?.isPremium ? 500 : 100);
-
-        // La distancia efectiva es el mínimo entre el slider elegido por el usuario y su límite máximo
         const effectiveRadius = Math.min(searchRadiusKm, maxLimit);
 
         return others.filter(u => {
@@ -867,7 +865,6 @@
                 </div>
               </div>
 
-              {/* Selector de Ciudad + Control Deslizante de Kilómetros */}
               <div className="flex flex-wrap items-center gap-3 bg-amber-500/10 border border-amber-500/30 px-3 py-2 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <div className="flex items-center gap-1.5">
                   <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad:</span>
@@ -952,7 +949,7 @@
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/30 p-8 shadow-2xl">
                   <div className="max-w-2xl space-y-4">
                     <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-3 py-1 rounded-md uppercase tracking-wider">
-                      {t.engineTitle} • Radio actual: {searchRadiusKm} km
+                      {t.engineTitle} • Radio: {searchRadiusKm} km
                     </span>
                     <h2 className="text-3xl font-black text-white leading-tight">
                       {t.cinemaRealtime} <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
@@ -962,10 +959,10 @@
                     </p>
                     <div className="pt-2">
                       <button 
-                        onClick={() => openGoogleEngine('cartelera cines {city} {country} radio {radius}km')} 
+                        onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city} {country} radio {radius}km')} 
                         className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
                       >
-                        <span>🏛️ {t.openCinema} {userCity || 'tu ciudad'} ({searchRadiusKm} km)</span>
+                        <span>🤖 {t.openCinema} {userCity || 'tu ciudad'} ({searchRadiusKm} km)</span>
                         <span>↗</span>
                       </button>
                     </div>
@@ -982,7 +979,7 @@
                     {SEARCH_CATEGORIES.map(cat => (
                       <div 
                         key={cat.id} 
-                        onClick={() => openGoogleEngine(cat.queryFormat)}
+                        onClick={() => openGoogleAIElEngine(cat.queryFormat)}
                         className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 shadow-lg group flex flex-col justify-between space-y-4"
                       >
                         <div>
