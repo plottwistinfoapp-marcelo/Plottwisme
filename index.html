@@ -75,7 +75,6 @@
         signup: "✨ Crear Cuenta",
         login: "🔑 Iniciar Sesión",
         cityPlaceholder: "Tu Ciudad",
-        country: "País:",
         engineTitle: "Cartelera Oficial con IA & Mapas Interactivos",
         cinemaRealtime: "Cartelera Inteligente en Tiempo Real para",
         cinemaSubtitle: "Accede instantáneamente al panel con IA de Google que integra mapas interactivos, horarios, salas y opciones de cines en tu ciudad.",
@@ -103,7 +102,6 @@
         signup: "✨ Sign Up",
         login: "🔑 Login",
         cityPlaceholder: "Your City",
-        country: "Country:",
         engineTitle: "Official AI & Interactive Maps Cartelera",
         cinemaRealtime: "Smart Real-Time Showtimes for",
         cinemaSubtitle: "Instantly access the Google AI panel featuring interactive maps, showtimes, theaters, and screening options in your city.",
@@ -131,7 +129,6 @@
         signup: "✨ Criar Conta",
         login: "🔑 Entrar",
         cityPlaceholder: "Sua Cidade",
-        country: "País:",
         engineTitle: "Cartelera Oficial com IA e Mapas",
         cinemaRealtime: "Programação Inteligente para",
         cinemaSubtitle: "Acesse instantaneamente o painel de IA do Google com mapas interativos, horários, cinemas e opções na sua cidade.",
@@ -164,6 +161,10 @@
       'Masculino', 'Femenino', 'No Binario', 'Género Fluido', 'Pansexual', 'Queer', 'Bisexual', 'Homosexual', 'Heterosexual', 'Otro'
     ];
 
+    const SEEKING_SEXUALITIES_OPTIONS = [
+      'Todos / Cualquiera', 'Masculinos', 'Femeninos', 'No Binarios / Fluidos', 'Pansexuales / Queer', 'Bisexuales', 'Homosexuales', 'Heterosexuales'
+    ];
+
     const SEARCH_CATEGORIES = [
       { id: 'all', label: '🎬 Cartelera Completa con IA', queryFormat: 'cartelera de cines y horarios en {city} {country}' },
       { id: 'today', label: '🍿 Funciones y Horarios Hoy', queryFormat: 'horarios de cine hoy salas y complejos en {city} {country}' },
@@ -183,8 +184,6 @@
 
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
-      
-      // Control deslizante exclusivo para el Radar de Citas (Matches)
       const [matchRadiusKm, setMatchRadiusKm] = useState(50);
 
       const [chatsList, setChatsList] = useState([]);
@@ -197,12 +196,15 @@
       const [authMode, setAuthMode] = useState('signup');
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
+      // Campos de Registro
       const [authEmail, setAuthEmail] = useState('');
       const [authPassword, setAuthPassword] = useState('');
       const [authName, setAuthName] = useState('');
       const [authAge, setAuthAge] = useState(25);
       const [authSex, setAuthSex] = useState('Masculino');
-      const [authLookingFor, setAuthLookingFor] = useState('Cita / Pareja & Amigos');
+      const [authInterestedIn, setAuthInterestedIn] = useState('Todos / Cualquiera');
+      const [authPublicBio, setAuthPublicBio] = useState('');
+      const [authDatingBio, setAuthDatingBio] = useState('');
       const [authWantCritic, setAuthWantCritic] = useState(false);
       
       const [forgotEmail, setForgotEmail] = useState('');
@@ -222,7 +224,11 @@
       const [newReviewRating, setNewReviewRating] = useState(10);
       const [newReviewText, setNewReviewText] = useState('');
 
-      const [editBio, setEditBio] = useState('');
+      // Campos de Edición de Perfil
+      const [editPublicBio, setEditPublicBio] = useState('');
+      const [editDatingBio, setEditDatingBio] = useState('');
+      const [editSex, setEditSex] = useState('Masculino');
+      const [editInterestedIn, setEditInterestedIn] = useState('Todos / Cualquiera');
       const [editPhotos, setEditPhotos] = useState([]);
       const [editRadio, setEditRadio] = useState('');
       const [editTv, setEditTv] = useState('');
@@ -245,7 +251,9 @@
               email: 'marbuttice@gmail.com',
               age: 57,
               sex: 'Masculino',
-              lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
+              interestedIn: 'Todos / Cualquiera',
+              publicBio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
+              datingBio: 'Buscando citas con cinéfilos apasionados por el buen cine.',
               location: 'Oberá, Misiones, Argentina',
               distanceKm: 2.5,
               role: 'admin',
@@ -253,7 +261,6 @@
               isPremium: true,
               isCritic: true,
               verified: true,
-              bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
               photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
               avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
               socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
@@ -329,7 +336,10 @@
 
       useEffect(() => {
         if (currentUser) {
-          setEditBio(currentUser.bio || '');
+          setEditPublicBio(currentUser.publicBio || currentUser.bio || '');
+          setEditDatingBio(currentUser.datingBio || currentUser.bio || '');
+          setEditSex(currentUser.sex || 'Masculino');
+          setEditInterestedIn(currentUser.interestedIn || 'Todos / Cualquiera');
           setEditPhotos(currentUser.photos || (currentUser.avatar ? [currentUser.avatar] : []));
           setEditRadio(currentUser.socialLinks?.radio || '');
           setEditTv(currentUser.socialLinks?.tv || '');
@@ -341,7 +351,6 @@
         return found ? found.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
       };
 
-      // Apertura de cartelera pura con geolocalización y Modo IA de Google
       const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city} {country}') => {
         const cleanCity = userCity.trim() || 'Buenos Aires';
         const country = getCountryName();
@@ -527,7 +536,9 @@
                 email: 'marbuttice@gmail.com',
                 age: 57,
                 sex: 'Masculino',
-                lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
+                interestedIn: 'Todos / Cualquiera',
+                publicBio: 'Devoto del cine de autor y creador de Plottwisme.',
+                datingBio: 'Buscando citas cinéfilas.',
                 location: 'Oberá, Misiones, Argentina',
                 distanceKm: 2.5,
                 role: 'admin',
@@ -535,7 +546,6 @@
                 isPremium: true,
                 isCritic: true,
                 verified: true,
-                bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
                 photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
                 avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
                 socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
@@ -569,7 +579,9 @@
               email: cleanEmail,
               age: Number(authAge),
               sex: authSex,
-              lookingFor: authLookingFor,
+              interestedIn: authInterestedIn,
+              publicBio: authPublicBio || 'Apasionado por el cine y las buenas charlas.',
+              datingBio: authDatingBio || 'Buscando conectar para citas y películas.',
               location: `${userCity || 'City'}, ${getCountryName()}`,
               distanceKm: 5.0,
               role: 'general',
@@ -578,7 +590,6 @@
               isCritic: authWantCritic,
               criticRequested: authWantCritic,
               verified: false,
-              bio: 'Buscando citas y charlas de cine.',
               photos: [defaultAvatar],
               avatar: defaultAvatar,
               socialLinks: {}
@@ -599,7 +610,9 @@
                   email: 'marbuttice@gmail.com',
                   age: 57,
                   sex: 'Masculino',
-                  lookingFor: 'Cita / Pareja & Amigos Cinéfilos',
+                  interestedIn: 'Todos / Cualquiera',
+                  publicBio: 'Devoto del cine de autor y creador de Plottwisme.',
+                  datingBio: 'Buscando citas cinéfilas.',
                   location: 'Oberá, Misiones, Argentina',
                   distanceKm: 2.5,
                   role: 'admin',
@@ -607,7 +620,6 @@
                   isPremium: true,
                   isCritic: true,
                   verified: true,
-                  bio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
                   photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
                   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
                   socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
@@ -675,20 +687,33 @@
         alert('Sesión cerrada.');
       };
 
-      // FILTRADO DE DISTANCIA EXCLUSIVO PARA EL RADAR DE CITAS (MATCHES)
+      // FILTRADO DE DISTANCIA Y GUSTOS SEXUALES PARA EL RADAR DE CITAS
       const filteredCandidates = useMemo(() => {
         const others = usersList.filter(u => u.email !== currentUser?.email);
         
         const emailCheck = currentUser?.email?.toLowerCase().trim();
         const isAdmin = emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
-        if (isAdmin) return others; // Admin ve el mundo entero en las citas
-
-        const maxLimit = currentUser?.isPremium ? 500 : 100;
+        
+        const maxLimit = isAdmin ? 10000 : (currentUser?.isPremium ? 500 : 100);
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
         return others.filter(u => {
-          const dist = u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 150) + 5;
-          return dist <= effectiveRadius;
+          // Filtro de distancia
+          if (!isAdmin) {
+            const dist = u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 150) + 5;
+            if (dist > effectiveRadius) return false;
+          }
+
+          // Filtro opcional de preferencias sexuales del usuario actual si las configuró
+          if (currentUser?.interestedIn && currentUser.interestedIn !== 'Todos / Cualquiera') {
+            const myPref = currentUser.interestedIn.toLowerCase();
+            const candidateSex = (u.sex || 'Masculino').toLowerCase();
+            
+            if (myPref.includes('masculino') && !candidateSex.includes('masculino')) return false;
+            if (myPref.includes('femenino') && !candidateSex.includes('femenino')) return false;
+          }
+
+          return true;
         });
       }, [usersList, currentUser, matchRadiusKm]);
 
@@ -717,12 +742,15 @@
         const primaryAvatar = editPhotos.length > 0 ? editPhotos[0] : 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80';
         try {
           await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id), {
-            bio: editBio,
+            publicBio: editPublicBio,
+            datingBio: editDatingBio,
+            sex: editSex,
+            interestedIn: editInterestedIn,
             photos: editPhotos,
             avatar: primaryAvatar,
             socialLinks: { radio: editRadio, tv: editTv }
           });
-          alert('✅ ¡Perfil y fotos guardados en la nube con éxito!');
+          alert('✅ ¡Perfil, biografías y preferencias guardados en la nube con éxito!');
         } catch(err) {
           alert('Error al guardar perfil.');
         }
@@ -865,7 +893,6 @@
                 </div>
               </div>
 
-              {/* Selector de Ciudad (para Carteleras) + Deslizante de km (Exclusivo para Radar de Citas) */}
               <div className="flex flex-wrap items-center gap-3 bg-amber-500/10 border border-amber-500/30 px-3 py-2 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <div className="flex items-center gap-1.5">
                   <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad (Cines):</span>
@@ -1051,7 +1078,7 @@
                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
                       <div>
                         <h2 className="text-2xl font-black text-white">💬 Foros de Discusión</h2>
-                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías con cinéfilos y valora con 🍿.</p>
+                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías con cinéfilos (Aquí se muestra tu biografía pública).</p>
                       </div>
                       <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
                         ✍️ Nuevo Debate
@@ -1098,15 +1125,20 @@
                   <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
                     <div className="relative h-96 w-full bg-slate-950">
                       <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.lookingFor || 'Cita / Pareja'}</div>
+                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.sex || 'Perfil'} • Busca: {currentCandidate.interestedIn || 'Cualquiera'}</div>
                       <div className="absolute bottom-4 left-4 right-4">
                         <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age || 25}</h2>
                         <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location || 'Oberá'} • Match Directo 🍿</p>
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
-                      <p className="text-xs italic text-slate-300">"{currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
-                      <div className="flex justify-center gap-6 pt-4 border-t border-slate-800">
+                      {/* Biografía de Citas (Visible solo en Matches) */}
+                      <div className="bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-2xl">
+                        <p className="text-[10px] uppercase font-bold text-rose-400 mb-1">💬 Descripción exclusiva para Citas:</p>
+                        <p className="text-xs italic text-slate-200">"{currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
+                      </div>
+                      
+                      <div className="flex justify-center gap-6 pt-2">
                         <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
                         <button onClick={() => { handleMatchUser(currentCandidate); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-110 transition-all">🍿</button>
                       </div>
@@ -1115,8 +1147,8 @@
                 ) : (
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay perfiles en un radio de {matchRadiusKm} km.</h3>
-                    <p className="text-xs text-slate-400">Prueba aumentando el radio en la barra superior {currentUser?.isPremium ? '' : 'o pásate a Premium para buscar hasta 500 km'}.</p>
+                    <h3 className="text-xl font-bold">No hay perfiles en un radio de {matchRadiusKm} km con tus preferencias.</h3>
+                    <p className="text-xs text-slate-400">Prueba aumentando el radio o ajustando tus preferencias sexuales en tu Perfil.</p>
                     <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
                   </div>
                 )}
@@ -1294,12 +1326,35 @@
                           <input type="file" accept="image/*" onChange={handleFileSelected} className="hidden" />
                         </label>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1.5">💡 Toca el botón para elegir una foto directamente desde tu celular o computadora. ¡Se sube al instante!</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div>
+                        <label className="block mb-1 text-slate-400 font-bold">Mi Género / Sexualidad:</label>
+                        <select value={editSex} onChange={(e) => setEditSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                          {SEXUALITIES_OPTIONS.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block mb-1 text-slate-400 font-bold">Quiero relacionarme con:</label>
+                        <select value={editInterestedIn} onChange={(e) => setEditInterestedIn(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                          {SEEKING_SEXUALITIES_OPTIONS.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-slate-400">Biografía:</label>
-                      <textarea rows="3" value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Cuéntanos sobre ti y tus películas favoritas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                      <label className="block mb-1 text-amber-400 font-bold">🌍 Biografía Pública (Visible en Foros y Debates):</label>
+                      <textarea rows="2" value={editPublicBio} onChange={(e) => setEditPublicBio(e.target.value)} placeholder="Algo sobre tus gustos generales de cine..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 text-rose-400 font-bold">💬 Biografía Privada de Citas (Visible solo en Matches):</label>
+                      <textarea rows="2" value={editDatingBio} onChange={(e) => setEditDatingBio(e.target.value)} placeholder="Lo que buscas para salir al cine o citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
                     </div>
 
                     {currentUser.isCritic && (
@@ -1347,6 +1402,7 @@
                             </p>
                             <p className="text-xs text-amber-400">{u.roleLabel}</p>
                             <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
+                            <p className="text-[10px] text-slate-300 mt-1"><b>Género:</b> {u.sex || 'N/D'} | <b>Busca:</b> {u.interestedIn || 'Cualquiera'}</p>
                           </div>
                         </div>
 
@@ -1482,19 +1538,39 @@
                       <label className="block mb-1 text-slate-400 font-bold">Nombre Completo:</label>
                       <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Ej: Juan Pérez" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                     </div>
+
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block mb-1 text-slate-400 font-bold">Edad (+18):</label>
                         <input type="number" min="18" max="99" value={authAge} onChange={(e) => setAuthAge(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                       </div>
                       <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Género / Sexualidad:</label>
+                        <label className="block mb-1 text-slate-400 font-bold">Mi Género:</label>
                         <select value={authSex} onChange={(e) => setAuthSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
                           {SEXUALITIES_OPTIONS.map(opt => (
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
                         </select>
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 text-slate-400 font-bold">Interesado en (Radar de Citas):</label>
+                      <select value={authInterestedIn} onChange={(e) => setAuthInterestedIn(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                        {SEEKING_SEXUALITIES_OPTIONS.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 text-amber-400 font-bold">🌍 Biografía Pública (Visible en Foros):</label>
+                      <textarea rows="2" value={authPublicBio} onChange={(e) => setAuthPublicBio(e.target.value)} placeholder="Tus gustos generales..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 text-rose-400 font-bold">💬 Biografía Privada de Citas (Visible en Matches):</label>
+                      <textarea rows="2" value={authDatingBio} onChange={(e) => setAuthDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
                     </div>
                     
                     <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
