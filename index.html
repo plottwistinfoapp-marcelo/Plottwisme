@@ -76,9 +76,9 @@
         login: "🔑 Iniciar Sesión",
         cityPlaceholder: "Tu Ciudad",
         country: "País:",
-        engineTitle: "Motor Oficial con IA & Mapas Interactivos",
+        engineTitle: "Cartelera Oficial con IA & Mapas Interactivos",
         cinemaRealtime: "Cartelera Inteligente en Tiempo Real para",
-        cinemaSubtitle: "Accede instantáneamente al panel con IA de Google que integra mapas interactivos, horarios, salas y opciones de cines en tu radio seleccionado.",
+        cinemaSubtitle: "Accede instantáneamente al panel con IA de Google que integra mapas interactivos, horarios, salas y opciones de cines en tu ciudad.",
         openCinema: "Abrir Cartelera Inteligente de",
         directSearch: "Búsqueda Avanzada por Categoría en",
         consultGoogle: "Consultar con IA",
@@ -104,9 +104,9 @@
         login: "🔑 Login",
         cityPlaceholder: "Your City",
         country: "Country:",
-        engineTitle: "Official AI & Interactive Maps Engine",
+        engineTitle: "Official AI & Interactive Maps Cartelera",
         cinemaRealtime: "Smart Real-Time Showtimes for",
-        cinemaSubtitle: "Instantly access the Google AI panel featuring interactive maps, showtimes, theaters, and screening options in your selected radius.",
+        cinemaSubtitle: "Instantly access the Google AI panel featuring interactive maps, showtimes, theaters, and screening options in your city.",
         openCinema: "Open Smart Showtimes for",
         directSearch: "Advanced Category Search in",
         consultGoogle: "Check with AI",
@@ -132,9 +132,9 @@
         login: "🔑 Entrar",
         cityPlaceholder: "Sua Cidade",
         country: "País:",
-        engineTitle: "Mecanismo Oficial com IA e Mapas",
+        engineTitle: "Cartelera Oficial com IA e Mapas",
         cinemaRealtime: "Programação Inteligente para",
-        cinemaSubtitle: "Acesse instantaneamente o painel de IA do Google com mapas interativos, horários, cinemas e opções na sua região.",
+        cinemaSubtitle: "Acesse instantaneamente o painel de IA do Google com mapas interativos, horários, cinemas e opções na sua cidade.",
         openCinema: "Abrir Cinemas Inteligentes de",
         directSearch: "Busca Avançada por Categoria em",
         consultGoogle: "Consultar com IA",
@@ -165,9 +165,9 @@
     ];
 
     const SEARCH_CATEGORIES = [
-      { id: 'all', label: '🎬 Cartelera Completa con IA', queryFormat: 'cartelera de cines y horarios en {city} {country} radio {radius}km' },
-      { id: 'today', label: '🍿 Funciones y Horarios Hoy', queryFormat: 'horarios de cine hoy salas y complejos en {city} {country} zona {radius}km' },
-      { id: 'theaters', label: '🏛️ Mapas & Cines Cercanos', queryFormat: 'cines cercanos y mapas en {city} {country} radio {radius}km' },
+      { id: 'all', label: '🎬 Cartelera Completa con IA', queryFormat: 'cartelera de cines y horarios en {city} {country}' },
+      { id: 'today', label: '🍿 Funciones y Horarios Hoy', queryFormat: 'horarios de cine hoy salas y complejos en {city} {country}' },
+      { id: 'theaters', label: '🏛️ Mapas & Cines Cercanos', queryFormat: 'cines cercanos y mapas en {city} {country}' },
       { id: 'premieres', label: '⭐ Estrenos & Reseñas IA', queryFormat: 'estrenos de cine actuales y criticas en {city} {country}' }
     ];
 
@@ -184,7 +184,8 @@
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
       
-      const [searchRadiusKm, setSearchRadiusKm] = useState(50);
+      // Control deslizante exclusivo para el Radar de Citas (Matches)
+      const [matchRadiusKm, setMatchRadiusKm] = useState(50);
 
       const [chatsList, setChatsList] = useState([]);
       const [activeChat, setActiveChat] = useState(null);
@@ -340,16 +341,14 @@
         return found ? found.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
       };
 
-      // Abre la búsqueda con parámetros optimizados para invocar la experiencia de IA de Google y Mapas
-      const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city} {country} radio {radius}km') => {
+      // Apertura de cartelera pura con geolocalización y Modo IA de Google
+      const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city} {country}') => {
         const cleanCity = userCity.trim() || 'Buenos Aires';
         const country = getCountryName();
         const query = customQueryFormat
           .replace('{city}', cleanCity)
-          .replace('{country}', country)
-          .replace('{radius}', searchRadiusKm);
+          .replace('{country}', country);
         
-        // Incluimos parám &aqs=ai para potenciar la respuesta de IA integrada de Google
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&aqs=ai&hl=${lang}`, '_blank');
       };
 
@@ -676,21 +675,22 @@
         alert('Sesión cerrada.');
       };
 
+      // FILTRADO DE DISTANCIA EXCLUSIVO PARA EL RADAR DE CITAS (MATCHES)
       const filteredCandidates = useMemo(() => {
         const others = usersList.filter(u => u.email !== currentUser?.email);
         
         const emailCheck = currentUser?.email?.toLowerCase().trim();
         const isAdmin = emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
-        
-        const maxLimit = isAdmin ? 10000 : (currentUser?.isPremium ? 500 : 100);
-        const effectiveRadius = Math.min(searchRadiusKm, maxLimit);
+        if (isAdmin) return others; // Admin ve el mundo entero en las citas
+
+        const maxLimit = currentUser?.isPremium ? 500 : 100;
+        const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
         return others.filter(u => {
-          if (isAdmin) return true;
           const dist = u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 150) + 5;
           return dist <= effectiveRadius;
         });
-      }, [usersList, currentUser, searchRadiusKm]);
+      }, [usersList, currentUser, matchRadiusKm]);
 
       const currentCandidate = filteredCandidates[currentIndex];
 
@@ -705,7 +705,7 @@
             roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
           });
           setShowSubscriptionModal(false);
-          alert(isPrem ? '⭐ ¡Actualizado a Premium! Ahora puedes ajustar tu radar y cartelera hasta 500 km.' : 'Cambiado a Estándar.');
+          alert(isPrem ? '⭐ ¡Actualizado a Premium! Ahora puedes ajustar tu radar de citas hasta 500 km.' : 'Cambiado a Estándar.');
         } catch(err) {
           alert('Error al actualizar plan.');
         }
@@ -846,7 +846,7 @@
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
-                      {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium (Máx 500km)' : '👤 Standard (Máx 100km)') : '🌐 Guest (Máx 100km)'}
+                      {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium (Radar 500km)' : '👤 Standard (Radar 100km)') : '🌐 Guest'}
                     </p>
                   </div>
                 </div>
@@ -865,9 +865,10 @@
                 </div>
               </div>
 
+              {/* Selector de Ciudad (para Carteleras) + Deslizante de km (Exclusivo para Radar de Citas) */}
               <div className="flex flex-wrap items-center gap-3 bg-amber-500/10 border border-amber-500/30 px-3 py-2 rounded-2xl text-xs w-full lg:w-auto justify-center">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad:</span>
+                  <span className="text-amber-500 font-bold whitespace-nowrap">📍 Ciudad (Cines):</span>
                   <input 
                     type="text" 
                     value={userCity} 
@@ -877,19 +878,21 @@
                   />
                 </div>
 
-                <div className="flex items-center gap-2 border-l border-amber-500/30 pl-3">
-                  <span className="text-amber-400 font-bold whitespace-nowrap">🎯 Radio: <b className="text-white">{searchRadiusKm} km</b></span>
-                  <input 
-                    type="range" 
-                    min="10" 
-                    max={maxAllowedSlider} 
-                    step="10"
-                    value={searchRadiusKm} 
-                    onChange={(e) => setSearchRadiusKm(Number(e.target.value))}
-                    className="w-24 sm:w-28 accent-amber-500 cursor-pointer"
-                    title={`Ajustar radio (Máx: ${maxAllowedSlider} km)`}
-                  />
-                </div>
+                {activeTab === 'radar' && (
+                  <div className="flex items-center gap-2 border-l border-amber-500/30 pl-3">
+                    <span className="text-rose-400 font-bold whitespace-nowrap">🎯 Radar Matches: <b className="text-white">{matchRadiusKm} km</b></span>
+                    <input 
+                      type="range" 
+                      min="10" 
+                      max={maxAllowedSlider} 
+                      step="10"
+                      value={matchRadiusKm} 
+                      onChange={(e) => setMatchRadiusKm(Number(e.target.value))}
+                      className="w-24 sm:w-28 accent-rose-500 cursor-pointer"
+                      title={`Ajustar radio de citas (Máx: ${maxAllowedSlider} km)`}
+                    />
+                  </div>
+                )}
 
                 {isAdmin && (
                   <>
@@ -949,7 +952,7 @@
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/30 p-8 shadow-2xl">
                   <div className="max-w-2xl space-y-4">
                     <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-3 py-1 rounded-md uppercase tracking-wider">
-                      {t.engineTitle} • Radio: {searchRadiusKm} km
+                      {t.engineTitle}
                     </span>
                     <h2 className="text-3xl font-black text-white leading-tight">
                       {t.cinemaRealtime} <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
@@ -959,10 +962,10 @@
                     </p>
                     <div className="pt-2">
                       <button 
-                        onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city} {country} radio {radius}km')} 
+                        onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city} {country}')} 
                         className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
                       >
-                        <span>🤖 {t.openCinema} {userCity || 'tu ciudad'} ({searchRadiusKm} km)</span>
+                        <span>🤖 {t.openCinema} {userCity || 'tu ciudad'}</span>
                         <span>↗</span>
                       </button>
                     </div>
@@ -984,7 +987,7 @@
                       >
                         <div>
                           <h4 className="font-bold text-white group-hover:text-amber-400 transition-colors text-sm">{cat.label}</h4>
-                          <p className="text-xs text-slate-400 mt-1">Radio: {searchRadiusKm} km</p>
+                          <p className="text-xs text-slate-400 mt-1">Con IA & Mapas Google.</p>
                         </div>
                         <div className="text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t border-slate-800">
                           <span>{t.consultGoogle}</span>
@@ -1087,7 +1090,7 @@
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold text-center">
-                  🎯 Radar Citas: Mostrando perfiles en un radio de <b className="text-white">{searchRadiusKm} km</b> 
+                  🎯 Radar de Citas (Matches): Mostrando perfiles en un radio de <b className="text-white">{matchRadiusKm} km</b> 
                   {!currentUser?.isPremium && !isAdmin && " (Máx Estándar: 100 km)"}
                 </div>
 
@@ -1112,8 +1115,8 @@
                 ) : (
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay perfiles en un radio de {searchRadiusKm} km.</h3>
-                    <p className="text-xs text-slate-400">Prueba aumentando el radio arriba en la barra deslizante {currentUser?.isPremium ? '' : 'o pásate a Premium para buscar hasta 500 km'}.</p>
+                    <h3 className="text-xl font-bold">No hay perfiles en un radio de {matchRadiusKm} km.</h3>
+                    <p className="text-xs text-slate-400">Prueba aumentando el radio en la barra superior {currentUser?.isPremium ? '' : 'o pásate a Premium para buscar hasta 500 km'}.</p>
                     <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
                   </div>
                 )}
@@ -1264,7 +1267,7 @@
                       <p className="text-xs text-amber-500">{currentUser.roleLabel} {currentUser.isCritic ? '🌟' : ''}</p>
                     </div>
                     <button type="button" onClick={() => setShowSubscriptionModal(true)} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
-                      {currentUser.isPremium ? '⭐ Premium (500km)' : '🚀 Planes'}
+                      {currentUser.isPremium ? '⭐ Premium (Radar 500km)' : '🚀 Planes'}
                     </button>
                   </div>
 
@@ -1449,11 +1452,11 @@
                 </div>
                 <div className="space-y-4 text-xs">
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <h4 className="font-bold text-slate-300 text-sm">Estándar (Gratis - Radar y Cartelera hasta 100 km)</h4>
+                    <h4 className="font-bold text-slate-300 text-sm">Estándar (Gratis - Radar de citas hasta 100 km)</h4>
                     <button onClick={() => handleUpgradePlan(false)} className="w-full mt-2 bg-slate-800 text-slate-300 font-bold py-2 rounded-xl">Elegir</button>
                   </div>
                   <div className="bg-amber-500/20 border border-amber-500/50 p-4 rounded-2xl">
-                    <h4 className="font-bold text-amber-400 text-sm">⭐ Premium ($4.99/mes - Radar y Cartelera hasta 500 km)</h4>
+                    <h4 className="font-bold text-amber-400 text-sm">⭐ Premium ($4.99/mes - Radar de citas hasta 500 km)</h4>
                     <button onClick={() => handleUpgradePlan(true)} className="w-full mt-2 bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase">Obtener</button>
                   </div>
                 </div>
