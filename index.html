@@ -394,7 +394,6 @@
         setNewMessageText('');
       };
 
-      // Selector de archivos nativo optimizado (Convierte la foto elegida directamente a imagen liviana local)
       const handleFileSelected = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -669,8 +668,24 @@
         alert('Sesión cerrada.');
       };
 
+      // FILTRADO DE DISTANCIA INTELIGENTE PARA EL RADAR DE CITAS
       const filteredCandidates = useMemo(() => {
-        return usersList.filter(u => u.email !== currentUser?.email);
+        const others = usersList.filter(u => u.email !== currentUser?.email);
+        
+        // Si no hay usuario logueado o es el Admin General (marbuttice@gmail.com), ve el mundo entero
+        const emailCheck = currentUser?.email?.toLowerCase().trim();
+        const isAdmin = emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
+        if (isAdmin) return others;
+
+        // Si es usuario Premium -> Rango de hasta 500 km
+        // Si es usuario Estándar (o invitado) -> Rango de hasta 100 km
+        const maxDistance = currentUser?.isPremium ? 500 : 100;
+
+        return others.filter(u => {
+          // Simulamos una distancia basada en la cercanía de ciudad o un valor aleatorio de referencia
+          const dist = u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 200) + 10;
+          return dist <= maxDistance;
+        });
       }, [usersList, currentUser]);
 
       const currentCandidate = filteredCandidates[currentIndex];
@@ -686,7 +701,7 @@
             roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
           });
           setShowSubscriptionModal(false);
-          alert(isPrem ? '⭐ ¡Actualizado a Premium!' : 'Cambiado a Estándar.');
+          alert(isPrem ? '⭐ ¡Actualizado a Premium! (Rango ampliado a 500 km)' : 'Cambiado a Estándar.');
         } catch(err) {
           alert('Error al actualizar plan.');
         }
@@ -826,7 +841,7 @@
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
-                      {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium' : '👤 Standard') : '🌐 Guest'}
+                      {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium (500km)' : '👤 Standard (100km)') : '🌐 Guest'}
                     </p>
                   </div>
                 </div>
@@ -1051,8 +1066,8 @@
 
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
-                <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold">
-                  🎯 Radar Citas: Match Cinéfilo Activo
+                <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold text-center">
+                  🎯 Radar Citas: {isAdmin ? '🌍 Vista Global Administrador (Mundo Entero)' : currentUser?.isPremium ? '⭐ Rango Premium (Hasta 500 km)' : '👤 Rango Estándar (Hasta 100 km)'}
                 </div>
 
                 {currentCandidate ? (
@@ -1076,8 +1091,11 @@
                 ) : (
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay más perfiles en el radar.</h3>
-                    <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar</button>
+                    <h3 className="text-xl font-bold">No hay más perfiles en tu radio actual.</h3>
+                    {!currentUser?.isPremium && !isAdmin && (
+                      <p className="text-xs text-slate-400">¡Actualiza a Premium para ampliar tu radar a 500 km y encontrar más cinéfilos!</p>
+                    )}
+                    <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
                   </div>
                 )}
               </div>
@@ -1227,7 +1245,7 @@
                       <p className="text-xs text-amber-500">{currentUser.roleLabel} {currentUser.isCritic ? '🌟' : ''}</p>
                     </div>
                     <button type="button" onClick={() => setShowSubscriptionModal(true)} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
-                      {currentUser.isPremium ? '⭐ Premium' : '🚀 Planes'}
+                      {currentUser.isPremium ? '⭐ Premium (500km)' : '🚀 Planes'}
                     </button>
                   </div>
 
@@ -1248,7 +1266,6 @@
                         ))}
                       </div>
 
-                      {/* Botón selector de archivo nativo directo */}
                       <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 p-4 rounded-2xl">
                         <label className="flex-1 cursor-pointer bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 px-4 rounded-xl text-center text-xs transition-all shadow-md">
                           📁 Seleccionar Foto de la Galería
@@ -1349,7 +1366,6 @@
 
           </main>
 
-          {/* MODAL PARA CREAR NUEVO DEBATE EN EL FORO */}
           {showNewTopicModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
@@ -1414,11 +1430,11 @@
                 </div>
                 <div className="space-y-4 text-xs">
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <h4 className="font-bold text-slate-300 text-sm">Estándar (Gratis)</h4>
+                    <h4 className="font-bold text-slate-300 text-sm">Estándar (Gratis - Hasta 100 km)</h4>
                     <button onClick={() => handleUpgradePlan(false)} className="w-full mt-2 bg-slate-800 text-slate-300 font-bold py-2 rounded-xl">Elegir</button>
                   </div>
                   <div className="bg-amber-500/20 border border-amber-500/50 p-4 rounded-2xl">
-                    <h4 className="font-bold text-amber-400 text-sm">⭐ Premium ($4.99/mes)</h4>
+                    <h4 className="font-bold text-amber-400 text-sm">⭐ Premium ($4.99/mes - Hasta 500 km)</h4>
                     <button onClick={() => handleUpgradePlan(true)} className="w-full mt-2 bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase">Obtener</button>
                   </div>
                 </div>
