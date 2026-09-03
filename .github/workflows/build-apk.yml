@@ -1,4 +1,4 @@
-name: Build Android APK with Bubblewrap
+name: Build Android APK
 
 on:
   push:
@@ -23,20 +23,28 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install Bubblewrap CLI
-      run: npm install -g @bubblewrap/cli
-
-    - name: Generate TWA Android Project
+    - name: Prepare Web Directory
       run: |
-        npx @bubblewrap/cli init --manifest=https://plottwistinfoapp-marcelo.github.io/Plottwisme/manifest.json --directory=android-app --skipAsking
+        mkdir -p www
+        cp index.html www/
 
-    - name: Build APK
+    - name: Install Capacitor
+      run: npm install @capacitor/core @capacitor/cli @capacitor/android
+
+    - name: Initialize & Sync Capacitor
       run: |
-        cd android-app
-        npx @bubblewrap/cli build
+        npx cap init Plottwisme com.plottwisme.app --web-dir www
+        npx cap add android
+        npx cap sync android
 
-    - name: Upload APK
+    - name: Build Debug APK via Gradle
+      run: |
+        cd android
+        chmod +x gradlew || true
+        ./gradlew assembleDebug --no-daemon
+
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-release-apk
-        path: android-app/*.apk
+        name: app-debug-apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
