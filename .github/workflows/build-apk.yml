@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android App Bundle (AAB)
 
 on:
   push:
@@ -44,14 +44,14 @@ jobs:
     - name: Sync Assets
       run: npx cap sync android
 
-    - name: Build Debug APK via Gradle
+    - name: Build Release AAB via Gradle
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew bundleRelease --no-daemon
 
-    - name: Upload APK Artifact
+    - name: Upload AAB Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug-apk
-        path: android/app/build/outputs/apk/debug/*.apk
+        name: app-release-aab
+        path: android/app/build/outputs/bundle/release/*.aab
