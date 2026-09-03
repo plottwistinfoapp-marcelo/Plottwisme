@@ -204,7 +204,6 @@
       const [authMode, setAuthMode] = useState('signup');
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-      // Estado para la instalación de la PWA
       const [installPromptEvent, setInstallPromptEvent] = useState(null);
       const [showInstallGuideModal, setShowInstallGuideModal] = useState(false);
 
@@ -244,7 +243,6 @@
       const [editTv, setEditTv] = useState('');
 
       useEffect(() => {
-        // Escucha el evento de instalación de PWA en navegadores móviles/escritorio
         const handleBeforeInstallPrompt = (e) => {
           e.preventDefault();
           setInstallPromptEvent(e);
@@ -261,7 +259,6 @@
             setInstallPromptEvent(null);
           }
         } else {
-          // Si el navegador bloqueó el evento automático, abrimos la guía visual para instalar
           setShowInstallGuideModal(true);
         }
       };
@@ -910,7 +907,6 @@
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Botón flotante para instalar como App en el teléfono */}
                   <button 
                     onClick={handleInstallAppClick}
                     className="bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-90 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 animate-pulse whitespace-nowrap"
@@ -1484,7 +1480,6 @@
 
           </main>
 
-          {/* Modal de Guía de Instalación para Teléfonos si el navegador lo bloquea */}
           {showInstallGuideModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
