@@ -57,15 +57,19 @@ jobs:
         chmod +x gradlew
         ./gradlew bundleRelease --no-daemon
 
-    - name: Copy AAB to root
+    - name: Create Keystore & Sign AAB
       run: |
+        keytool -genkeypair -v -keystore release.keystore -alias my-alias -keyalg RSA -keysize 2048 -validity 10000 -storepass password -keypass password -dname "CN=Android, OU=Dev, O=App, L=City, ST=State, C=US"
+        
+        AAB_FILE=$(find android -name "*.aab" | head -n 1)
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore release.keystore -storepass password $AAB_FILE my-alias
+        
         mkdir -p release-output
-        find android -name "*.aab" -exec cp {} release-output/ \;
-        ls -la release-output/
+        cp $AAB_FILE release-output/app-release-signed.aab
 
-    - name: Upload AAB Artifact
+    - name: Upload Signed AAB Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-release-aab
-        path: release-output/*.aab
+        path: release-output/app-release-signed.aab
         if-no-files-found: error
