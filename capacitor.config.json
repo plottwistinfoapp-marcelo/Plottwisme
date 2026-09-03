@@ -1,0 +1,6 @@
+{
+  "appId": "com.plottwisme.app",
+  "appName": "Plottwisme",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
