@@ -35,6 +35,13 @@ jobs:
       run: |
         npx cap add android || true
 
+    - name: Set Version Code to 15
+      run: |
+        if [ -f "android/app/build.gradle" ]; then
+          sed -i 's/versionCode [0-9]*/versionCode 15/g' android/app/build.gradle
+          sed -i 's/versionName "[^"]*"/versionName "1.0.15"/g' android/app/build.gradle
+        fi
+
     - name: Fix Kotlin Duplicate Classes Conflict
       run: |
         if [ -f "android/build.gradle" ]; then
@@ -54,4 +61,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-release-aab
-        path: android/app/build/outputs/bundle/release/*.aab
+        path: android/app/build/outputs/bundle/**/*.aab
