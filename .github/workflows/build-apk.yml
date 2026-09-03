@@ -23,6 +23,9 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
     - name: Prepare web directory
       run: |
         mkdir -p www
@@ -34,14 +37,14 @@ jobs:
     - name: Add Android Platform
       run: npx cap add android
 
-    - name: Sync Web Assets
+    - name: Sync Assets
       run: npx cap sync android
 
     - name: Build Debug APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --warning-mode all
+        ./gradlew assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
