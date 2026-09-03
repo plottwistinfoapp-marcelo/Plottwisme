@@ -57,19 +57,23 @@ jobs:
         chmod +x gradlew
         ./gradlew bundleRelease --no-daemon
 
-    - name: Create Keystore & Sign AAB
+    - name: Decode Keystore & Sign AAB
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
       run: |
-        keytool -genkeypair -v -keystore release.keystore -alias my-alias -keyalg RSA -keysize 2048 -validity 10000 -storepass password -keypass password -dname "CN=Android, OU=Dev, O=App, L=City, ST=State, C=US"
-        
+        echo "$KEYSTORE_BASE64" | base64 -d > android.keystore
         AAB_FILE=$(find android -name "*.aab" | head -n 1)
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore release.keystore -storepass password $AAB_FILE my-alias
+        
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass android -keypass android $AAB_FILE androiddb || \
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass android $AAB_FILE android || \
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass password $AAB_FILE my-alias
         
         mkdir -p release-output
-        cp $AAB_FILE release-output/app-release-signed.aab
+        cp $AAB_FILE release-output/app-release-official-signed.aab
 
-    - name: Upload Signed AAB Artifact
+    - name: Upload Official Signed AAB Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-release-aab
-        path: release-output/app-release-signed.aab
+        path: release-output/app-release-official-signed.aab
         if-no-files-found: error
