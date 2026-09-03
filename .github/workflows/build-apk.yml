@@ -60,13 +60,14 @@ jobs:
     - name: Decode Keystore & Sign AAB
       env:
         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       run: |
         echo "$KEYSTORE_BASE64" | base64 -d > android.keystore
         AAB_FILE=$(find android -name "*.aab" | head -n 1)
         
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass android -keypass android $AAB_FILE androiddb || \
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass android $AAB_FILE android || \
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass password $AAB_FILE my-alias
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" $AAB_FILE androiddb || \
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass "$KEYSTORE_PASSWORD" $AAB_FILE android || \
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass "$KEYSTORE_PASSWORD" $AAB_FILE my-alias
         
         mkdir -p release-output
         cp $AAB_FILE release-output/app-release-official-signed.aab
