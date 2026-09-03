@@ -28,17 +28,20 @@ jobs:
         mkdir -p www
         cp index.html www/
 
-    - name: Install Capacitor CLI & Core
+    - name: Install Capacitor
       run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
     - name: Add Android Platform
       run: npx cap add android
 
+    - name: Sync Web Assets
+      run: npx cap sync android
+
     - name: Build Debug APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --warning-mode all
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
