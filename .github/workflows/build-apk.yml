@@ -57,12 +57,8 @@ jobs:
         chmod +x gradlew
         ./gradlew bundleRelease --no-daemon
 
-    - name: List Generated Bundles
-      run: find android/app/build -name "*.aab"
-
     - name: Upload AAB Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-release-aab
-        path: android/app/build/outputs/bundle/release/app-release.aab
-        if-no-files-found: error
+        path: android/app/build/outputs/**/*.aab
