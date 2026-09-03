@@ -23,27 +23,24 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Prepare web files directory
+    - name: Prepare web directory
       run: |
         mkdir -p www
         cp index.html www/
 
-    - name: Install Capacitor CLI
-      run: npm install -g @capacitor/cli @capacitor/core @capacitor/android
+    - name: Install Capacitor CLI & Core
+      run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
-    - name: Initialize Capacitor project
-      run: npx cap init Plottwisme com.plottwisme.app --web-dir www --yes
-
-    - name: Add Android platform
+    - name: Add Android Platform
       run: npx cap add android
 
-    - name: Build Android APK Debug
+    - name: Build Debug APK
       run: |
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug
 
-    - name: Upload APK artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug-apk
