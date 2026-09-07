@@ -288,7 +288,7 @@
         openCinema: "Otwórz Inteligentny Repertuar miasta",
         directSearch: "Zaawansowane Wyszukiwanie w",
         consultGoogle: "Sprawdź z SI",
-        activeChats: "Aktywne Czaty",
+        activeChats: "Actywne Czaty",
         noChats: "Brak dopasowań. Przejdź do Radaru Randkowego!",
         sendPlaceholder: "Napisz wiadomość, aby umówić się na randkę...",
         sendBtn: "Wyślij",
@@ -335,7 +335,8 @@
       { code: 'CO', name: 'Colombia 🇨🇴' },
       { code: 'PY', name: 'Paraguay 🇵🇾' },
       { code: 'UY', name: 'Uruguay 🇺🇾' },
-      { code: 'BR', name: 'Brasil 🇧🇷' }
+      { code: 'BR', name: 'Brasil 🇧🇷' },
+      { code: 'IT', name: 'Italia 🇮🇹' }
     ];
 
     const SEXUALITIES_OPTIONS = [
@@ -365,7 +366,7 @@
 
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
-      const [matchRadiusKm, setMatchRadiusKm] = useState(50);
+      const [matchRadiusKm, setMatchRadiusKm] = useState(30);
 
       const [chatsList, setChatsList] = useState([]);
       const [activeChat, setActiveChat] = useState(null);
@@ -568,7 +569,6 @@
         return found ? found.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
       };
 
-      // Función de Búsqueda Optimizada
       const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city}') => {
         const cleanCity = userCity.trim() || 'Buenos Aires';
         const query = customQueryFormat
@@ -912,12 +912,13 @@
         const emailCheck = currentUser?.email?.toLowerCase().trim();
         const isAdmin = emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
         
-        const maxLimit = isAdmin ? 10000 : (currentUser?.isPremium ? 500 : 100);
+        // Límite fijado a 50 km para plan Free y 500 km para Premium
+        const maxLimit = isAdmin ? 10000 : (currentUser?.isPremium ? 500 : 50);
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
         return others.filter(u => {
           if (!isAdmin) {
-            const dist = u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 150) + 5;
+            const dist = u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 100) + 5;
             if (dist > effectiveRadius) return false;
           }
 
@@ -946,7 +947,7 @@
             roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
           });
           setShowSubscriptionModal(false);
-          alert(isPrem ? '⭐ ¡Actualizado a Premium! Ahora puedes ajustar tu radar de citas hasta 500 km.' : 'Cambiado a Estándar.');
+          alert(isPrem ? '⭐ ¡Actualizado a Premium (u$d 4.99)! Ahora puedes ajustar tu radar hasta 500 km.' : 'Cambiado a Plan Free.');
         } catch(err) {
           alert('Error al actualizar plan.');
         }
@@ -1076,7 +1077,7 @@
       };
 
       const isAdmin = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
-      const maxAllowedSlider = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 100);
+      const maxAllowedSlider = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 50);
 
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
@@ -1090,7 +1091,7 @@
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
-                      {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium (Radar 500km)' : '👤 Standard (Radar 100km)') : '🌐 Guest'}
+                      {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium (Radar 500km)' : '👤 Free (Radar 50km)') : '🌐 Guest'}
                     </p>
                   </div>
                 </div>
@@ -1144,9 +1145,9 @@
                     <span className="text-rose-400 font-bold whitespace-nowrap">🎯 Radar Matches: <b className="text-white">{matchRadiusKm} km</b></span>
                     <input 
                       type="range" 
-                      min="10" 
+                      min="5" 
                       max={maxAllowedSlider} 
-                      step="10"
+                      step="5"
                       value={matchRadiusKm} 
                       onChange={(e) => setMatchRadiusKm(Number(e.target.value))}
                       className="w-24 sm:w-28 accent-rose-500 cursor-pointer"
@@ -1352,7 +1353,7 @@
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold text-center">
                   🎯 Radar de Citas (Matches): Mostrando perfiles en un radio de <b className="text-white">{matchRadiusKm} km</b> 
-                  {!currentUser?.isPremium && !isAdmin && " (Máx Estándar: 100 km)"}
+                  {!currentUser?.isPremium && !isAdmin && " (Máx Free: 50 km)"}
                 </div>
 
                 {currentCandidate ? (
@@ -1381,7 +1382,7 @@
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
                     <h3 className="text-xl font-bold">No hay perfiles en un radio de {matchRadiusKm} km con tus preferencias.</h3>
-                    <p className="text-xs text-slate-400">Prueba aumentando el radio o ajustando tus preferencias sexuales en tu Perfil.</p>
+                    <p className="text-xs text-slate-400">Prueba aumentando el radio o cambiando a Plan Premium (hasta 500 km) en tu Perfil.</p>
                     <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
                   </div>
                 )}
@@ -1525,15 +1526,59 @@
 
             {activeTab === 'profile' && currentUser && (
               <div className="max-w-xl mx-auto space-y-6">
+                
+                {/* TARJETA VISIBLE DE PLANES */}
+                <div className="bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-4 shadow-xl">
+                  <h3 className="text-base font-black text-amber-400 flex items-center gap-2">
+                    <span>🚀 Elija su Plan Plottwisme</span>
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    {/* Plan Free */}
+                    <div className={`p-4 rounded-2xl border transition-all ${!currentUser.isPremium ? 'bg-amber-500/10 border-amber-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-bold text-sm text-white">Free (Gratis)</span>
+                        {!currentUser.isPremium && <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ACTIVO</span>}
+                      </div>
+                      <p className="text-[11px] text-slate-300 mt-2"><b>Radar Citas:</b> hasta 50 km</p>
+                      <p className="text-[11px] text-slate-300"><b>Fotos reales:</b> hasta 3 fotos</p>
+                      <button 
+                        type="button" 
+                        onClick={() => handleUpgradePlan(false)} 
+                        disabled={!currentUser.isPremium}
+                        className="w-full mt-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 font-bold py-2 rounded-xl text-xs transition-all"
+                      >
+                        {currentUser.isPremium ? "Cambiar a Free" : "Plan Actual"}
+                      </button>
+                    </div>
+
+                    {/* Plan Premium */}
+                    <div className={`p-4 rounded-2xl border transition-all ${currentUser.isPremium ? 'bg-amber-500/20 border-amber-500 text-white shadow-lg shadow-amber-500/10' : 'bg-slate-950 border-amber-500/30 text-slate-200'}`}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-bold text-sm text-amber-400">⭐ Premium</span>
+                        {currentUser.isPremium && <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ACTIVO</span>}
+                      </div>
+                      <p className="text-xs font-black text-amber-300">u$d 4.99 / mes</p>
+                      <p className="text-[11px] text-slate-300 mt-1"><b>Radar Citas:</b> hasta 500 km</p>
+                      <p className="text-[11px] text-slate-300"><b>Fotos reales:</b> hasta 10 fotos</p>
+                      <button 
+                        type="button" 
+                        onClick={() => handleUpgradePlan(true)} 
+                        disabled={currentUser.isPremium}
+                        className="w-full mt-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider transition-all"
+                      >
+                        {currentUser.isPremium ? "Plan Actual" : "Obtener Premium (u$d 4.99)"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
                   <div className="flex justify-between items-center border-b border-slate-800 pb-4">
                     <div>
                       <h2 className="text-xl font-black">{currentUser.name}</h2>
                       <p className="text-xs text-amber-500">{currentUser.roleLabel} {currentUser.isCritic ? '🌟' : ''}</p>
                     </div>
-                    <button type="button" onClick={() => setShowSubscriptionModal(true)} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
-                      {currentUser.isPremium ? '⭐ Premium (Radar 500km)' : '🚀 Planes'}
-                    </button>
                   </div>
 
                   <div className="space-y-4 text-xs">
@@ -1703,7 +1748,7 @@
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-white">✍️ Crear Nuevo Debate en la Nube</h3>
-                  <button onClick={() => setShowNewTopicModal(false)} className="text-slate-400 font-bold text-lg">✖</button>
+                  <button onClick={() => setShowNewTopicModal(false)} className="text-slate-400 font-bold text-lg">✕</button>
                 </div>
                 <form onSubmit={handleCreateTopic} className="space-y-4 text-xs">
                   <div>
@@ -1758,16 +1803,23 @@
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-white">🚀 Planes Cloud</h3>
-                  <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 font-bold">✖</button>
+                  <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 font-bold">✕</button>
                 </div>
                 <div className="space-y-4 text-xs">
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <h4 className="font-bold text-slate-300 text-sm">Estándar (Gratis - Radar de citas hasta 100 km)</h4>
-                    <button onClick={() => handleUpgradePlan(false)} className="w-full mt-2 bg-slate-800 text-slate-300 font-bold py-2 rounded-xl">Elegir</button>
+                    <h4 className="font-bold text-slate-300 text-sm">Free (Gratis)</h4>
+                    <p className="text-slate-400 mt-1">Radar de citas hasta 50 km de distancia.</p>
+                    <button onClick={() => handleUpgradePlan(false)} className="w-full mt-3 bg-slate-800 text-slate-300 font-bold py-2 rounded-xl">
+                      Elegir Plan Free
+                    </button>
                   </div>
+
                   <div className="bg-amber-500/20 border border-amber-500/50 p-4 rounded-2xl">
-                    <h4 className="font-bold text-amber-400 text-sm">⭐ Premium ($4.99/mes - Radar de citas hasta 500 km)</h4>
-                    <button onClick={() => handleUpgradePlan(true)} className="w-full mt-2 bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl uppercase">Obtener</button>
+                    <h4 className="font-bold text-amber-400 text-sm">⭐ Premium — u$d 4.99 / mes</h4>
+                    <p className="text-slate-300 mt-1">Radar de citas extendido hasta 500 km + hasta 10 fotos reales.</p>
+                    <button onClick={() => handleUpgradePlan(true)} className="w-full mt-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">
+                      Obtener Premium (u$d 4.99)
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1783,7 +1835,7 @@
                     {authMode === 'login' && '🔑 Iniciar Sesión en la Nube'}
                     {authMode === 'forgot' && '🔄 Recuperar Contraseña'}
                   </h3>
-                  <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 font-bold text-lg">✖</button>
+                  <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 font-bold text-lg">✕</button>
                 </div>
 
                 {authMode === 'signup' && (
