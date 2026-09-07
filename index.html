@@ -912,8 +912,7 @@
         const emailCheck = currentUser?.email?.toLowerCase().trim();
         const isAdmin = emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
         
-        // Límite fijado a 50 km para plan Free y 500 km para Premium
-        const maxLimit = isAdmin ? 10000 : (currentUser?.isPremium ? 500 : 50);
+        const maxLimit = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 50);
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
         return others.filter(u => {
