@@ -3,81 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plottwisme</title>
+  <title>Plottwisme - Cine, Foros & Radar Citas</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
   <style>
     :root {
-      --bg-dark: #090d16;
-      --card-dark: #121824;
-      --modal-bg: #222938;
-      --primary-gold: #d97706;
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
-      --border-color: #374151;
+      --bg-main: #0a0d14;
+      --card-bg: #121722;
+      --card-inner: #1a202c;
+      --modal-bg: #1f2633;
+      --accent-gold: #d97706;
+      --accent-gold-hover: #b45309;
+      --text-white: #f3f4f6;
+      --text-gray: #9ca3af;
+      --border-color: #2d3748;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      margin: 0;
-      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-white);
       display: flex;
       justify-content: center;
+      min-height: 100vh;
+      padding: 12px;
     }
 
-    .app-container {
+    .app-viewport {
       width: 100%;
       max-width: 480px;
-      background-color: var(--card-dark);
-      border-radius: 16px;
-      padding: 20px;
-      box-sizing: border-box;
+      background-color: var(--card-bg);
+      border-radius: 20px;
+      padding: 16px;
       position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    /* Encabezado */
-    .top-bar {
+    /* Encabezado Principal */
+    .header-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
 
-    .brand {
+    .user-profile {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .avatar {
-      width: 40px;
-      height: 40px;
-      background-color: #ea580c;
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      color: #fff;
-    }
-
-    .brand-info h1 {
-      margin: 0;
       font-size: 1.2rem;
-      color: var(--primary-gold);
     }
 
-    .brand-info span {
+    .user-info h2 {
+      font-size: 1.1rem;
+      color: var(--accent-gold);
+      line-height: 1.1;
+    }
+
+    .user-info span {
       font-size: 0.75rem;
-      color: var(--text-muted);
+      color: var(--text-gray);
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     /* Botón Selector de Idioma */
-    .lang-btn {
-      background-color: #1f2937;
+    .lang-selector-btn {
+      background-color: #1a202c;
       border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 8px 14px;
+      color: var(--text-white);
+      padding: 6px 12px;
       border-radius: 20px;
       font-size: 0.85rem;
       cursor: pointer;
@@ -86,18 +103,129 @@
       gap: 6px;
     }
 
-    /* Fondo y Modal Emergente de Idiomas */
+    /* Selector de Ciudad */
+    .city-picker {
+      background-color: #161b26;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-gray);
+      margin-bottom: 16px;
+    }
+
+    .city-picker strong {
+      color: var(--text-white);
+      text-decoration: underline var(--accent-gold);
+    }
+
+    /* Navegación por Secciones */
+    .nav-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .pill {
+      background-color: #1f2937;
+      color: var(--text-white);
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pill.active {
+      background-color: var(--accent-gold);
+      color: #000;
+    }
+
+    .auth-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn-auth {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-login { background-color: #2d3748; color: var(--text-white); }
+    .btn-register { background-color: var(--accent-gold); color: #000; }
+
+    /* Tarjeta Principal */
+    .main-card {
+      background-color: var(--card-inner);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .card-banner {
+      background: linear-gradient(135deg, #b45309, #78350f);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .card-content {
+      text-align: center;
+    }
+
+    .card-content p {
+      font-size: 0.85rem;
+      color: var(--text-gray);
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background-color: var(--accent-gold);
+      color: #000;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* Modal de Idiomas (Flotante y Responsive) */
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background-color: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 1000;
+      z-index: 9999;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease;
@@ -111,13 +239,14 @@
     .lang-modal {
       background-color: var(--modal-bg);
       width: 85%;
-      max-width: 360px;
-      border-radius: 16px;
+      max-width: 340px;
+      border-radius: 18px;
       padding: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      border: 1px solid var(--border-color);
       
-      /* Permite scroll si los 9 idiomas superan la altura de la pantalla */
-      max-height: 75vh;
+      /* Permite scroll suave para los 9 idiomas */
+      max-height: 70vh;
       overflow-y: auto;
     }
 
@@ -125,28 +254,21 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 16px;
+      padding: 12px 14px;
       border-radius: 10px;
       cursor: pointer;
       margin-bottom: 4px;
-      transition: background-color 0.15s ease;
     }
 
     .lang-option:hover {
       background-color: rgba(255, 255, 255, 0.05);
     }
 
-    .lang-option span {
-      font-size: 1rem;
-      font-weight: 500;
-    }
-
-    /* Radio button estilizado */
     .radio-circle {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
-      border: 2px solid var(--text-muted);
+      border: 2px solid var(--text-gray);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -158,74 +280,97 @@
 
     .lang-option.selected .radio-circle::after {
       content: "";
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       background-color: #3b82f6;
       border-radius: 50%;
-    }
-
-    /* Estilo del contenido principal */
-    .card-box {
-      background-color: #1c2333;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-    }
-
-    .action-btn {
-      background-color: var(--primary-gold);
-      color: #000;
-      border: none;
-      width: 100%;
-      padding: 14px;
-      border-radius: 10px;
-      font-weight: bold;
-      font-size: 0.95rem;
-      cursor: pointer;
-      margin-top: 16px;
     }
   </style>
 </head>
 <body>
 
-  <div class="app-container">
-    <!-- Barra Superior -->
-    <div class="top-bar">
-      <div class="brand">
+  <div class="app-viewport">
+    
+    <!-- Header -->
+    <div class="header-bar">
+      <div class="user-profile">
         <div class="avatar">P</div>
-        <div class="brand-info">
-          <h1>Plottwisme</h1>
+        <div class="user-info">
+          <h2>Plottwisme</h2>
           <span>🌐 GUEST</span>
         </div>
       </div>
-      
-      <!-- Botón que activa el Modal -->
-      <button class="lang-btn" onclick="toggleModal(true)">
-        <span id="current-lang-text">Español 🇪🇸</span> ▾
+
+      <button class="lang-selector-btn" onclick="toggleLangModal(true)">
+        <span id="current-lang-label">Español 🇪🇸</span> ▾
       </button>
     </div>
 
-    <!-- Contenido dinamizado por idioma -->
-    <div class="card-box">
-      <h3 id="ui-title">Cartelera Oficial</h3>
-      <p id="ui-desc" style="color: var(--text-muted); font-size: 0.9rem;">
-        Horarios, salas y opciones de cines en tu ciudad.
-      </p>
-      <button class="action-btn" id="ui-btn">Abrir Cartelera Inteligente</button>
+    <!-- Ubicación -->
+    <div class="city-picker">
+      📍 <span id="txt-city-label">Ciudad (Cines):</span> <strong>Oberá</strong>
     </div>
+
+    <!-- Navegación por Módulos -->
+    <div class="nav-pills">
+      <button class="pill active" id="nav-cartelera">🎬 Cartelera</button>
+      <button class="pill" id="nav-foros">💬 Foros</button>
+      <button class="pill" id="nav-radar">🎯 Radar Citas</button>
+      <button class="pill" id="nav-chats">💬 Chats (0)</button>
+      <button class="pill" id="nav-criticos">📰 Críticos</button>
+    </div>
+
+    <!-- Login / Registro -->
+    <div class="auth-actions">
+      <button class="btn-auth btn-login" id="btn-login">🔑 Iniciar Sesión</button>
+      <button class="btn-auth btn-register" id="btn-register">✨ Crear Cuenta</button>
+    </div>
+
+    <!-- Tarjeta Principal de Cartelera -->
+    <div class="main-card">
+      <div class="card-banner" id="txt-banner">
+        CARTELERA OFICIAL CON IA & MAPAS INTERACTIVOS
+      </div>
+      
+      <div class="card-content">
+        <p id="txt-card-desc">
+          Consulta horarios, salas y opciones de cines disponibles en tu ciudad.
+        </p>
+
+        <button class="btn-primary" id="btn-main-action">
+          🤖 Abrir Cartelera Inteligente de Oberá ↗
+        </button>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Modal Flotante de Selección de Idioma -->
-  <div class="modal-overlay" id="modal-overlay" onclick="toggleModal(false)">
+  <!-- Modal Emergente de Selección de Idiomas (9 Idiomas) -->
+  <div class="modal-overlay" id="lang-modal-overlay" onclick="toggleLangModal(false)">
     <div class="lang-modal" onclick="event.stopPropagation()">
       <div id="language-list-container">
-        <!-- Se genera dinámicamente con las 9 opciones -->
+        <!-- Renderizado dinámico de los 9 idiomas -->
       </div>
     </div>
   </div>
 
   <script>
-    // 1. Definición de los 9 idiomas
+    // Configuración de Firebase (Coloca tus claves aquí)
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "tu-app.firebaseapp.com",
+      projectId: "tu-app",
+      storageBucket: "tu-app.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
+    
+    // Inicializar Firebase solo si las claves son válidas
+    if (firebaseConfig.apiKey !== "TU_API_KEY") {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    // Lista ampliada de los 9 idiomas europeos/americanos
     const availableLanguages = [
       { code: 'es', name: 'Español', flag: '🇪🇸' },
       { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -238,22 +383,130 @@
       { code: 'nl', name: 'Nederlands', flag: '🇳🇱' }
     ];
 
-    // 2. Traducciones de interfaz
-    const uiTranslations = {
-      es: { title: "Cartelera Oficial", desc: "Horarios, salas y opciones de cines en tu ciudad.", btn: "Abrir Cartelera Inteligente" },
-      en: { title: "Official Showtime", desc: "Schedules, theaters, and cinema options in your city.", btn: "Open Smart Billboard" },
-      pt: { title: "Cartaz Oficial", desc: "Horários, salas e opções de cinema na sua cidade.", btn: "Abrir Cartaz Inteligente" },
-      it: { title: "Programmazione Ufficiale", desc: "Orari, sale e opzioni di cinema nella tua città.", btn: "Apri Programmazione Intelligente" },
-      fr: { title: "Programme Officiel", desc: "Horaires, salles et options de cinéma dans votre ville.", btn: "Ouvrir le Programme Intelligent" },
-      de: { title: "Offizielles Programm", desc: "Zeiten, Kinos und Optionen in Ihrer Stadt.", btn: "Intelligentes Programm Öffnen" },
-      ru: { title: "Официальная Афиша", desc: "Расписание, залы и варианты кинотеатров в вашем городе.", btn: "Открыть Умную Афишу" },
-      pl: { title: "Oficjalny Repertuar", desc: "Godziny, sale i opcje kinowe w Twoim mieście.", btn: "Otwórz Inteligentny Repertuar" },
-      nl: { title: "Officiële Filmagenda", desc: "Tijden, zalen en bioscoopopties in jouw stad.", btn: "Open Slimme Filmagenda" }
+    // Diccionario de textos de la interfaz
+    const translations = {
+      es: {
+        cityLabel: "Ciudad (Cines):",
+        cartelera: "🎬 Cartelera",
+        foros: "💬 Foros",
+        radar: "🎯 Radar Citas",
+        chats: "💬 Chats (0)",
+        criticos: "📰 Críticos",
+        login: "🔑 Iniciar Sesión",
+        register: "✨ Crear Cuenta",
+        banner: "CARTELERA OFICIAL CON IA & MAPAS INTERACTIVOS",
+        desc: "Consulta horarios, salas y opciones de cines disponibles en tu ciudad.",
+        btnAction: "🤖 Abrir Cartelera Inteligente de Oberá ↗"
+      },
+      en: {
+        cityLabel: "City (Cinemas):",
+        cartelera: "🎬 Showtimes",
+        foros: "💬 Forums",
+        radar: "🎯 Date Radar",
+        chats: "💬 Chats (0)",
+        criticos: "📰 Critics",
+        login: "🔑 Log In",
+        register: "✨ Sign Up",
+        banner: "OFFICIAL SHOWTIMES WITH AI & INTERACTIVE MAPS",
+        desc: "Check showtimes, theaters, and cinema options available in your city.",
+        btnAction: "🤖 Open Smart Billboard of Oberá ↗"
+      },
+      pt: {
+        cityLabel: "Cidade (Cinemas):",
+        cartelera: "🎬 Cartaz",
+        foros: "💬 Fóruns",
+        radar: "🎯 Radar Encontros",
+        chats: "💬 Chats (0)",
+        criticos: "📰 Críticos",
+        login: "🔑 Entrar",
+        register: "✨ Criar Conta",
+        banner: "CARTAZ OFICIAL COM IA E MAPAS INTERATIVOS",
+        desc: "Confira horários, salas e opções de cinema disponíveis na sua cidade.",
+        btnAction: "🤖 Abrir Cartaz Inteligente de Oberá ↗"
+      },
+      it: {
+        cityLabel: "Città (Cinema):",
+        cartelera: "🎬 Cinema",
+        foros: "💬 Forum",
+        radar: "🎯 Radar Appuntamenti",
+        chats: "💬 Chat (0)",
+        criticos: "📰 Critici",
+        login: "🔑 Accedi",
+        register: "✨ Registrati",
+        banner: "PROGRAMMAZIONE UFFICIALE CON IA E MAPPE INTERATTIVE",
+        desc: "Consulta orari, sale e opzioni di cinema disponibili nella tua città.",
+        btnAction: "🤖 Apri Programmazione Intelligente ↗"
+      },
+      fr: {
+        cityLabel: "Ville (Cinémas):",
+        cartelera: "🎬 Films",
+        foros: "💬 Forums",
+        radar: "🎯 Radar Rencontres",
+        chats: "💬 Chats (0)",
+        criticos: "📰 Critiques",
+        login: "🔑 Connexion",
+        register: "✨ S'inscrire",
+        banner: "PROGRAMME OFFICIEL AVEC IA ET CARTES INTERACTIVES",
+        desc: "Consultez les horaires, salles et options de cinéma dans votre ville.",
+        btnAction: "🤖 Ouvrir le Programme Intelligent ↗"
+      },
+      de: {
+        cityLabel: "Stadt (Kinos):",
+        cartelera: "🎬 Kinoprogramm",
+        foros: "💬 Foren",
+        radar: "🎯 Date-Radar",
+        chats: "💬 Chats (0)",
+        criticos: "📰 Kritiker",
+        login: "🔑 Anmelden",
+        register: "✨ Registrieren",
+        banner: "OFFIZIELLES KINOPROGRAMM MIT KI & INTERAKTIVEN KARTEN",
+        desc: "Prüfen Sie Zeiten, Kinos und Optionen in Ihrer Stadt.",
+        btnAction: "🤖 Intelligentes Programm Öffnen ↗"
+      },
+      ru: {
+        cityLabel: "Город (Кинотеатры):",
+        cartelera: "🎬 Афиша",
+        foros: "💬 Форумы",
+        radar: "🎯 Радар Свиданий",
+        chats: "💬 Чат (0)",
+        criticos: "📰 Критики",
+        login: "🔑 Войти",
+        register: "✨ Создать Аккаунт",
+        banner: "ОФИЦИАЛЬНАЯ АФИША С ИИ И ИНТЕРАКТИВНЫМИ КАРТАМИ",
+        desc: "Расписание, залы и варианты кинотеатров в вашем городе.",
+        btnAction: "🤖 Открыть Умную Афишу ↗"
+      },
+      pl: {
+        cityLabel: "Miasto (Kina):",
+        cartelera: "🎬 Repertuar",
+        foros: "💬 Fora",
+        radar: "🎯 Radar Randkowy",
+        chats: "💬 Czaty (0)",
+        criticos: "📰 Krytycy",
+        login: "🔑 Zaloguj się",
+        register: "✨ Zarejestruj się",
+        banner: "OFICJALNY REPERTUAR Z SI I INTERAKTYWNYMI MAPAMI",
+        desc: "Sprawdź godziny, sale i opcje kinowe w Twoim mieście.",
+        btnAction: "🤖 Otwórz Inteligentny Repertuar ↗"
+      },
+      nl: {
+        cityLabel: "Stad (Bioscopen):",
+        cartelera: "🎬 Filmagenda",
+        foros: "💬 Forums",
+        radar: "🎯 Date Radar",
+        chats: "💬 Chats (0)",
+        criticos: "📰 Recensenten",
+        login: "🔑 Inloggen",
+        register: "✨ Account Maken",
+        banner: "OFFICIËLE FILMAGENDA MET AI & INTERACTIEVE KAARTEN",
+        desc: "Bekijk tijden, zalen en bioscoopopties in jouw stad.",
+        btnAction: "🤖 Open Slimme Filmagenda ↗"
+      }
     };
 
     let currentLang = 'es';
 
-    // 3. Detección automática según el navegador
+    // Detección automática de idiomas usando getBrowserLang
     function getBrowserLang() {
       const userLangs = navigator.languages || [navigator.language || navigator.userLanguage];
       for (let lang of userLangs) {
@@ -265,15 +518,13 @@
       return 'es';
     }
 
-    // 4. Muestra / Oculta el Modal
-    function toggleModal(show) {
-      const overlay = document.getElementById('modal-overlay');
+    function toggleLangModal(show) {
+      const overlay = document.getElementById('lang-modal-overlay');
       if (show) overlay.classList.add('active');
       else overlay.classList.remove('active');
     }
 
-    // 5. Genera la lista de opciones dentro del modal
-    function renderModalOptions() {
+    function renderLangModalOptions() {
       const container = document.getElementById('language-list-container');
       container.innerHTML = availableLanguages.map(lang => {
         const isSelected = lang.code === currentLang;
@@ -286,28 +537,35 @@
       }).join('');
     }
 
-    // 6. Cambia el idioma en toda la aplicación
     function selectLanguage(code) {
       currentLang = code;
       const langObj = availableLanguages.find(l => l.code === code);
-      
-      // Actualiza el texto del botón principal
-      document.getElementById('current-lang-text').innerText = `${langObj.name} ${langObj.flag}`;
-      
-      // Actualiza la interfaz
-      const texts = uiTranslations[code] || uiTranslations['es'];
-      document.getElementById('ui-title').innerText = texts.title;
-      document.getElementById('ui-desc').innerText = texts.desc;
-      document.getElementById('ui-btn').innerText = texts.btn;
+      const txt = translations[code] || translations['es'];
 
-      renderModalOptions();
-      toggleModal(false);
+      // Actualizar botón superior
+      document.getElementById('current-lang-label').innerText = `${langObj.name} ${langObj.flag}`;
+
+      // Actualizar textos de la UI
+      document.getElementById('txt-city-label').innerText = txt.cityLabel;
+      document.getElementById('nav-cartelera').innerText = txt.cartelera;
+      document.getElementById('nav-foros').innerText = txt.foros;
+      document.getElementById('nav-radar').innerText = txt.radar;
+      document.getElementById('nav-chats').innerText = txt.chats;
+      document.getElementById('nav-criticos').innerText = txt.criticos;
+      document.getElementById('btn-login').innerText = txt.login;
+      document.getElementById('btn-register').innerText = txt.register;
+      document.getElementById('txt-banner').innerText = txt.banner;
+      document.getElementById('txt-card-desc').innerText = txt.desc;
+      document.getElementById('btn-main-action').innerText = txt.btnAction;
+
+      renderLangModalOptions();
+      toggleLangModal(false);
     }
 
-    // 7. Inicialización al cargar la página
+    // Inicialización al cargar el DOM
     document.addEventListener('DOMContentLoaded', () => {
-      const initialLang = getBrowserLang();
-      selectLanguage(initialLang);
+      const detected = getBrowserLang();
+      selectLanguage(detected);
     });
   </script>
 </body>
