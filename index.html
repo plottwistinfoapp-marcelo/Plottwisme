@@ -63,9 +63,13 @@
     const { useState, useMemo, useEffect } = React;
 
     const getBrowserLang = () => {
-      const lang = navigator.language || navigator.userLanguage || 'es';
-      if (lang.startsWith('en')) return 'en';
-      if (lang.startsWith('pt')) return 'pt';
+      const languages = navigator.languages || [navigator.language || navigator.userLanguage || 'es'];
+      for (let lang of languages) {
+        const l = lang.toLowerCase();
+        if (l.startsWith('es')) return 'es';
+        if (l.startsWith('pt')) return 'pt';
+        if (l.startsWith('en')) return 'en';
+      }
       return 'es';
     };
 
