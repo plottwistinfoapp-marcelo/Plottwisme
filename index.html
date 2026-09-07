@@ -18,10 +18,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
-  <!-- SDK de Verificación de Identidad KYC (Veriff / Sumsub WebSDK) -->
-  <script src="https://cdn.jsdelivr.net/npm/@sumsub/websdk@2.3.9/sns-websdk.js"></script>
-
-  <!-- Firebase SDKs (Auth y Firestore Cloud) -->
+  <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
@@ -192,9 +189,8 @@
       const [authMode, setAuthMode] = useState('signup');
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
       
-      // ESTADOS KYC (VERIFICACIÓN DE IDENTIDAD)
+      // ESTADOS KYC
       const [showKycModal, setShowKycModal] = useState(false);
-      const [kycStep, setKycStep] = useState(1);
       const [kycDocFront, setKycDocFront] = useState(null);
       const [kycDocBack, setKycDocBack] = useState(null);
       const [kycSelfie, setKycSelfie] = useState(null);
@@ -406,13 +402,11 @@
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query.trim())}${countryParam}&hl=${lang}`, '_blank');
       };
 
-      // PROCESADOR DE VERIFICACIÓN KYC REAL / BIOMÉTRICA
       const handleStartKycProcess = () => {
         if (!currentUser) {
           setShowAuthModal(true);
           return;
         }
-        setKycStep(1);
         setKycDocFront(null);
         setKycDocBack(null);
         setKycSelfie(null);
@@ -451,12 +445,12 @@
             setCurrentUser(prev => ({ ...prev, kycVerified: true, verified: true }));
             setKycProcessing(false);
             setShowKycModal(false);
-            alert('🎉 ¡Verificación KYC Exitosa! Tu identidad y edad han sido convalidadas oficialmente.');
+            alert('🎉 ¡Verificación KYC Exitosa! Tu identidad y edad han sido autenticadas.');
           } catch(err) {
             setKycProcessing(false);
             alert('Error guardando la verificación.');
           }
-        }, 3000);
+        }, 2000);
       };
 
       const handleToggleKycAdmin = async (userId) => {
@@ -717,7 +711,7 @@
 
             await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", uid), newUser);
             setCurrentUser(newUser);
-            alert('🎉 ¡Cuenta creada con éxito! Ahora te invitamos a completar tu Verificación KYC para activar tu insignia de identidad.');
+            alert('🎉 ¡Cuenta creada con éxito! Ahora te invitamos a completar tu Verificación KYC.');
           } else {
             let userCred;
             try {
@@ -1005,9 +999,8 @@
                 <div className="flex items-center gap-2">
                   {!isAppInstalled && (
                     <button 
-                      onClick={handleInstallAppClick}
+                      onClick={() => setShowInstallGuideModal(true)}
                       className="bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-90 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 animate-pulse whitespace-nowrap"
-                      title="Instalar Plottwisme como App en tu teléfono"
                     >
                       <span>📱</span> <span>Instalar App</span>
                     </button>
@@ -1022,13 +1015,6 @@
                     >
                       <option value="es" className="bg-slate-900">Español 🇪🇸</option>
                       <option value="en" className="bg-slate-900">English 🇺🇸</option>
-                      <option value="pt" className="bg-slate-900">Português 🇧🇷</option>
-                      <option value="it" className="bg-slate-900">Italiano 🇮🇹</option>
-                      <option value="fr" className="bg-slate-900">Français 🇫🇷</option>
-                      <option value="de" className="bg-slate-900">Deutsch 🇩🇪</option>
-                      <option value="ru" className="bg-slate-900">Русский 🇷🇺</option>
-                      <option value="pl" className="bg-slate-900">Polski 🇵🇱</option>
-                      <option value="nl" className="bg-slate-900">Nederlands 🇳🇱</option>
                     </select>
                   </div>
                 </div>
@@ -1057,7 +1043,6 @@
                       value={matchRadiusKm} 
                       onChange={(e) => setMatchRadiusKm(Number(e.target.value))}
                       className="w-24 sm:w-28 accent-rose-500 cursor-pointer"
-                      title={`Ajustar radio de citas (Máx: ${maxAllowedSlider} km)`}
                     />
                   </div>
                 )}
@@ -1219,7 +1204,7 @@
                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
                       <div>
                         <h2 className="text-2xl font-black text-white">💬 Foros de Discusión</h2>
-                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías con cinéfilos (Aquí se muestra tu biografía pública).</p>
+                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías con cinéfilos.</p>
                       </div>
                       <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
                         ✍️ Nuevo Debate
@@ -1258,8 +1243,7 @@
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold text-center">
-                  🎯 Radar de Citas (Matches): Mostrando perfiles en un radio de <b className="text-white">{matchRadiusKm} km</b> 
-                  {!currentUser?.isPremium && !isAdmin && " (Máx Free: 50 km)"}
+                  🎯 Radar de Citas (Matches): Mostrando perfiles en un radio de <b className="text-white">{matchRadiusKm} km</b>
                 </div>
 
                 {currentCandidate ? (
@@ -1277,14 +1261,14 @@
                       <div className="absolute bottom-4 left-4 right-4">
                         <h2 className="text-2xl font-black text-white flex items-center gap-2">
                           {currentCandidate.name}, {currentCandidate.age || 25}
-                          {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Documento oficial verificado">✔</span>}
+                          {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Documento verificado">✔</span>}
                         </h2>
                         <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location || 'Oberá'} • Match Directo 🍿</p>
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
                       <div className="bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-2xl">
-                        <p className="text-[10px] uppercase font-bold text-rose-400 mb-1">💬 Descripción exclusiva para Citas:</p>
+                        <p className="text-[10px] uppercase font-bold text-rose-400 mb-1">💬 Descripción para Citas:</p>
                         <p className="text-xs italic text-slate-200">"{currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
                       </div>
                       
@@ -1297,8 +1281,7 @@
                 ) : (
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay perfiles en un radio de {matchRadiusKm} km con tus preferencias.</h3>
-                    <p className="text-xs text-slate-400">Prueba aumentando el radio o cambiando a Plan Premium (hasta 500 km) en tu Perfil.</p>
+                    <h3 className="text-xl font-bold">No hay más perfiles en este radio.</h3>
                     <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
                   </div>
                 )}
@@ -1307,7 +1290,7 @@
 
             {activeTab === 'chats' && (
               <div className="max-w-4xl mx-auto space-y-6">
-                <h2 className="text-2xl font-black text-white">💬 Chats & Matches de Citas</h2>
+                <h2 className="text-2xl font-black text-white">💬 Chats & Matches</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900 border border-slate-800 rounded-3xl p-4 min-h-[450px]">
                   <div className="border-r border-slate-800 pr-3 space-y-2">
@@ -1411,31 +1394,27 @@
                 )}
 
                 <div className="space-y-4 pt-2">
-                  {reviewsList.length === 0 ? (
-                    <p className="text-xs text-slate-400 text-center py-6">Aún no hay reseñas en la nube. ¡Sé el primero en escribir una!</p>
-                  ) : (
-                    reviewsList.map(rev => (
-                      <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
-                        <div className="flex justify-between items-start text-xs">
-                          <div>
-                            <span className="font-bold text-amber-500 flex items-center gap-1">
-                              {rev.author} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">🌟 Crítico</span>
-                            </span>
-                            <p className="text-[10px] text-slate-400">🎙️ Medio / Red: {rev.mediaOutlet || 'Independiente'}</p>
-                          </div>
-                          <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
+                  {reviewsList.map(rev => (
+                    <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
+                      <div className="flex justify-between items-start text-xs">
+                        <div>
+                          <span className="font-bold text-amber-500 flex items-center gap-1">
+                            {rev.author} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">🌟 Crítico</span>
+                          </span>
+                          <p className="text-[10px] text-slate-400">🎙️ Medio: {rev.mediaOutlet || 'Independiente'}</p>
                         </div>
-                        <h4 className="text-base font-black">{rev.movieTitle}</h4>
-                        <p className="text-xs text-slate-300 leading-relaxed">{rev.content}</p>
-
-                        <div className="flex items-center gap-4 pt-2 border-t border-slate-800 text-xs">
-                          <button onClick={() => handleLikeReview(rev)} className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 font-bold text-amber-400 hover:bg-slate-800">
-                            <span>🍿</span> <span>{rev.likes || 0} Me gusta</span>
-                          </button>
-                        </div>
+                        <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
                       </div>
-                    ))
-                  )}
+                      <h4 className="text-base font-black">{rev.movieTitle}</h4>
+                      <p className="text-xs text-slate-300 leading-relaxed">{rev.content}</p>
+
+                      <div className="flex items-center gap-4 pt-2 border-t border-slate-800 text-xs">
+                        <button onClick={() => handleLikeReview(rev)} className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 font-bold text-amber-400 hover:bg-slate-800">
+                          <span>🍿</span> <span>{rev.likes || 0} Me gusta</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1443,7 +1422,6 @@
             {activeTab === 'profile' && currentUser && (
               <div className="max-w-xl mx-auto space-y-6">
                 
-                {/* TARJETA DE ESTADO KYC & IDENTIDAD */}
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1452,7 +1430,7 @@
                       </h3>
                       <p className="text-xs text-slate-400 mt-1">
                         {currentUser.kycVerified 
-                          ? "Tu documento oficial y selfie han sido autenticados con éxito." 
+                          ? "Tu documento oficial y selfie han sido autenticados." 
                           : "Obtén el tilde azul de confianza escaneando tu DNI/Pasaporte y Selfie."}
                       </p>
                     </div>
@@ -1471,20 +1449,18 @@
                   </div>
                 </div>
 
-                {/* TARJETA VISIBLE DE PLANES */}
                 <div className="bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-4 shadow-xl">
                   <h3 className="text-base font-black text-amber-400 flex items-center gap-2">
-                    <span>🚀 Elija su Plan Plottwisme</span>
+                    <span>🚀 Plan de Usuario</span>
                   </h3>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                     <div className={`p-4 rounded-2xl border transition-all ${!currentUser.isPremium ? 'bg-amber-500/10 border-amber-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="font-bold text-sm text-white">Free (Gratis)</span>
+                        <span className="font-bold text-sm text-white">Free</span>
                         {!currentUser.isPremium && <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ACTIVO</span>}
                       </div>
-                      <p className="text-[11px] text-slate-300 mt-2"><b>Radar Citas:</b> hasta 50 km</p>
-                      <p className="text-[11px] text-slate-300"><b>Fotos reales:</b> hasta 3 fotos</p>
+                      <p className="text-[11px] text-slate-300 mt-2"><b>Radar:</b> hasta 50 km</p>
                       <button 
                         type="button" 
                         onClick={() => handleUpgradePlan(false)} 
@@ -1501,15 +1477,14 @@
                         {currentUser.isPremium && <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ACTIVO</span>}
                       </div>
                       <p className="text-xs font-black text-amber-300">u$d 4.99 / mes</p>
-                      <p className="text-[11px] text-slate-300 mt-1"><b>Radar Citas:</b> hasta 500 km</p>
-                      <p className="text-[11px] text-slate-300"><b>Fotos reales:</b> hasta 10 fotos</p>
+                      <p className="text-[11px] text-slate-300 mt-1"><b>Radar:</b> hasta 500 km</p>
                       <button 
                         type="button" 
                         onClick={() => handleUpgradePlan(true)} 
                         disabled={currentUser.isPremium}
                         className="w-full mt-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider transition-all"
                       >
-                        {currentUser.isPremium ? "Plan Actual" : "Obtener Premium (u$d 4.99)"}
+                        {currentUser.isPremium ? "Plan Actual" : "Obtener Premium"}
                       </button>
                     </div>
                   </div>
@@ -1530,7 +1505,7 @@
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="font-bold text-amber-400">
-                          📸 Mis Fotos Reales ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
+                          Mis Fotos Reales ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
                         </label>
                       </div>
 
@@ -1553,7 +1528,7 @@
 
                     <div className="grid grid-cols-2 gap-3 pt-2">
                       <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Mi Género / Sexualidad:</label>
+                        <label className="block mb-1 text-slate-400 font-bold">Mi Género:</label>
                         <select value={editSex} onChange={(e) => setEditSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
                           {SEXUALITIES_OPTIONS.map(opt => (
                             <option key={opt} value={opt}>{opt}</option>
@@ -1571,30 +1546,16 @@
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-amber-400 font-bold">🌍 Biografía Pública (Visible en Foros y Debates):</label>
-                      <textarea rows="2" value={editPublicBio} onChange={(e) => setEditPublicBio(e.target.value)} placeholder="Algo sobre tus gustos generales de cine..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                      <label className="block mb-1 text-amber-400 font-bold">Biografía Pública:</label>
+                      <textarea rows="2" value={editPublicBio} onChange={(e) => setEditPublicBio(e.target.value)} placeholder="Tus gustos de cine..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-rose-400 font-bold">💬 Biografía Privada de Citas (Visible solo en Matches):</label>
-                      <textarea rows="2" value={editDatingBio} onChange={(e) => setEditDatingBio(e.target.value)} placeholder="Lo que buscas para salir al cine o citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                      <label className="block mb-1 text-rose-400 font-bold">Biografía de Citas:</label>
+                      <textarea rows="2" value={editDatingBio} onChange={(e) => setEditDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
                     </div>
 
-                    {currentUser.isCritic && (
-                      <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl space-y-3">
-                        <h4 className="font-bold text-amber-400">🎙️ Links de Redes / Medios (Crítico)</h4>
-                        <div>
-                          <label className="block mb-1 text-slate-400">Radio / Podcast / Medio:</label>
-                          <input type="text" value={editRadio} onChange={(e) => setEditRadio(e.target.value)} placeholder="Ej: Frecuencia Cine" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
-                        </div>
-                        <div>
-                          <label className="block mb-1 text-slate-400">TV / Canal / Web Link:</label>
-                          <input type="text" value={editTv} onChange={(e) => setEditTv(e.target.value)} placeholder="Ej: Canal 12 o enlace web" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" />
-                        </div>
-                      </div>
-                    )}
-
-                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20">Guardar Perfil en la Nube</button>
+                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20">Guardar Perfil</button>
                   </div>
                 </form>
               </div>
@@ -1605,10 +1566,10 @@
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div>
                     <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador Cloud</h2>
-                    <p className="text-xs text-amber-400 mt-1">Control total en la nube: otorga Premium, verificación KYC, insignia de crítico, modera fotos y expulsa usuarios.</p>
+                    <p className="text-xs text-amber-400 mt-1">Gestión de usuarios y verificaciones.</p>
                   </div>
                   <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
-                    Total Usuarios Cloud: {usersList.length}
+                    Total Usuarios: {usersList.length}
                   </span>
                 </div>
 
@@ -1625,17 +1586,17 @@
                             </p>
                             <p className="text-xs text-amber-400">{u.roleLabel}</p>
                             <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
-                            <p className="text-[10px] text-slate-300 mt-1"><b>Edad:</b> {u.age || 25} años | <b>Género:</b> {u.sex || 'N/D'}</p>
+                            <p className="text-[10px] text-slate-300 mt-1"><b>Edad:</b> {u.age || 25} años</p>
                           </div>
                         </div>
 
                         <div>
-                          <p className="text-[10px] font-bold text-slate-400 mb-1">Fotos reales del usuario (haz clic en ✕ para borrar inapropiadas):</p>
+                          <p className="text-[10px] font-bold text-slate-400 mb-1">Fotos del usuario:</p>
                           <div className="flex gap-1 overflow-x-auto py-1">
                             {userPhotos.map((p, pIdx) => (
                               <div key={pIdx} className="relative group shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-slate-700 bg-slate-900">
                                 <img src={p} alt="mini" className="w-full h-full object-cover" />
-                                <button onClick={() => handleDeletePhoto(u.id, pIdx)} className="absolute inset-0 bg-rose-900/90 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity font-bold" title="Borrar foto inapropiada">
+                                <button onClick={() => handleDeletePhoto(u.id, pIdx)} className="absolute inset-0 bg-rose-900/90 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity font-bold">
                                   ✕ Borrar
                                 </button>
                               </div>
@@ -1645,20 +1606,20 @@
                         
                         <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
                           <button onClick={() => handleToggleKycAdmin(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.kycVerified ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                            {u.kycVerified ? '✔ Quitar Verificación KYC' : '🪪 Otorgar Verificación KYC Manual'}
+                            {u.kycVerified ? '✔ Quitar Verificación KYC' : '🪪 Otorgar KYC Manual'}
                           </button>
 
                           <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                            {u.isCritic ? '🌟 Quitar Insignia de Crítico' : '✨ Otorgar Insignia de Crítico'}
+                            {u.isCritic ? '🌟 Quitar Crítico' : '✨ Otorgar Crítico'}
                           </button>
 
                           <button onClick={() => handleToggleAdminPremium(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isPremium ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                            {u.isPremium ? '⭐ Quitar Plan Premium' : '⭐ Otorgar Plan Premium'}
+                            {u.isPremium ? '⭐ Quitar Premium' : '⭐ Otorgar Premium'}
                           </button>
                           
                           {u.email.toLowerCase() !== 'marbuttice@gmail.com' && (
                             <button onClick={() => handleDeleteUser(u.id)} className="w-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
-                              🗑️ Expulsar / Eliminar Usuario
+                              🗑️ Eliminar Usuario
                             </button>
                           )}
                         </div>
@@ -1671,13 +1632,13 @@
 
           </main>
 
-          {/* MODAL KYC - ESCANEO DE DNI Y SERVICIO BIOMÉTRICO */}
+          {/* MODAL KYC */}
           {showKycModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-sky-400 flex items-center gap-2">
-                    <span>🪪 Escaneo & Verificación de DNI / Selfie</span>
+                    <span>🪪 Verificación de Identidad KYC</span>
                   </h3>
                   <button onClick={() => setShowKycModal(false)} className="text-slate-400 font-bold">✕</button>
                 </div>
@@ -1685,46 +1646,45 @@
                 {kycProcessing ? (
                   <div className="text-center py-10 space-y-4">
                     <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="text-sm font-bold text-sky-300">Validando datos con el motor biométrico e IA...</p>
-                    <p className="text-xs text-slate-400">Verificando holograma de seguridad, OCR y prueba de vida.</p>
+                    <p className="text-sm font-bold text-sky-300">Validando datos biométricos y documento...</p>
                   </div>
                 ) : (
                   <div className="space-y-4 text-xs">
                     <p className="text-slate-300 leading-relaxed">
-                      Para garantizar la seguridad de la comunidad y certificar que tienes **+18 años**, captura tu documento oficial de identidad y una foto biométrica.
+                      Para verificar tu edad (+18) y dar seguridad a tus citas, sube la foto de tu documento y una selfie.
                     </p>
 
                     <div className="space-y-3">
                       <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
                         <div>
-                          <p className="font-bold text-white">1. DNI / Documento (Frente):</p>
-                          <p className="text-[10px] text-slate-400">Captura clara del frente de tu DNI o Pasaporte.</p>
+                          <p className="font-bold text-white">1. DNI (Frente):</p>
+                          <p className="text-[10px] text-slate-400">Foto clara del frente del documento.</p>
                         </div>
                         <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
                           {kycDocFront ? "✔ Cargado" : "Subir Frente"}
-                          <input type="file" accept="image/*" capture="environment" onChange={(e) => handleSimulateKycUpload('front', e)} className="hidden" />
+                          <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('front', e)} className="hidden" />
                         </label>
                       </div>
 
                       <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
                         <div>
-                          <p className="font-bold text-white">2. DNI / Documento (Dorso):</p>
-                          <p className="text-[10px] text-slate-400">Captura del reverso del documento.</p>
+                          <p className="font-bold text-white">2. DNI (Dorso):</p>
+                          <p className="text-[10px] text-slate-400">Foto del dorso del documento.</p>
                         </div>
                         <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
                           {kycDocBack ? "✔ Cargado" : "Subir Dorso"}
-                          <input type="file" accept="image/*" capture="environment" onChange={(e) => handleSimulateKycUpload('back', e)} className="hidden" />
+                          <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('back', e)} className="hidden" />
                         </label>
                       </div>
 
                       <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
                         <div>
-                          <p className="font-bold text-white">3. Selfie Biométrica (Prueba de vida):</p>
-                          <p className="text-[10px] text-slate-400">Foto de tu rostro mirando a la cámara.</p>
+                          <p className="font-bold text-white">3. Selfie Biométrica:</p>
+                          <p className="text-[10px] text-slate-400">Foto actual de tu rostro.</p>
                         </div>
                         <label className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
                           {kycSelfie ? "✔ Capturada" : "Tomar Selfie"}
-                          <input type="file" accept="image/*" capture="user" onChange={(e) => handleSimulateKycUpload('selfie', e)} className="hidden" />
+                          <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('selfie', e)} className="hidden" />
                         </label>
                       </div>
                     </div>
@@ -1745,18 +1705,13 @@
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
                 <div className="text-4xl">📱✨</div>
-                <h3 className="text-xl font-black text-amber-400">Instalar Plottwisme en tu Teléfono</h3>
+                <h3 className="text-xl font-black text-amber-400">Instalar Plottwisme</h3>
                 <p className="text-xs text-slate-300 leading-relaxed text-left bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                  Para tener la app con su propio ícono en la pantalla de inicio de tu celular, haz lo siguiente según tu navegador:
-                  <br/><br/>
-                  <b>🌐 En Google Chrome (Android):</b><br/>
-                  Toca los tres puntos <b>( ⋮ )</b> arriba a la derecha y selecciona <b>"Instalar aplicación"</b> o <b>"Agregar a la pantalla principal"</b>.
-                  <br/><br/>
-                  <b>🍏 En Safari (iPhone):</b><br/>
-                  Toca el botón de <b>Compartir</b> (cuadrado con flecha hacia arriba) y selecciona <b>"Agregar a Inicio"</b>.
+                  <b>🌐 Android:</b> Abre el menú del navegador <b>( ⋮ )</b> y toca <b>"Instalar aplicación"</b>.<br/><br/>
+                  <b>🍏 iPhone:</b> Toca el botón <b>Compartir</b> y selecciona <b>"Agregar a Inicio"</b>.
                 </p>
-                <button onClick={() => setShowInstallGuideModal(false)} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider">
-                  ¡Entendido!
+                <button onClick={() => setShowInstallGuideModal(false)} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">
+                  Entendido
                 </button>
               </div>
             </div>
@@ -1766,13 +1721,13 @@
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">✍️ Crear Nuevo Debate en la Nube</h3>
+                  <h3 className="text-lg font-black text-white">✍️ Crear Nuevo Debate</h3>
                   <button onClick={() => setShowNewTopicModal(false)} className="text-slate-400 font-bold text-lg">✕</button>
                 </div>
                 <form onSubmit={handleCreateTopic} className="space-y-4 text-xs">
                   <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Título del Debate:</label>
-                    <input type="text" value={newTopicTitle} onChange={(e) => setNewTopicTitle(e.target.value)} placeholder="Ej: ¿Cuál es el mejor final de la historia?" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    <label className="block mb-1 text-slate-400 font-bold">Título:</label>
+                    <input type="text" value={newTopicTitle} onChange={(e) => setNewTopicTitle(e.target.value)} placeholder="Ej: ¿Cuál es el mejor final?" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
                   <div>
                     <label className="block mb-1 text-slate-400 font-bold">Categoría:</label>
@@ -1785,11 +1740,11 @@
                     </select>
                   </div>
                   <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Contenido / Teoría:</label>
-                    <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe tu planteo para debatir con la comunidad..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    <label className="block mb-1 text-slate-400 font-bold">Contenido:</label>
+                    <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe tu propuesta..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
                   <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                    Publicar Debate Cloud
+                    Publicar Debate
                   </button>
                 </form>
               </div>
@@ -1817,41 +1772,13 @@
             </div>
           )}
 
-          {showSubscriptionModal && (
-            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">🚀 Planes Cloud</h3>
-                  <button onClick={() => setShowSubscriptionModal(false)} className="text-slate-400 font-bold">✕</button>
-                </div>
-                <div className="space-y-4 text-xs">
-                  <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                    <h4 className="font-bold text-slate-300 text-sm">Free (Gratis)</h4>
-                    <p className="text-slate-400 mt-1">Radar de citas hasta 50 km de distancia.</p>
-                    <button onClick={() => handleUpgradePlan(false)} className="w-full mt-3 bg-slate-800 text-slate-300 font-bold py-2 rounded-xl">
-                      Elegir Plan Free
-                    </button>
-                  </div>
-
-                  <div className="bg-amber-500/20 border border-amber-500/50 p-4 rounded-2xl">
-                    <h4 className="font-bold text-amber-400 text-sm">⭐ Premium — u$d 4.99 / mes</h4>
-                    <p className="text-slate-300 mt-1">Radar de citas extendido hasta 500 km + hasta 10 fotos reales.</p>
-                    <button onClick={() => handleUpgradePlan(true)} className="w-full mt-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl uppercase tracking-wider">
-                      Obtener Premium (u$d 4.99)
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {showAuthModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-white">
-                    {authMode === 'signup' && '✨ Crear Cuenta en la Nube'}
-                    {authMode === 'login' && '🔑 Iniciar Sesión en la Nube'}
+                    {authMode === 'signup' && '✨ Crear Cuenta'}
+                    {authMode === 'login' && '🔑 Iniciar Sesión'}
                     {authMode === 'forgot' && '🔄 Recuperar Contraseña'}
                   </h3>
                   <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 font-bold text-lg">✕</button>
@@ -1889,19 +1816,19 @@
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-amber-400 font-bold">🌍 Biografía Pública (Visible en Foros):</label>
+                      <label className="block mb-1 text-amber-400 font-bold">Biografía Pública:</label>
                       <textarea rows="2" value={authPublicBio} onChange={(e) => setAuthPublicBio(e.target.value)} placeholder="Tus gustos generales..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-rose-400 font-bold">💬 Biografía Privada de Citas (Visible en Matches):</label>
+                      <label className="block mb-1 text-rose-400 font-bold">Biografía de Citas:</label>
                       <textarea rows="2" value={authDatingBio} onChange={(e) => setAuthDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
                     </div>
                     
                     <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
                       <div>
                         <p className="font-bold text-white">¿Solicitar Insignia de Crítico?</p>
-                        <p className="text-[10px] text-slate-400">Permite postularte para publicar reseñas oficiales.</p>
+                        <p className="text-[10px] text-slate-400">Permite publicar reseñas de cine.</p>
                       </div>
                       <input type="checkbox" checked={authWantCritic} onChange={(e) => setAuthWantCritic(e.target.checked)} className="w-4 h-4 accent-amber-500 cursor-pointer" />
                     </div>
@@ -1917,7 +1844,7 @@
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Registrarme en la Nube
+                      Registrarme
                     </button>
                   </form>
                 )}
@@ -1938,7 +1865,7 @@
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Ingresar a la Nube
+                      Ingresar
                     </button>
                   </form>
                 )}
@@ -1947,7 +1874,7 @@
                   <form onSubmit={handleForgotSubmit} className="space-y-4 text-xs">
                     {resetStep === 1 ? (
                       <>
-                        <p className="text-slate-300 leading-relaxed">Ingresa el correo electrónico asociado a tu cuenta para restablecer tu contraseña.</p>
+                        <p className="text-slate-300 leading-relaxed">Ingresa tu correo para restablecer tu contraseña.</p>
                         <div>
                           <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
                           <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
@@ -1966,12 +1893,6 @@
                         </button>
                       </>
                     )}
-
-                    <div className="text-center pt-2">
-                      <button type="button" onClick={() => { setAuthMode('login'); setResetStep(1); }} className="text-slate-400 hover:text-white font-bold underline">
-                        ← Volver al inicio de sesión
-                      </button>
-                    </div>
                   </form>
                 )}
 
