@@ -328,6 +328,7 @@
     const COUNTRY_CODES = [
       { code: 'AR', name: 'Argentina 🇦🇷' },
       { code: 'US', name: 'Estados Unidos 🇺🇸' },
+      { code: 'CA', name: 'Canadá 🇨🇦' },
       { code: 'ES', name: 'España 🇪🇸' },
       { code: 'MX', name: 'México 🇲🇽' },
       { code: 'CL', name: 'Chile 🇨🇱' },
@@ -346,10 +347,10 @@
     ];
 
     const SEARCH_CATEGORIES = [
-      { id: 'all', label: '🎬 Cartelera Completa con IA', queryFormat: 'cartelera de cines y horarios en {city} {country}' },
-      { id: 'today', label: '🍿 Funciones y Horarios Hoy', queryFormat: 'horarios de cine hoy salas y complejos en {city} {country}' },
-      { id: 'theaters', label: '🏛️ Mapas & Cines Cercanos', queryFormat: 'cines cercanos y mapas en {city} {country}' },
-      { id: 'premieres', label: '⭐ Estrenos & Reseñas IA', queryFormat: 'estrenos de cine actuales y criticas en {city} {country}' }
+      { id: 'all', label: '🎬 Cartelera Completa con IA', queryFormat: 'cartelera de cines y horarios en {city}' },
+      { id: 'today', label: '🍿 Funciones y Horarios Hoy', queryFormat: 'horarios de cine hoy salas y complejos en {city}' },
+      { id: 'theaters', label: '🏛️ Mapas & Cines Cercanos', queryFormat: 'cines cercanos y mapas en {city}' },
+      { id: 'premieres', label: '⭐ Estrenos & Reseñas IA', queryFormat: 'estrenos de cine actuales y criticas en {city}' }
     ];
 
     function App() {
@@ -567,14 +568,16 @@
         return found ? found.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim() : '';
       };
 
-      const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city} {country}') => {
+      // Función de Búsqueda Optimizada
+      const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city}') => {
         const cleanCity = userCity.trim() || 'Buenos Aires';
-        const country = getCountryName();
         const query = customQueryFormat
           .replace('{city}', cleanCity)
-          .replace('{country}', country);
+          .replace('{country}', '');
         
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&aqs=ai&hl=${lang}`, '_blank');
+        const countryParam = userCountryCode ? `&gl=${userCountryCode.toLowerCase()}` : '';
+
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query.trim())}${countryParam}&hl=${lang}`, '_blank');
       };
 
       const handleMatchUser = (candidate) => {
@@ -1220,7 +1223,7 @@
                     </p>
                     <div className="pt-2">
                       <button 
-                        onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city} {country}')} 
+                        onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city}')} 
                         className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
                       >
                         <span>🤖 {t.openCinema} {userCity || 'tu ciudad'}</span>
