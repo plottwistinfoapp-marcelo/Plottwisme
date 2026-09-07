@@ -206,6 +206,7 @@
 
       const [installPromptEvent, setInstallPromptEvent] = useState(null);
       const [showInstallGuideModal, setShowInstallGuideModal] = useState(false);
+      const [isAppInstalled, setIsAppInstalled] = useState(false);
 
       const [authEmail, setAuthEmail] = useState('');
       const [authPassword, setAuthPassword] = useState('');
@@ -243,10 +244,23 @@
       const [editTv, setEditTv] = useState('');
 
       useEffect(() => {
+        const checkInstalled = () => {
+          const isStandalone = 
+            window.matchMedia('(display-mode: standalone)').matches || 
+            window.navigator.standalone || 
+            document.referrer.includes('android-app://');
+          if (isStandalone) {
+            setIsAppInstalled(true);
+          }
+        };
+
+        checkInstalled();
+
         const handleBeforeInstallPrompt = (e) => {
           e.preventDefault();
           setInstallPromptEvent(e);
         };
+
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       }, []);
@@ -907,13 +921,15 @@
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button 
-                    onClick={handleInstallAppClick}
-                    className="bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-90 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 animate-pulse whitespace-nowrap"
-                    title="Instalar Plottwisme como App en tu teléfono"
-                  >
-                    <span>📱</span> <span>Instalar App</span>
-                  </button>
+                  {!isAppInstalled && (
+                    <button 
+                      onClick={handleInstallAppClick}
+                      className="bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-90 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 animate-pulse whitespace-nowrap"
+                      title="Instalar Plottwisme como App en tu teléfono"
+                    >
+                      <span>📱</span> <span>Instalar App</span>
+                    </button>
+                  )}
 
                   <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-xl">
                     <span className="text-xs">🌐</span>
