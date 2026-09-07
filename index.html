@@ -189,7 +189,7 @@
       const [authMode, setAuthMode] = useState('signup');
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
       
-      // ESTADOS KYC
+      // ESTADOS KYC OPCIONAL
       const [showKycModal, setShowKycModal] = useState(false);
       const [kycDocFront, setKycDocFront] = useState(null);
       const [kycDocBack, setKycDocBack] = useState(null);
@@ -445,7 +445,7 @@
             setCurrentUser(prev => ({ ...prev, kycVerified: true, verified: true }));
             setKycProcessing(false);
             setShowKycModal(false);
-            alert('🎉 ¡Verificación KYC Exitosa! Tu identidad y edad han sido autenticadas.');
+            alert('🎉 ¡Verificación KYC Exitosa! Ya cuentas con el tilde azul de identidad verificada.');
           } catch(err) {
             setKycProcessing(false);
             alert('Error guardando la verificación.');
@@ -711,7 +711,7 @@
 
             await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", uid), newUser);
             setCurrentUser(newUser);
-            alert('🎉 ¡Cuenta creada con éxito! Ahora te invitamos a completar tu Verificación KYC.');
+            alert('🎉 ¡Cuenta creada con éxito! Ya puedes usar Plottwisme.');
           } else {
             let userCred;
             try {
@@ -988,7 +988,7 @@
                   <div>
                     <h1 className="text-xl font-black font-brand text-amber-500 flex items-center gap-1.5">
                       Plottwisme
-                      {currentUser?.kycVerified && <span className="text-xs text-sky-400" title="Identidad KYC Verificada">✔</span>}
+                      {currentUser?.kycVerified && <span className="text-xs text-sky-400" title="Identidad Verificada">✔</span>}
                     </h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
                       {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium (Radar 500km)' : '👤 Free (Radar 50km)') : '🌐 Guest'}
@@ -1254,14 +1254,14 @@
                         <span className="bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.sex || 'Perfil'} • Busca: {currentCandidate.interestedIn || 'Cualquiera'}</span>
                         {currentCandidate.kycVerified && (
                           <span className="bg-sky-500 text-slate-950 px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1">
-                            ✔ Identidad KYC
+                            ✔ Verificado
                           </span>
                         )}
                       </div>
                       <div className="absolute bottom-4 left-4 right-4">
                         <h2 className="text-2xl font-black text-white flex items-center gap-2">
                           {currentCandidate.name}, {currentCandidate.age || 25}
-                          {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Documento verificado">✔</span>}
+                          {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Identidad Verificada">✔</span>}
                         </h2>
                         <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location || 'Oberá'} • Match Directo 🍿</p>
                       </div>
@@ -1422,16 +1422,17 @@
             {activeTab === 'profile' && currentUser && (
               <div className="max-w-xl mx-auto space-y-6">
                 
+                {/* OPCIONAL: VERIFICACIÓN KYC VOLUNTARIA */}
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-black text-white text-base flex items-center gap-2">
-                        <span>🛡️ Verificación de Edad e Identidad (KYC)</span>
+                        <span>🛡️ Insignia de Identidad Verificada (Opcional)</span>
                       </h3>
                       <p className="text-xs text-slate-400 mt-1">
                         {currentUser.kycVerified 
-                          ? "Tu documento oficial y selfie han sido autenticados." 
-                          : "Obtén el tilde azul de confianza escaneando tu DNI/Pasaporte y Selfie."}
+                          ? "Tienes tu perfil verificado con tilde azul." 
+                          : "Obtén el tilde azul opcional verificando tu identidad con DNI para generar mayor confianza."}
                       </p>
                     </div>
                     {currentUser.kycVerified ? (
@@ -1495,7 +1496,7 @@
                     <div>
                       <h2 className="text-xl font-black flex items-center gap-2">
                         {currentUser.name}
-                        {currentUser.kycVerified && <span className="text-sky-400 text-sm" title="Verificado KYC">✔</span>}
+                        {currentUser.kycVerified && <span className="text-sky-400 text-sm" title="Verificado">✔</span>}
                       </h2>
                       <p className="text-xs text-amber-500">{currentUser.roleLabel} {currentUser.isCritic ? '🌟' : ''}</p>
                     </div>
@@ -1606,7 +1607,7 @@
                         
                         <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
                           <button onClick={() => handleToggleKycAdmin(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.kycVerified ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                            {u.kycVerified ? '✔ Quitar Verificación KYC' : '🪪 Otorgar KYC Manual'}
+                            {u.kycVerified ? '✔ Quitar Verificación' : '🪪 Otorgar Verificación Manual'}
                           </button>
 
                           <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
@@ -1632,13 +1633,13 @@
 
           </main>
 
-          {/* MODAL KYC */}
+          {/* MODAL KYC OPCIONAL */}
           {showKycModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-sky-400 flex items-center gap-2">
-                    <span>🪪 Verificación de Identidad KYC</span>
+                    <span>🪪 Verificación de Identidad Opcional</span>
                   </h3>
                   <button onClick={() => setShowKycModal(false)} className="text-slate-400 font-bold">✕</button>
                 </div>
@@ -1646,22 +1647,21 @@
                 {kycProcessing ? (
                   <div className="text-center py-10 space-y-4">
                     <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="text-sm font-bold text-sky-300">Validando datos biométricos y documento...</p>
+                    <p className="text-sm font-bold text-sky-300">Validando datos biométricos...</p>
                   </div>
                 ) : (
                   <div className="space-y-4 text-xs">
                     <p className="text-slate-300 leading-relaxed">
-                      Para verificar tu edad (+18) y dar seguridad a tus citas, sube la foto de tu documento y una selfie.
+                      Sube una foto de tu documento y una selfie para obtener el tilde azul de identidad verificada en tu perfil.
                     </p>
 
                     <div className="space-y-3">
                       <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
                         <div>
                           <p className="font-bold text-white">1. DNI (Frente):</p>
-                          <p className="text-[10px] text-slate-400">Foto clara del frente del documento.</p>
                         </div>
                         <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
-                          {kycDocFront ? "✔ Cargado" : "Subir Frente"}
+                          {kycDocFront ? "✔ Cargado" : "Subir"}
                           <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('front', e)} className="hidden" />
                         </label>
                       </div>
@@ -1669,21 +1669,19 @@
                       <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
                         <div>
                           <p className="font-bold text-white">2. DNI (Dorso):</p>
-                          <p className="text-[10px] text-slate-400">Foto del dorso del documento.</p>
                         </div>
                         <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
-                          {kycDocBack ? "✔ Cargado" : "Subir Dorso"}
+                          {kycDocBack ? "✔ Cargado" : "Subir"}
                           <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('back', e)} className="hidden" />
                         </label>
                       </div>
 
                       <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
                         <div>
-                          <p className="font-bold text-white">3. Selfie Biométrica:</p>
-                          <p className="text-[10px] text-slate-400">Foto actual de tu rostro.</p>
+                          <p className="font-bold text-white">3. Selfie:</p>
                         </div>
                         <label className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
-                          {kycSelfie ? "✔ Capturada" : "Tomar Selfie"}
+                          {kycSelfie ? "✔ Capturada" : "Tomar"}
                           <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('selfie', e)} className="hidden" />
                         </label>
                       </div>
@@ -1693,7 +1691,7 @@
                       onClick={handleFinalizeKycVerification} 
                       className="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-sky-500/20"
                     >
-                      Comprobar e Identificar en Vivo
+                      Enviar Verificación
                     </button>
                   </div>
                 )}
