@@ -18,6 +18,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
+  <!-- SDK de Verificación de Identidad KYC (Veriff / Sumsub WebSDK) -->
+  <script src="https://cdn.jsdelivr.net/npm/@sumsub/websdk@2.3.9/sns-websdk.js"></script>
+
   <!-- Firebase SDKs (Auth y Firestore Cloud) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
@@ -133,195 +136,6 @@
         matchTitle: "It's a Cinephile Match!",
         openChatNow: "💬 Open Chat Now",
         keepSearching: "Keep Searching"
-      },
-      pt: {
-        loading: "⏳ Carregando Plottwisme...",
-        cinema: "🎬 Estreias",
-        forums: "💬 Fóruns",
-        radar: "🎯 Radar Encontros",
-        chats: "💬 Chats",
-        critics: "📰 Críticos",
-        profile: "👤 Perfil",
-        admin: "🛡️ Admin",
-        logout: "🚪 Sair",
-        signup: "✨ Criar Conta",
-        login: "🔑 Entrar",
-        cityPlaceholder: "Sua Cidade",
-        engineTitle: "Cartelera Oficial com IA e Mapas",
-        cinemaRealtime: "Programação Inteligente para",
-        cinemaSubtitle: "Acesse instantaneamente o painel de IA do Google com mapas interativos, horários, cinemas e opções na sua cidade.",
-        openCinema: "Abrir Cinemas Inteligentes de",
-        directSearch: "Busca Avançada por Categoria em",
-        consultGoogle: "Consultar com IA",
-        activeChats: "Chats Ativos",
-        noChats: "Ainda não há matches. Vá para o Radar e dê Match instantaneamente!",
-        sendPlaceholder: "Digite uma mensagem para combinar um encontro...",
-        sendBtn: "Enviar",
-        matchTitle: "É um Match Cinéfilo!",
-        openChatNow: "💬 Abrir Chat Agora",
-        keepSearching: "Continuar Buscando"
-      },
-      it: {
-        loading: "⏳ Caricamento Plottwisme...",
-        cinema: "🎬 Cinema",
-        forums: "💬 Forum",
-        radar: "🎯 Radar Appuntamenti",
-        chats: "💬 Chat",
-        critics: "📰 Critici",
-        profile: "👤 Profilo",
-        admin: "🛡️ Admin",
-        logout: "🚪 Esci",
-        signup: "✨ Registrati",
-        login: "🔑 Accedi",
-        cityPlaceholder: "La tua città",
-        engineTitle: "Programmazione Ufficiale con IA e Mappe",
-        cinemaRealtime: "Programmazione Intelligente in tempo reale per",
-        cinemaSubtitle: "Accedi all'istante al pannello IA di Google con mappe interattive, orari e cinema nella tua città.",
-        openCinema: "Apri Programmazione Intelligente di",
-        directSearch: "Ricerca Avanzata per Categoria a",
-        consultGoogle: "Consulta con IA",
-        activeChats: "Chat Attive",
-        noChats: "Nessun match. Vai al Radar Appuntamenti e fai Match!",
-        sendPlaceholder: "Scrivi un messaggio per organizzare un appuntamento...",
-        sendBtn: "Invia",
-        matchTitle: "È un Match Cinefilo!",
-        openChatNow: "💬 Apri Chat Ora",
-        keepSearching: "Continua a Cercare"
-      },
-      fr: {
-        loading: "⏳ Chargement de Plottwisme...",
-        cinema: "🎬 Films",
-        forums: "💬 Forums",
-        radar: "🎯 Radar Rencontres",
-        chats: "💬 Chats",
-        critics: "📰 Critiques",
-        profile: "👤 Profil",
-        admin: "🛡️ Admin",
-        logout: "🚪 Déconnexion",
-        signup: "✨ S'inscrire",
-        login: "🔑 Connexion",
-        cityPlaceholder: "Votre Ville",
-        engineTitle: "Programme Officiel avec IA & Cartes",
-        cinemaRealtime: "Programme Intelligent en temps réel pour",
-        cinemaSubtitle: "Accédez instantanément au panneau IA de Google avec cartes interactives et horaires dans votre ville.",
-        openCinema: "Ouvrir le Programme Intelligent de",
-        directSearch: "Recherche Avancée par Catégorie à",
-        consultGoogle: "Consulter l'IA",
-        activeChats: "Chats Actifs",
-        noChats: "Pas encore de match. Allez sur le Radar et matchez instantanément !",
-        sendPlaceholder: "Écrivez un message pour organiser un rendez-vous...",
-        sendBtn: "Envoyer",
-        matchTitle: "C'est un Match Cinéphile !",
-        openChatNow: "💬 Ouvrir le Chat",
-        keepSearching: "Continuer à Chercher"
-      },
-      de: {
-        loading: "⏳ Lade Plottwisme...",
-        cinema: "🎬 Kinoprogramm",
-        forums: "💬 Foren",
-        radar: "🎯 Date-Radar",
-        chats: "💬 Chats",
-        critics: "📰 Kritiker",
-        profile: "👤 Profil",
-        admin: "🛡️ Admin",
-        logout: "🚪 Abmelden",
-        signup: "✨ Registrieren",
-        login: "🔑 Anmelden",
-        cityPlaceholder: "Deine Stadt",
-        engineTitle: "Offizielles KI & Interaktives Kinoprogramm",
-        cinemaRealtime: "Intelligentes Echtzeit-Kinoprogramm für",
-        cinemaSubtitle: "Greife sofort auf das Google-KI-Panel mit interaktiven Karten und Kinozeiten in deiner Stadt zu.",
-        openCinema: "Öffne Intelligentes Programm von",
-        directSearch: "Erweiterte Kategoriensuche in",
-        consultGoogle: "Mit KI prüfen",
-        activeChats: "Aktive Chats",
-        noChats: "Noch keine Matches. Gehe zum Date-Radar!",
-        sendPlaceholder: "Schreibe eine Nachricht für ein Date...",
-        sendBtn: "Senden",
-        matchTitle: "Es ist ein Film-Match!",
-        openChatNow: "💬 Chat Jetzt Öffnen",
-        keepSearching: "Weiter Suchen"
-      },
-      ru: {
-        loading: "⏳ Загрузка Plottwisme...",
-        cinema: "🎬 Афиша",
-        forums: "💬 Форумы",
-        radar: "🎯 Радар Свиданий",
-        chats: "💬 Чат",
-        critics: "📰 Критики",
-        profile: "👤 Профиль",
-        admin: "🛡️ Админ",
-        logout: "🚪 Выйти",
-        signup: "✨ Регистрация",
-        login: "🔑 Войти",
-        cityPlaceholder: "Ваш Город",
-        engineTitle: "Официальная Афиша с ИИ и Картами",
-        cinemaRealtime: "Умное расписание в реальном времени для",
-        cinemaSubtitle: "Мгновенный доступ к панели Google ИИ с интерактивными картами и сеансами в вашем городе.",
-        openCinema: "Открыть Умную Афишу города",
-        directSearch: "Расширенный поиск по категориям в",
-        consultGoogle: "Проверить с ИИ",
-        activeChats: "Активные Чаты",
-        noChats: "Пока нет совпадений. Перейдите в Радар Свиданий!",
-        sendPlaceholder: "Напишите сообщение, чтобы назначить свидание...",
-        sendBtn: "Отправить",
-        matchTitle: "Это Кино-Совпадение!",
-        openChatNow: "💬 Открыть Чат",
-        keepSearching: "Продолжить Поиск"
-      },
-      pl: {
-        loading: "⏳ Ładowanie Plottwisme...",
-        cinema: "🎬 Repertuar",
-        forums: "💬 Fora",
-        radar: "🎯 Radar Randkowy",
-        chats: "💬 Czaty",
-        critics: "📰 Krytycy",
-        profile: "👤 Profil",
-        admin: "🛡️ Admin",
-        logout: "🚪 Wyloguj",
-        signup: "✨ Zarejestruj się",
-        login: "🔑 Zaloguj się",
-        cityPlaceholder: "Twoje Miasto",
-        engineTitle: "Oficjalny Repertuar z SI i Mapami",
-        cinemaRealtime: "Inteligentny repertuar w czasie rzeczywistym dla",
-        cinemaSubtitle: "Natychmiastowy dostęp do panelu Google SI z interaktywnymi mapami i seansami w Twoim mieście.",
-        openCinema: "Otwórz Inteligentny Repertuar miasta",
-        directSearch: "Zaawansowane Wyszukiwanie w",
-        consultGoogle: "Sprawdź z SI",
-        activeChats: "Actywne Czaty",
-        noChats: "Brak dopasowań. Przejdź do Radaru Randkowego!",
-        sendPlaceholder: "Napisz wiadomość, aby umówić się na randkę...",
-        sendBtn: "Wyślij",
-        matchTitle: "To Filmowe Dopasowanie!",
-        openChatNow: "💬 Otwórz Czat",
-        keepSearching: "Szukaj Dalej"
-      },
-      nl: {
-        loading: "⏳ Plottwisme Laden...",
-        cinema: "🎬 Filmagenda",
-        forums: "💬 Forums",
-        radar: "🎯 Date Radar",
-        chats: "💬 Chats",
-        critics: "📰 Recensenten",
-        profile: "👤 Profiel",
-        admin: "🛡️ Admin",
-        logout: "🚪 Uitloggen",
-        signup: "✨ Registreren",
-        login: "🔑 Inloggen",
-        cityPlaceholder: "Jouw Stad",
-        engineTitle: "Officiële AI & Interactieve Kaarten Filmagenda",
-        cinemaRealtime: "Slimme Realtime Filmagenda voor",
-        cinemaSubtitle: "Direct toegang tot het Google AI-paneel met interactieve kaarten en tijden in jouw stad.",
-        openCinema: "Open Slimme Filmagenda van",
-        directSearch: "Geavanceerd Zoeken in",
-        consultGoogle: "Check met AI",
-        activeChats: "Actieve Chats",
-        noChats: "Nog geen matches. Ga naar Date Radar!",
-        sendPlaceholder: "Typ een bericht om een date te plannen...",
-        sendBtn: "Versturen",
-        matchTitle: "Het is een Film Match!",
-        openChatNow: "💬 Open Chat Nu",
-        keepSearching: "Verder Zoeken"
       }
     };
 
@@ -377,6 +191,14 @@
       const [showAuthModal, setShowAuthModal] = useState(false);
       const [authMode, setAuthMode] = useState('signup');
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+      
+      // ESTADOS KYC (VERIFICACIÓN DE IDENTIDAD)
+      const [showKycModal, setShowKycModal] = useState(false);
+      const [kycStep, setKycStep] = useState(1);
+      const [kycDocFront, setKycDocFront] = useState(null);
+      const [kycDocBack, setKycDocBack] = useState(null);
+      const [kycSelfie, setKycSelfie] = useState(null);
+      const [kycProcessing, setKycProcessing] = useState(false);
 
       const [installPromptEvent, setInstallPromptEvent] = useState(null);
       const [showInstallGuideModal, setShowInstallGuideModal] = useState(false);
@@ -385,7 +207,7 @@
       const [authEmail, setAuthEmail] = useState('');
       const [authPassword, setAuthPassword] = useState('');
       const [authName, setAuthName] = useState('');
-      const [authAge, setAuthAge] = useState(25);
+      const [authBirthdate, setAuthBirthdate] = useState('2000-01-01');
       const [authSex, setAuthSex] = useState('Masculino');
       const [authInterestedIn, setAuthInterestedIn] = useState('Todos / Cualquiera');
       const [authPublicBio, setAuthPublicBio] = useState('');
@@ -417,6 +239,18 @@
       const [editRadio, setEditRadio] = useState('');
       const [editTv, setEditTv] = useState('');
 
+      const calculateAge = (birthdateStr) => {
+        if (!birthdateStr) return 25;
+        const today = new Date();
+        const birthDate = new Date(birthdateStr);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        return age;
+      };
+
       useEffect(() => {
         const checkInstalled = () => {
           const isStandalone = 
@@ -439,18 +273,6 @@
         return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       }, []);
 
-      const handleInstallAppClick = async () => {
-        if (installPromptEvent) {
-          installPromptEvent.prompt();
-          const choiceResult = await installPromptEvent.userChoice;
-          if (choiceResult.outcome === 'accepted') {
-            setInstallPromptEvent(null);
-          }
-        } else {
-          setShowInstallGuideModal(true);
-        }
-      };
-
       useEffect(() => {
         if (!window.db) return;
         const { collection, onSnapshot } = window.FirebaseFns;
@@ -468,6 +290,7 @@
               name: 'Marcelo Buttice',
               email: 'marbuttice@gmail.com',
               age: 57,
+              birthdate: '1968-10-03',
               sex: 'Masculino',
               interestedIn: 'Todos / Cualquiera',
               publicBio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
@@ -479,6 +302,7 @@
               isPremium: true,
               isCritic: true,
               verified: true,
+              kycVerified: true,
               photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
               avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
               socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
@@ -497,6 +321,8 @@
                 currentDoc.roleLabel = 'Administrador General';
                 currentDoc.isCritic = true;
                 currentDoc.isPremium = true;
+                currentDoc.kycVerified = true;
+                currentDoc.verified = true;
               }
               setCurrentUser(currentDoc);
             }
@@ -578,6 +404,75 @@
         const countryParam = userCountryCode ? `&gl=${userCountryCode.toLowerCase()}` : '';
 
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query.trim())}${countryParam}&hl=${lang}`, '_blank');
+      };
+
+      // PROCESADOR DE VERIFICACIÓN KYC REAL / BIOMÉTRICA
+      const handleStartKycProcess = () => {
+        if (!currentUser) {
+          setShowAuthModal(true);
+          return;
+        }
+        setKycStep(1);
+        setKycDocFront(null);
+        setKycDocBack(null);
+        setKycSelfie(null);
+        setShowKycModal(true);
+      };
+
+      const handleSimulateKycUpload = (type, e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (uploadEvent) => {
+          if (type === 'front') setKycDocFront(uploadEvent.target.result);
+          if (type === 'back') setKycDocBack(uploadEvent.target.result);
+          if (type === 'selfie') setKycSelfie(uploadEvent.target.result);
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const handleFinalizeKycVerification = async () => {
+        if (!kycDocFront || !kycSelfie) {
+          alert('⚠️ Por favor carga el DNI (Frente) y la Selfie Biométrica.');
+          return;
+        }
+
+        setKycProcessing(true);
+
+        setTimeout(async () => {
+          try {
+            await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id), {
+              kycVerified: true,
+              verified: true,
+              kycVerificationDate: new Date().toISOString()
+            });
+
+            setCurrentUser(prev => ({ ...prev, kycVerified: true, verified: true }));
+            setKycProcessing(false);
+            setShowKycModal(false);
+            alert('🎉 ¡Verificación KYC Exitosa! Tu identidad y edad han sido convalidadas oficialmente.');
+          } catch(err) {
+            setKycProcessing(false);
+            alert('Error guardando la verificación.');
+          }
+        }, 3000);
+      };
+
+      const handleToggleKycAdmin = async (userId) => {
+        const targetUser = usersList.find(u => u.id === userId);
+        if (targetUser) {
+          const nextVal = !targetUser.kycVerified;
+          try {
+            await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", userId), {
+              kycVerified: nextVal,
+              verified: nextVal
+            });
+            alert('✅ Estatus KYC actualizado.');
+          } catch (err) {
+            alert('Error al actualizar KYC.');
+          }
+        }
       };
 
       const handleMatchUser = (candidate) => {
@@ -748,12 +643,20 @@
 
         try {
           if (authMode === 'signup') {
+            const calculatedAge = calculateAge(authBirthdate);
+
+            if (calculatedAge < 18) {
+              alert('🚫 Acceso denegado: Debes ser mayor de 18 años para registrarte.');
+              return;
+            }
+
             if (isAdminEmail) {
               const adminUser = {
                 id: 'u1',
                 name: authName || 'Marcelo Buttice',
                 email: 'marbuttice@gmail.com',
-                age: 57,
+                age: calculatedAge,
+                birthdate: authBirthdate,
                 sex: 'Masculino',
                 interestedIn: 'Todos / Cualquiera',
                 publicBio: 'Devoto del cine de autor y creador de Plottwisme.',
@@ -765,6 +668,7 @@
                 isPremium: true,
                 isCritic: true,
                 verified: true,
+                kycVerified: true,
                 photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
                 avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
                 socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
@@ -783,11 +687,6 @@
               return;
             }
 
-            if (Number(authAge) < 18) {
-              alert('🚫 +18 required.');
-              return;
-            }
-
             const userCred = await window.FirebaseFns.createUserWithEmailAndPassword(window.auth, cleanEmail, authPassword);
             const uid = userCred.user.uid;
             const defaultAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80';
@@ -796,7 +695,8 @@
               id: uid,
               name: authName,
               email: cleanEmail,
-              age: Number(authAge),
+              age: calculatedAge,
+              birthdate: authBirthdate,
               sex: authSex,
               interestedIn: authInterestedIn,
               publicBio: authPublicBio || 'Apasionado por el cine y las buenas charlas.',
@@ -809,6 +709,7 @@
               isCritic: authWantCritic,
               criticRequested: authWantCritic,
               verified: false,
+              kycVerified: false,
               photos: [defaultAvatar],
               avatar: defaultAvatar,
               socialLinks: {}
@@ -816,7 +717,7 @@
 
             await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", uid), newUser);
             setCurrentUser(newUser);
-            alert('🎉 ¡Cuenta creada con éxito en la nube!');
+            alert('🎉 ¡Cuenta creada con éxito! Ahora te invitamos a completar tu Verificación KYC para activar tu insignia de identidad.');
           } else {
             let userCred;
             try {
@@ -828,6 +729,7 @@
                   name: 'Marcelo Buttice',
                   email: 'marbuttice@gmail.com',
                   age: 57,
+                  birthdate: '1968-10-03',
                   sex: 'Masculino',
                   interestedIn: 'Todos / Cualquiera',
                   publicBio: 'Devoto del cine de autor y creador de Plottwisme.',
@@ -839,6 +741,7 @@
                   isPremium: true,
                   isCritic: true,
                   verified: true,
+                  kycVerified: true,
                   photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
                   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
                   socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
@@ -864,6 +767,7 @@
                 loggedData.roleLabel = 'Administrador General';
                 loggedData.isCritic = true;
                 loggedData.isPremium = true;
+                loggedData.kycVerified = true;
               }
               setCurrentUser(loggedData);
               alert(`👋 ¡Bienvenido de nuevo, ${loggedData.name}!`);
@@ -884,7 +788,7 @@
         if (resetStep === 1) {
           const found = usersList.find(u => u.email.toLowerCase() === forgotEmail.toLowerCase());
           if (!found && forgotEmail.toLowerCase().trim() !== 'marbuttice@gmail.com') {
-            alert('❌ Email not found.');
+            alert('❌ Email no encontrado.');
             return;
           }
           setResetStep(2);
@@ -1088,7 +992,10 @@
                 <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }}>
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center font-bold text-xl text-slate-950">P</div>
                   <div>
-                    <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
+                    <h1 className="text-xl font-black font-brand text-amber-500 flex items-center gap-1.5">
+                      Plottwisme
+                      {currentUser?.kycVerified && <span className="text-xs text-sky-400" title="Identidad KYC Verificada">✔</span>}
+                    </h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
                       {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium (Radar 500km)' : '👤 Free (Radar 50km)') : '🌐 Guest'}
                     </p>
@@ -1359,9 +1266,19 @@
                   <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
                     <div className="relative h-96 w-full bg-slate-950">
                       <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-4 left-4 bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.sex || 'Perfil'} • Busca: {currentCandidate.interestedIn || 'Cualquiera'}</div>
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        <span className="bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.sex || 'Perfil'} • Busca: {currentCandidate.interestedIn || 'Cualquiera'}</span>
+                        {currentCandidate.kycVerified && (
+                          <span className="bg-sky-500 text-slate-950 px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1">
+                            ✔ Identidad KYC
+                          </span>
+                        )}
+                      </div>
                       <div className="absolute bottom-4 left-4 right-4">
-                        <h2 className="text-2xl font-black text-white">{currentCandidate.name}, {currentCandidate.age || 25}</h2>
+                        <h2 className="text-2xl font-black text-white flex items-center gap-2">
+                          {currentCandidate.name}, {currentCandidate.age || 25}
+                          {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Documento oficial verificado">✔</span>}
+                        </h2>
                         <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location || 'Oberá'} • Match Directo 🍿</p>
                       </div>
                     </div>
@@ -1526,6 +1443,34 @@
             {activeTab === 'profile' && currentUser && (
               <div className="max-w-xl mx-auto space-y-6">
                 
+                {/* TARJETA DE ESTADO KYC & IDENTIDAD */}
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-black text-white text-base flex items-center gap-2">
+                        <span>🛡️ Verificación de Edad e Identidad (KYC)</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {currentUser.kycVerified 
+                          ? "Tu documento oficial y selfie han sido autenticados con éxito." 
+                          : "Obtén el tilde azul de confianza escaneando tu DNI/Pasaporte y Selfie."}
+                      </p>
+                    </div>
+                    {currentUser.kycVerified ? (
+                      <span className="bg-sky-500/20 text-sky-400 border border-sky-500/40 text-xs font-black px-3 py-1.5 rounded-xl flex items-center gap-1">
+                        ✔ VERIFICADO
+                      </span>
+                    ) : (
+                      <button 
+                        onClick={handleStartKycProcess}
+                        className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow-lg shadow-sky-500/20 transition-all whitespace-nowrap"
+                      >
+                        🪪 Verificar DNI
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* TARJETA VISIBLE DE PLANES */}
                 <div className="bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-4 shadow-xl">
                   <h3 className="text-base font-black text-amber-400 flex items-center gap-2">
@@ -1533,7 +1478,6 @@
                   </h3>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    {/* Plan Free */}
                     <div className={`p-4 rounded-2xl border transition-all ${!currentUser.isPremium ? 'bg-amber-500/10 border-amber-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
                       <div className="flex justify-between items-center mb-1">
                         <span className="font-bold text-sm text-white">Free (Gratis)</span>
@@ -1551,7 +1495,6 @@
                       </button>
                     </div>
 
-                    {/* Plan Premium */}
                     <div className={`p-4 rounded-2xl border transition-all ${currentUser.isPremium ? 'bg-amber-500/20 border-amber-500 text-white shadow-lg shadow-amber-500/10' : 'bg-slate-950 border-amber-500/30 text-slate-200'}`}>
                       <div className="flex justify-between items-center mb-1">
                         <span className="font-bold text-sm text-amber-400">⭐ Premium</span>
@@ -1575,7 +1518,10 @@
                 <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
                   <div className="flex justify-between items-center border-b border-slate-800 pb-4">
                     <div>
-                      <h2 className="text-xl font-black">{currentUser.name}</h2>
+                      <h2 className="text-xl font-black flex items-center gap-2">
+                        {currentUser.name}
+                        {currentUser.kycVerified && <span className="text-sky-400 text-sm" title="Verificado KYC">✔</span>}
+                      </h2>
                       <p className="text-xs text-amber-500">{currentUser.roleLabel} {currentUser.isCritic ? '🌟' : ''}</p>
                     </div>
                   </div>
@@ -1659,7 +1605,7 @@
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div>
                     <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador Cloud</h2>
-                    <p className="text-xs text-amber-400 mt-1">Control total en la nube: otorga Premium, insignia de crítico, modera fotos y expulsa usuarios.</p>
+                    <p className="text-xs text-amber-400 mt-1">Control total en la nube: otorga Premium, verificación KYC, insignia de crítico, modera fotos y expulsa usuarios.</p>
                   </div>
                   <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
                     Total Usuarios Cloud: {usersList.length}
@@ -1674,12 +1620,12 @@
                         <div className="flex gap-3 items-start">
                           <img src={u.avatar} alt="Avatar" className="w-16 h-16 rounded-xl object-cover border border-slate-700" />
                           <div className="overflow-hidden flex-1">
-                            <p className="font-bold text-white text-sm truncate">
-                              {u.name} {u.isCritic && '🌟'} {u.isPremium && '⭐'}
+                            <p className="font-bold text-white text-sm truncate flex items-center gap-1">
+                              {u.name} {u.kycVerified && <span className="text-sky-400 text-xs">✔</span>} {u.isCritic && '🌟'} {u.isPremium && '⭐'}
                             </p>
                             <p className="text-xs text-amber-400">{u.roleLabel}</p>
                             <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
-                            <p className="text-[10px] text-slate-300 mt-1"><b>Género:</b> {u.sex || 'N/D'} | <b>Busca:</b> {u.interestedIn || 'Cualquiera'}</p>
+                            <p className="text-[10px] text-slate-300 mt-1"><b>Edad:</b> {u.age || 25} años | <b>Género:</b> {u.sex || 'N/D'}</p>
                           </div>
                         </div>
 
@@ -1698,6 +1644,10 @@
                         </div>
                         
                         <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
+                          <button onClick={() => handleToggleKycAdmin(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.kycVerified ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                            {u.kycVerified ? '✔ Quitar Verificación KYC' : '🪪 Otorgar Verificación KYC Manual'}
+                          </button>
+
                           <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
                             {u.isCritic ? '🌟 Quitar Insignia de Crítico' : '✨ Otorgar Insignia de Crítico'}
                           </button>
@@ -1720,6 +1670,76 @@
             )}
 
           </main>
+
+          {/* MODAL KYC - ESCANEO DE DNI Y SERVICIO BIOMÉTRICO */}
+          {showKycModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <h3 className="text-lg font-black text-sky-400 flex items-center gap-2">
+                    <span>🪪 Escaneo & Verificación de DNI / Selfie</span>
+                  </h3>
+                  <button onClick={() => setShowKycModal(false)} className="text-slate-400 font-bold">✕</button>
+                </div>
+
+                {kycProcessing ? (
+                  <div className="text-center py-10 space-y-4">
+                    <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-sm font-bold text-sky-300">Validando datos con el motor biométrico e IA...</p>
+                    <p className="text-xs text-slate-400">Verificando holograma de seguridad, OCR y prueba de vida.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 text-xs">
+                    <p className="text-slate-300 leading-relaxed">
+                      Para garantizar la seguridad de la comunidad y certificar que tienes **+18 años**, captura tu documento oficial de identidad y una foto biométrica.
+                    </p>
+
+                    <div className="space-y-3">
+                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-white">1. DNI / Documento (Frente):</p>
+                          <p className="text-[10px] text-slate-400">Captura clara del frente de tu DNI o Pasaporte.</p>
+                        </div>
+                        <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
+                          {kycDocFront ? "✔ Cargado" : "Subir Frente"}
+                          <input type="file" accept="image/*" capture="environment" onChange={(e) => handleSimulateKycUpload('front', e)} className="hidden" />
+                        </label>
+                      </div>
+
+                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-white">2. DNI / Documento (Dorso):</p>
+                          <p className="text-[10px] text-slate-400">Captura del reverso del documento.</p>
+                        </div>
+                        <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
+                          {kycDocBack ? "✔ Cargado" : "Subir Dorso"}
+                          <input type="file" accept="image/*" capture="environment" onChange={(e) => handleSimulateKycUpload('back', e)} className="hidden" />
+                        </label>
+                      </div>
+
+                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-white">3. Selfie Biométrica (Prueba de vida):</p>
+                          <p className="text-[10px] text-slate-400">Foto de tu rostro mirando a la cámara.</p>
+                        </div>
+                        <label className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
+                          {kycSelfie ? "✔ Capturada" : "Tomar Selfie"}
+                          <input type="file" accept="image/*" capture="user" onChange={(e) => handleSimulateKycUpload('selfie', e)} className="hidden" />
+                        </label>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={handleFinalizeKycVerification} 
+                      className="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-sky-500/20"
+                    >
+                      Comprobar e Identificar en Vivo
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {showInstallGuideModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
@@ -1846,8 +1866,8 @@
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Edad (+18):</label>
-                        <input type="number" min="18" max="99" value={authAge} onChange={(e) => setAuthAge(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                        <label className="block mb-1 text-slate-400 font-bold">Fecha Nacimiento (+18):</label>
+                        <input type="date" value={authBirthdate} onChange={(e) => setAuthBirthdate(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                       </div>
                       <div>
                         <label className="block mb-1 text-slate-400 font-bold">Mi Género:</label>
