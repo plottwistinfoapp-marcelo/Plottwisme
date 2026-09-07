@@ -55,7 +55,7 @@
 <body class="antialiased bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
   <div id="root">
     <div class="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
-      ⏳ Sintonizando Plottwisme Dating Cloud...
+      ⏳ Sintonizando Plottwisme Dating Cloud Pro...
     </div>
   </div>
 
@@ -165,6 +165,20 @@
       { id: 'premieres', label: '⭐ Estrenos & Reseñas IA', queryFormat: 'estrenos de cine actuales y criticas en {city}' }
     ];
 
+    // FÓRMULA DE HAVERSINE PARA CÁLCULO DE DISTANCIA GPS REAL
+    const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return Math.floor(Math.random() * 30) + 2;
+      const R = 6371; // Radio de la Tierra en km
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLon = (lon2 - lon1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return Math.round(R * c * 10) / 10;
+    };
+
     function App() {
       const [lang, setLang] = useState(() => getBrowserLang());
       const t = TRANSLATIONS[lang] || TRANSLATIONS.es;
@@ -177,7 +191,9 @@
 
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
+      const [userCoords, setUserCoords] = useState({ lat: null, lon: null });
       const [matchRadiusKm, setMatchRadiusKm] = useState(30);
+      const [radarFilterType, setRadarFilterType] = useState('all'); // 'all' | 'verified' | 'critic'
 
       const [chatsList, setChatsList] = useState([]);
       const [activeChat, setActiveChat] = useState(null);
@@ -189,7 +205,6 @@
       const [authMode, setAuthMode] = useState('signup');
       const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
       
-      // ESTADOS KYC OPCIONAL
       const [showKycModal, setShowKycModal] = useState(false);
       const [kycDocFront, setKycDocFront] = useState(null);
       const [kycDocBack, setKycDocBack] = useState(null);
@@ -253,20 +268,44 @@
             window.matchMedia('(display-mode: standalone)').matches || 
             window.navigator.standalone || 
             document.referrer.includes('android-app://');
-          if (isStandalone) {
-            setIsAppInstalled(true);
-          }
+          if (isStandalone) setIsAppInstalled(true);
         };
-
         checkInstalled();
 
         const handleBeforeInstallPrompt = (e) => {
           e.preventDefault();
           setInstallPromptEvent(e);
         };
-
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      }, []);
+
+      // GEOLOCALIZACIÓN GPS REAL Y REVERSA
+      useEffect(() => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const { latitude, longitude } = position.coords;
+              setUserCoords({ lat: latitude, lon: longitude });
+              try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+                const data = await response.json();
+                const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Buenos Aires';
+                const countryCode = data.address.country_code ? data.address.country_code.toUpperCase() : 'AR';
+                
+                setUserCity(city);
+                if (COUNTRY_CODES.some(c => c.code === countryCode)) {
+                  setUserCountryCode(countryCode);
+                }
+              } catch (e) {
+                setUserCity('Buenos Aires');
+              }
+            },
+            () => { setUserCity('Buenos Aires'); }
+          );
+        } else {
+          setUserCity('Buenos Aires');
+        }
       }, []);
 
       useEffect(() => {
@@ -292,6 +331,8 @@
               publicBio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
               datingBio: 'Buscando citas con cinéfilos apasionados por el buen cine.',
               location: 'Oberá, Misiones, Argentina',
+              lat: -27.4855,
+              lon: -55.1167,
               distanceKm: 2.5,
               role: 'admin',
               roleLabel: 'Administrador General',
@@ -349,32 +390,6 @@
       }, []);
 
       useEffect(() => {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              try {
-                const { latitude, longitude } = position.coords;
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
-                const data = await response.json();
-                const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Buenos Aires';
-                const countryCode = data.address.country_code ? data.address.country_code.toUpperCase() : 'AR';
-                
-                setUserCity(city);
-                if (COUNTRY_CODES.some(c => c.code === countryCode)) {
-                  setUserCountryCode(countryCode);
-                }
-              } catch (e) {
-                setUserCity('Buenos Aires');
-              }
-            },
-            () => { setUserCity('Buenos Aires'); }
-          );
-        } else {
-          setUserCity('Buenos Aires');
-        }
-      }, []);
-
-      useEffect(() => {
         if (currentUser) {
           setEditPublicBio(currentUser.publicBio || currentUser.bio || '');
           setEditDatingBio(currentUser.datingBio || currentUser.bio || '');
@@ -396,17 +411,12 @@
         const query = customQueryFormat
           .replace('{city}', cleanCity)
           .replace('{country}', '');
-        
         const countryParam = userCountryCode ? `&gl=${userCountryCode.toLowerCase()}` : '';
-
         window.open(`https://www.google.com/search?q=${encodeURIComponent(query.trim())}${countryParam}&hl=${lang}`, '_blank');
       };
 
       const handleStartKycProcess = () => {
-        if (!currentUser) {
-          setShowAuthModal(true);
-          return;
-        }
+        if (!currentUser) { setShowAuthModal(true); return; }
         setKycDocFront(null);
         setKycDocBack(null);
         setKycSelfie(null);
@@ -416,7 +426,6 @@
       const handleSimulateKycUpload = (type, e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = (uploadEvent) => {
           if (type === 'front') setKycDocFront(uploadEvent.target.result);
@@ -431,9 +440,7 @@
           alert('⚠️ Por favor carga el DNI (Frente) y la Selfie Biométrica.');
           return;
         }
-
         setKycProcessing(true);
-
         setTimeout(async () => {
           try {
             await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id), {
@@ -441,7 +448,6 @@
               verified: true,
               kycVerificationDate: new Date().toISOString()
             });
-
             setCurrentUser(prev => ({ ...prev, kycVerified: true, verified: true }));
             setKycProcessing(false);
             setShowKycModal(false);
@@ -463,18 +469,12 @@
               verified: nextVal
             });
             alert('✅ Estatus KYC actualizado.');
-          } catch (err) {
-            alert('Error al actualizar KYC.');
-          }
+          } catch (err) { alert('Error al actualizar KYC.'); }
         }
       };
 
       const handleMatchUser = (candidate) => {
-        if (!currentUser) {
-          setShowAuthModal(true);
-          return;
-        }
-
+        if (!currentUser) { setShowAuthModal(true); return; }
         setMatchedUser(candidate);
         setShowMatchModal(true);
 
@@ -521,7 +521,6 @@
       const handleFileSelected = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         const maxPhotosAllowed = currentUser?.isPremium ? 10 : 3;
         if (editPhotos.length >= maxPhotosAllowed) {
           alert(`⚠️ Máximo ${maxPhotosAllowed} fotos permitidas.`);
@@ -537,24 +536,15 @@
             const MAX_HEIGHT = 600;
             let width = img.width;
             let height = img.height;
-
             if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
+              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
             } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
+              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
             }
-
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-
             const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
             setEditPhotos([...editPhotos, compressedDataUrl]);
           };
@@ -572,9 +562,7 @@
           try {
             await window.FirebaseFns.deleteDoc(window.FirebaseFns.doc(window.db, "users", userId));
             alert('✅ Usuario eliminado de la nube.');
-          } catch (err) {
-            alert('Error al eliminar usuario.');
-          }
+          } catch (err) { alert('Error al eliminar usuario.'); }
         }
       };
 
@@ -590,9 +578,7 @@
                 avatar: newAvatar
               });
               alert('✅ Foto moderada y eliminada.');
-            } catch (err) {
-              alert('Error al actualizar fotos.');
-            }
+            } catch (err) { alert('Error al actualizar fotos.'); }
           }
         }
       };
@@ -608,9 +594,7 @@
               criticRequested: false
             });
             alert('✅ Insignia de crítico actualizada en la nube.');
-          } catch (err) {
-            alert('Error al actualizar crítico.');
-          }
+          } catch (err) { alert('Error al actualizar crítico.'); }
         }
       };
 
@@ -624,9 +608,7 @@
               roleLabel: nextPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
             });
             alert('✅ Estatus Premium actualizado en la nube.');
-          } catch (err) {
-            alert('Error al actualizar premium.');
-          }
+          } catch (err) { alert('Error al actualizar premium.'); }
         }
       };
 
@@ -638,7 +620,6 @@
         try {
           if (authMode === 'signup') {
             const calculatedAge = calculateAge(authBirthdate);
-
             if (calculatedAge < 18) {
               alert('🚫 Acceso denegado: Debes ser mayor de 18 años para registrarte.');
               return;
@@ -656,6 +637,8 @@
                 publicBio: 'Devoto del cine de autor y creador de Plottwisme.',
                 datingBio: 'Buscando citas cinéfilas.',
                 location: 'Oberá, Misiones, Argentina',
+                lat: -27.4855,
+                lon: -55.1167,
                 distanceKm: 2.5,
                 role: 'admin',
                 roleLabel: 'Administrador General',
@@ -667,11 +650,7 @@
                 avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
                 socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
               };
-              
-              try {
-                await window.FirebaseFns.createUserWithEmailAndPassword(window.auth, cleanEmail, authPassword);
-              } catch(err) {}
-
+              try { await window.FirebaseFns.createUserWithEmailAndPassword(window.auth, cleanEmail, authPassword); } catch(err) {}
               await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", "u1"), adminUser);
               setCurrentUser(adminUser);
               alert('🛡️ ¡Acceso de Administrador autorizado en la nube!');
@@ -696,6 +675,8 @@
               publicBio: authPublicBio || 'Apasionado por el cine y las buenas charlas.',
               datingBio: authDatingBio || 'Buscando conectar para citas y películas.',
               location: `${userCity || 'City'}, ${getCountryName()}`,
+              lat: userCoords.lat,
+              lon: userCoords.lon,
               distanceKm: 5.0,
               role: 'general',
               roleLabel: authWantCritic ? 'Solicitud Crítico Pendiente' : 'Cinéfilo Estándar',
@@ -729,6 +710,8 @@
                   publicBio: 'Devoto del cine de autor y creador de Plottwisme.',
                   datingBio: 'Buscando citas cinéfilas.',
                   location: 'Oberá, Misiones, Argentina',
+                  lat: -27.4855,
+                  lon: -55.1167,
                   distanceKm: 2.5,
                   role: 'admin',
                   roleLabel: 'Administrador General',
@@ -747,9 +730,7 @@
                 setAuthEmail('');
                 setAuthPassword('');
                 return;
-              } else {
-                throw authErr;
-              }
+              } else { throw authErr; }
             }
 
             const uid = userCred.user.uid;
@@ -796,58 +777,55 @@
       };
 
       const handleLogout = async () => {
-        try {
-          await window.FirebaseFns.signOut(window.auth);
-        } catch(e){}
+        try { await window.FirebaseFns.signOut(window.auth); } catch(e){}
         setCurrentUser(null);
         setActiveTab('cinema');
         alert('Sesión cerrada.');
       };
 
+      // FILTRADO CON CÁLCULO DE DISTANCIA REAL GPS Y FILTROS AVANZADOS
       const filteredCandidates = useMemo(() => {
         const others = usersList.filter(u => u.email !== currentUser?.email);
-        
         const emailCheck = currentUser?.email?.toLowerCase().trim();
         const isAdmin = emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
-        
         const maxLimit = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 50);
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
         return others.filter(u => {
-          if (!isAdmin) {
-            const dist = u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 100) + 5;
-            if (dist > effectiveRadius) return false;
-          }
+          // Cálculo de distancia por GPS real (Haversine) o fallback
+          const dist = (currentUser?.lat && currentUser?.lon && u.lat && u.lon)
+            ? calculateDistanceKm(currentUser.lat, currentUser.lon, u.lat, u.lon)
+            : (u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 40) + 5);
+
+          if (!isAdmin && dist > effectiveRadius) return false;
+
+          // Filtro avanzado en Radar
+          if (radarFilterType === 'verified' && !u.kycVerified) return false;
+          if (radarFilterType === 'critic' && !u.isCritic) return false;
 
           if (currentUser?.interestedIn && currentUser.interestedIn !== 'Todos / Cualquiera') {
             const myPref = currentUser.interestedIn.toLowerCase();
             const candidateSex = (u.sex || 'Masculino').toLowerCase();
-            
             if (myPref.includes('masculino') && !candidateSex.includes('masculino')) return false;
             if (myPref.includes('femenino') && !candidateSex.includes('femenino')) return false;
           }
 
           return true;
         });
-      }, [usersList, currentUser, matchRadiusKm]);
+      }, [usersList, currentUser, matchRadiusKm, radarFilterType]);
 
       const currentCandidate = filteredCandidates[currentIndex];
 
       const handleUpgradePlan = async (isPrem) => {
-        if (!currentUser) {
-          setShowAuthModal(true);
-          return;
-        }
+        if (!currentUser) { setShowAuthModal(true); return; }
         try {
           await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id), {
             isPremium: isPrem,
             roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
           });
           setShowSubscriptionModal(false);
-          alert(isPrem ? '⭐ ¡Actualizado a Premium (u$d 4.99)! Ahora puedes ajustar tu radar hasta 500 km.' : 'Cambiado a Plan Free.');
-        } catch(err) {
-          alert('Error al actualizar plan.');
-        }
+          alert(isPrem ? '⭐ ¡Actualizado a Premium! Radar extendido hasta 500 km.' : 'Cambiado a Plan Free.');
+        } catch(err) { alert('Error al actualizar plan.'); }
       };
 
       const handleSaveProfile = async (e) => {
@@ -864,10 +842,8 @@
             avatar: primaryAvatar,
             socialLinks: { radio: editRadio, tv: editTv }
           });
-          alert('✅ ¡Perfil, biografías y preferencias guardados en la nube con éxito!');
-        } catch(err) {
-          alert('Error al guardar perfil.');
-        }
+          alert('✅ ¡Perfil guardado en la nube con éxito!');
+        } catch(err) { alert('Error al guardar perfil.'); }
       };
 
       const handlePublishReview = async (e) => {
@@ -888,10 +864,8 @@
           await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "reviews", 'r_' + Date.now()), newRev);
           setNewReviewMovie('');
           setNewReviewText('');
-          alert('📝 ¡Reseña publicada en la nube!');
-        } catch(err) {
-          alert('Error al publicar reseña.');
-        }
+          alert('📝 ¡Reseña publicada!');
+        } catch(err) { alert('Error al publicar.'); }
       };
 
       const handleLikeReview = async (rev) => {
@@ -900,12 +874,8 @@
         const alreadyLiked = likedBy.includes(currentUser.email);
         const newLikedBy = alreadyLiked ? likedBy.filter(e => e !== currentUser.email) : [...likedBy, currentUser.email];
         const newLikes = alreadyLiked ? (rev.likes || 1) - 1 : (rev.likes || 0) + 1;
-
         try {
-          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "reviews", rev.id), {
-            likes: newLikes,
-            likedBy: newLikedBy
-          });
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "reviews", rev.id), { likes: newLikes, likedBy: newLikedBy });
         } catch(e) {}
       };
 
@@ -931,9 +901,7 @@
           setNewTopicContent('');
           setShowNewTopicModal(false);
           alert('💬 ¡Debate creado con éxito!');
-        } catch(err) {
-          alert('Error al crear debate.');
-        }
+        } catch(err) { alert('Error al crear debate.'); }
       };
 
       const handleLikeTopic = async (topic) => {
@@ -942,12 +910,8 @@
         const alreadyLiked = likedBy.includes(currentUser.email);
         const newLikedBy = alreadyLiked ? likedBy.filter(e => e !== currentUser.email) : [...likedBy, currentUser.email];
         const newLikes = alreadyLiked ? (topic.likes || 1) - 1 : (topic.likes || 0) + 1;
-
         try {
-          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "forums", topic.id), {
-            likes: newLikes,
-            likedBy: newLikedBy
-          });
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "forums", topic.id), { likes: newLikes, likedBy: newLikedBy });
         } catch(e) {}
       };
 
@@ -968,10 +932,11 @@
           });
           setActiveTopic({ ...activeTopic, comments: updatedComments, repliesCount: updatedComments.length });
           setNewCommentText('');
-        } catch(err) {
-          alert('Error al responder.');
-        }
+        } catch(err) { alert('Error al responder.'); }
       };
+
+      // Contador de chats activos para insignia en la barra superior
+      const unreadChatsCount = chatsList.length;
 
       const isAdmin = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
       const maxAllowedSlider = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 50);
@@ -991,7 +956,7 @@
                       {currentUser?.kycVerified && <span className="text-xs text-sky-400" title="Identidad Verificada">✔</span>}
                     </h1>
                     <p className="text-[10px] uppercase text-slate-400 font-bold">
-                      {currentUser ? (isAdmin ? '🛡️ Admin Dating' : currentUser.isPremium ? '⭐ Premium (Radar 500km)' : '👤 Free (Radar 50km)') : '🌐 Guest'}
+                      {currentUser ? (isAdmin ? '🛡️ Admin Dating Pro' : currentUser.isPremium ? '⭐ Premium (500km)' : '👤 Free (50km)') : '🌐 Guest'}
                     </p>
                   </div>
                 </div>
@@ -1034,7 +999,7 @@
 
                 {activeTab === 'radar' && (
                   <div className="flex items-center gap-2 border-l border-amber-500/30 pl-3">
-                    <span className="text-rose-400 font-bold whitespace-nowrap">🎯 Radar Matches: <b className="text-white">{matchRadiusKm} km</b></span>
+                    <span className="text-rose-400 font-bold whitespace-nowrap">🎯 Radar: <b className="text-white">{matchRadiusKm} km</b></span>
                     <input 
                       type="range" 
                       min="5" 
@@ -1067,7 +1032,17 @@
                 <button onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>{t.cinema}</button>
                 <button onClick={() => { setActiveTab('forums'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>{t.forums}</button>
                 <button onClick={() => { setActiveTab('radar'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>{t.radar}</button>
-                <button onClick={() => { setActiveTab('chats'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'chats' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>{t.chats} ({chatsList.length})</button>
+                
+                {/* BOTÓN DE CHATS CON BADGE DE NOTIFICACIÓN DINÁMICO */}
+                <button onClick={() => { setActiveTab('chats'); setActiveTopic(null); }} className={`relative px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'chats' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>
+                  {t.chats}
+                  {unreadChatsCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white font-black text-[9px] w-5 h-5 rounded-full flex items-center justify-center shadow-md animate-pulse">
+                      {unreadChatsCount}
+                    </span>
+                  )}
+                </button>
+
                 <button onClick={() => { setActiveTab('critics'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>{t.critics}</button>
                 
                 {currentUser && (
@@ -1204,7 +1179,7 @@
                     <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
                       <div>
                         <h2 className="text-2xl font-black text-white">💬 Foros de Discusión</h2>
-                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías con cinéfilos.</p>
+                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías cinéfilas.</p>
                       </div>
                       <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
                         ✍️ Nuevo Debate
@@ -1242,8 +1217,19 @@
 
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
+                
+                {/* FILTROS AVANZADOS EN RADAR */}
+                <div className="w-full max-w-md flex flex-wrap items-center justify-between gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl text-xs">
+                  <span className="text-slate-400 font-bold">🔍 Filtrar Radar:</span>
+                  <div className="flex gap-1.5">
+                    <button onClick={() => setRadarFilterType('all')} className={`px-2.5 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'all' ? 'bg-amber-500 text-slate-950' : 'bg-slate-950 text-slate-300'}`}>Todos</button>
+                    <button onClick={() => setRadarFilterType('verified')} className={`px-2.5 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'verified' ? 'bg-sky-500 text-slate-950' : 'bg-slate-950 text-slate-300'}`}>✔ Verificados</button>
+                    <button onClick={() => setRadarFilterType('critic')} className={`px-2.5 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'critic' ? 'bg-amber-400 text-slate-950' : 'bg-slate-950 text-slate-300'}`}>🌟 Críticos</button>
+                  </div>
+                </div>
+
                 <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold text-center">
-                  🎯 Radar de Citas (Matches): Mostrando perfiles en un radio de <b className="text-white">{matchRadiusKm} km</b>
+                  🎯 Radar de Citas (GPS Activo): Mostrando perfiles en un radio de <b className="text-white">{matchRadiusKm} km</b>
                 </div>
 
                 {currentCandidate ? (
@@ -1263,7 +1249,9 @@
                           {currentCandidate.name}, {currentCandidate.age || 25}
                           {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Identidad Verificada">✔</span>}
                         </h2>
-                        <p className="text-xs text-amber-300 font-medium">📍 {currentCandidate.location || 'Oberá'} • Match Directo 🍿</p>
+                        <p className="text-xs text-amber-300 font-medium">
+                          📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{(currentUser?.lat && currentUser?.lon && currentCandidate.lat && currentCandidate.lon) ? calculateDistanceKm(currentUser.lat, currentUser.lon, currentCandidate.lat, currentCandidate.lon) : (currentCandidate.distanceKm || 5)} km</b>
+                        </p>
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
@@ -1281,7 +1269,7 @@
                 ) : (
                   <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay más perfiles en este radio.</h3>
+                    <h3 className="text-xl font-bold">No hay más perfiles con estos filtros.</h3>
                     <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
                   </div>
                 )}
@@ -1422,12 +1410,11 @@
             {activeTab === 'profile' && currentUser && (
               <div className="max-w-xl mx-auto space-y-6">
                 
-                {/* OPCIONAL: VERIFICACIÓN KYC VOLUNTARIA */}
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-black text-white text-base flex items-center gap-2">
-                        <span>🛡️ Insignia de Identidad Verificada (Opcional)</span>
+                        <span>🛡️ Insignia de Identidad Verificada</span>
                       </h3>
                       <p className="text-xs text-slate-400 mt-1">
                         {currentUser.kycVerified 
@@ -1633,13 +1620,12 @@
 
           </main>
 
-          {/* MODAL KYC OPCIONAL */}
           {showKycModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-sky-400 flex items-center gap-2">
-                    <span>🪪 Verificación de Identidad Opcional</span>
+                    <span>🪪 Verificación de Identidad</span>
                   </h3>
                   <button onClick={() => setShowKycModal(false)} className="text-slate-400 font-bold">✕</button>
                 </div>
@@ -1652,14 +1638,12 @@
                 ) : (
                   <div className="space-y-4 text-xs">
                     <p className="text-slate-300 leading-relaxed">
-                      Sube una foto de tu documento y una selfie para obtener el tilde azul de identidad verificada en tu perfil.
+                      Sube una foto de tu documento y una selfie para obtener el tilde azul de identidad verificada.
                     </p>
 
                     <div className="space-y-3">
                       <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
-                        <div>
-                          <p className="font-bold text-white">1. DNI (Frente):</p>
-                        </div>
+                        <div><p className="font-bold text-white">1. DNI (Frente):</p></div>
                         <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
                           {kycDocFront ? "✔ Cargado" : "Subir"}
                           <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('front', e)} className="hidden" />
@@ -1667,9 +1651,7 @@
                       </div>
 
                       <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
-                        <div>
-                          <p className="font-bold text-white">2. DNI (Dorso):</p>
-                        </div>
+                        <div><p className="font-bold text-white">2. DNI (Dorso):</p></div>
                         <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
                           {kycDocBack ? "✔ Cargado" : "Subir"}
                           <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('back', e)} className="hidden" />
@@ -1677,9 +1659,7 @@
                       </div>
 
                       <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
-                        <div>
-                          <p className="font-bold text-white">3. Selfie:</p>
-                        </div>
+                        <div><p className="font-bold text-white">3. Selfie:</p></div>
                         <label className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
                           {kycSelfie ? "✔ Capturada" : "Tomar"}
                           <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('selfie', e)} className="hidden" />
@@ -1916,9 +1896,7 @@
         const root = ReactDOM.createRoot(rootElement);
         root.render(<App />);
       }
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
   </script>
 </body>
 </html>
