@@ -18,7 +18,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (Firestore & Auth - Sin Storage para costo 0) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
@@ -168,7 +168,7 @@
     // FÓRMULA DE HAVERSINE PARA CÁLCULO DE DISTANCIA GPS REAL
     const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
       if (!lat1 || !lon1 || !lat2 || !lon2) return Math.floor(Math.random() * 30) + 2;
-      const R = 6371; // Radio de la Tierra en km
+      const R = 6371;
       const dLat = (lat2 - lat1) * (Math.PI / 180);
       const dLon = (lon2 - lon1) * (Math.PI / 180);
       const a =
@@ -193,7 +193,7 @@
       const [userCountryCode, setUserCountryCode] = useState('AR');
       const [userCoords, setUserCoords] = useState({ lat: null, lon: null });
       const [matchRadiusKm, setMatchRadiusKm] = useState(30);
-      const [radarFilterType, setRadarFilterType] = useState('all'); // 'all' | 'verified' | 'critic'
+      const [radarFilterType, setRadarFilterType] = useState('all');
 
       const [chatsList, setChatsList] = useState([]);
       const [activeChat, setActiveChat] = useState(null);
@@ -280,7 +280,6 @@
         return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       }, []);
 
-      // GEOLOCALIZACIÓN GPS REAL Y REVERSA
       useEffect(() => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -783,7 +782,6 @@
         alert('Sesión cerrada.');
       };
 
-      // FILTRADO CON CÁLCULO DE DISTANCIA REAL GPS Y FILTROS AVANZADOS
       const filteredCandidates = useMemo(() => {
         const others = usersList.filter(u => u.email !== currentUser?.email);
         const emailCheck = currentUser?.email?.toLowerCase().trim();
@@ -792,14 +790,12 @@
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
         return others.filter(u => {
-          // Cálculo de distancia por GPS real (Haversine) o fallback
           const dist = (currentUser?.lat && currentUser?.lon && u.lat && u.lon)
             ? calculateDistanceKm(currentUser.lat, currentUser.lon, u.lat, u.lon)
             : (u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 40) + 5);
 
           if (!isAdmin && dist > effectiveRadius) return false;
 
-          // Filtro avanzado en Radar
           if (radarFilterType === 'verified' && !u.kycVerified) return false;
           if (radarFilterType === 'critic' && !u.isCritic) return false;
 
@@ -935,9 +931,7 @@
         } catch(err) { alert('Error al responder.'); }
       };
 
-      // Contador de chats activos para insignia en la barra superior
       const unreadChatsCount = chatsList.length;
-
       const isAdmin = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
       const maxAllowedSlider = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 50);
 
@@ -1033,7 +1027,6 @@
                 <button onClick={() => { setActiveTab('forums'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>{t.forums}</button>
                 <button onClick={() => { setActiveTab('radar'); setActiveTopic(null); }} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>{t.radar}</button>
                 
-                {/* BOTÓN DE CHATS CON BADGE DE NOTIFICACIÓN DINÁMICO */}
                 <button onClick={() => { setActiveTab('chats'); setActiveTopic(null); }} className={`relative px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${activeTab === 'chats' ? 'bg-amber-500 text-slate-950' : 'text-slate-300'}`}>
                   {t.chats}
                   {unreadChatsCount > 0 && (
@@ -1218,7 +1211,6 @@
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-4">
                 
-                {/* FILTROS AVANZADOS EN RADAR */}
                 <div className="w-full max-w-md flex flex-wrap items-center justify-between gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl text-xs">
                   <span className="text-slate-400 font-bold">🔍 Filtrar Radar:</span>
                   <div className="flex gap-1.5">
