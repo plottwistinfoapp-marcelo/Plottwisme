@@ -1047,872 +1047,887 @@
                       ))}
                     </select>
                   )}
-                </div>
+              </div>
 
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/30 p-8 shadow-2xl">
-                  <div className="max-w-2xl space-y-4">
-                    <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-3 py-1 rounded-md uppercase tracking-wider">
-                      {t.engineTitle}
-                    </span>
-                    <h2 className="text-3xl font-black text-white leading-tight">
-                      {t.cinemaRealtime} <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
-                    </h2>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      {t.cinemaSubtitle}
-                    </p>
-                    <div className="pt-2">
-                      <button 
-                        onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city}')} 
-                        className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
-                      >
-                        <span>🤖 {t.openCinema} {userCity || 'tu ciudad'}</span>
-                        <span>↗</span>
-                      </button>
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/30 p-8 shadow-2xl">
+                <div className="max-w-2xl space-y-4">
+                  <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-3 py-1 rounded-md uppercase tracking-wider">
+                    {t.engineTitle}
+                  </span>
+                  <h2 className="text-3xl font-black text-white leading-tight">
+                    {t.cinemaRealtime} <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
+                  </h2>
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    {t.cinemaSubtitle}
+                  </p>
+                  <div className="pt-2">
+                    <button 
+                      onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city}')} 
+                      className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
+                    >
+                      <span>🤖 {t.openCinema} {userCity || 'tu ciudad'}</span>
+                      <span>↗</span>
+                    </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <span>⚡ {t.directSearch}</span>
+                <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {SEARCH_CATEGORIES.map(cat => (
+                  <div 
+                    key={cat.id} 
+                    onClick={() => openGoogleAIElEngine(cat.queryFormat)}
+                    className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 shadow-lg group flex flex-col justify-between space-y-4"
+                  >
+                    <div>
+                      <h4 className="font-bold text-white group-hover:text-amber-400 transition-colors text-sm">{cat.label}</h4>
+                      <p className="text-xs text-slate-400 mt-1">Con IA & Mapas Google.</p>
+                    </div>
+                    <div className="text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t border-slate-800">
+                      <span>{t.consultGoogle}</span>
+                      <span>↗</span>
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          )}
+
+          {activeTab === 'forums' && (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              {activeTopic ? (
+                <div className="space-y-6">
+                  <button onClick={() => setActiveTopic(null)} className="bg-slate-900 border border-slate-800 text-amber-400 hover:text-amber-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all">
+                    <span>← Volver</span>
+                  </button>
+
+                  <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                      <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase">
+                        {activeTopic.category}
+                      </span>
+                      <span className="text-xs text-slate-400">Por <b>{activeTopic.author}</b> • {activeTopic.date}</span>
+                    </div>
+                    <h2 className="text-2xl font-black text-white">{activeTopic.title}</h2>
+                    <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{activeTopic.content}</p>
+                    
+                    <div className="flex items-center gap-4 pt-2">
+                      <button onClick={() => handleLikeTopic(activeTopic)} className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs font-bold text-amber-400 hover:bg-slate-800">
+                        <span>🍿</span> <span>{activeTopic.likes || 0} Me gusta</span>
+                      </button>
+                    </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-black text-white flex items-center gap-2">
-                    <span>⚡ {t.directSearch}</span>
-                    <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
-                  </h3>
+                  <h3 className="text-lg font-black text-amber-500">💬 Respuestas ({activeTopic.comments?.length || 0})</h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {SEARCH_CATEGORIES.map(cat => (
-                      <div 
-                        key={cat.id} 
-                        onClick={() => openGoogleAIElEngine(cat.queryFormat)}
-                        className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 shadow-lg group flex flex-col justify-between space-y-4"
-                      >
-                        <div>
-                          <h4 className="font-bold text-white group-hover:text-amber-400 transition-colors text-sm">{cat.label}</h4>
-                          <p className="text-xs text-slate-400 mt-1">Con IA & Mapas Google.</p>
-                        </div>
-                        <div className="text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t border-slate-800">
-                          <span>{t.consultGoogle}</span>
-                          <span>↗</span>
-                        </div>
+                  {(activeTopic.comments || []).map(c => (
+                    <div key={c.id} className="bg-slate-900/80 border border-slate-800/80 p-4 rounded-2xl space-y-2">
+                      <div className="flex justify-between items-center text-xs text-slate-400">
+                        <span className="font-bold text-white">{c.author}</span>
+                        <span>{c.date}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'forums' && (
-              <div className="space-y-6 max-w-4xl mx-auto">
-                {activeTopic ? (
-                  <div className="space-y-6">
-                    <button onClick={() => setActiveTopic(null)} className="bg-slate-900 border border-slate-800 text-amber-400 hover:text-amber-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all">
-                      <span>← Volver</span>
-                    </button>
-
-                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
-                        <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase">
-                          {activeTopic.category}
-                        </span>
-                        <span className="text-xs text-slate-400">Por <b>{activeTopic.author}</b> • {activeTopic.date}</span>
-                      </div>
-                      <h2 className="text-2xl font-black text-white">{activeTopic.title}</h2>
-                      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{activeTopic.content}</p>
-                      
-                      <div className="flex items-center gap-4 pt-2">
-                        <button onClick={() => handleLikeTopic(activeTopic)} className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs font-bold text-amber-400 hover:bg-slate-800">
-                          <span>🍿</span> <span>{activeTopic.likes || 0} Me gusta</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-black text-amber-500">💬 Respuestas ({activeTopic.comments?.length || 0})</h3>
-
-                      {(activeTopic.comments || []).map(c => (
-                        <div key={c.id} className="bg-slate-900/80 border border-slate-800/80 p-4 rounded-2xl space-y-2">
-                          <div className="flex justify-between items-center text-xs text-slate-400">
-                            <span className="font-bold text-white">{c.author}</span>
-                            <span>{c.date}</span>
-                          </div>
-                          <p className="text-xs text-slate-300 leading-relaxed">{c.text}</p>
-                        </div>
-                      ))}
-
-                      <form onSubmit={handleAddComment} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-                        <textarea rows="3" value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} placeholder="Escribe tu respuesta..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500" required disabled={!currentUser} />
-                        <button type="submit" disabled={!currentUser} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider disabled:opacity-50">
-                          Publicar
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
-                      <div>
-                        <h2 className="text-2xl font-black text-white">💬 Foros de Discusión</h2>
-                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías cinéfilas.</p>
-                      </div>
-                      <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
-                        ✍️ Nuevo Debate
-                      </button>
-                    </div>
-
-                    <div className="space-y-4">
-                      {forumTopics.length === 0 ? (
-                        <p className="text-xs text-slate-400 text-center py-6">Aún no hay debates. ¡Sé el primero en abrir uno!</p>
-                      ) : (
-                        forumTopics.map(topic => (
-                          <div key={topic.id} className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl transition-all space-y-3 group">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">{topic.category}</span>
-                              <span className="text-slate-500 text-[10px]">{topic.date}</span>
-                            </div>
-                            <h3 onClick={() => setActiveTopic(topic)} className="text-base font-bold text-white group-hover:text-amber-400 transition-colors cursor-pointer">{topic.title}</h3>
-                            <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800">
-                              <span>Por <b>{topic.author}</b></span>
-                              <div className="flex items-center gap-3">
-                                <button onClick={() => handleLikeTopic(topic)} className="flex items-center gap-1 hover:text-amber-400 font-bold">
-                                  <span>🍿</span> <span>{topic.likes || 0}</span>
-                                </button>
-                                <span className="text-amber-500 font-bold cursor-pointer" onClick={() => setActiveTopic(topic)}>💬 {topic.repliesCount || 0}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'radar' && (
-              <div className="flex flex-col items-center space-y-3">
-                
-                {/* Controles superiores del Radar */}
-                <div className="w-full max-w-md flex flex-wrap items-center justify-between gap-2 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-2xl text-xs shadow">
-                  <div className="flex items-center gap-2">
-                    <span className="text-rose-400 font-bold">🎯 Radar: <b className="text-white">{matchRadiusKm} km</b></span>
-                    <input 
-                      type="range" 
-                      min="5" 
-                      max={maxAllowedSlider} 
-                      step="5"
-                      value={matchRadiusKm} 
-                      onChange={(e) => setMatchRadiusKm(Number(e.target.value))}
-                      className="w-24 accent-rose-500 cursor-pointer"
-                    />
-                  </div>
-                  <div className="flex gap-1">
-                    <button onClick={() => setRadarFilterType('all')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'all' ? 'bg-amber-500 text-slate-950' : 'bg-slate-950 text-slate-400'}`}>Todos</button>
-                    <button onClick={() => setRadarFilterType('verified')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'verified' ? 'bg-sky-500 text-slate-950' : 'bg-slate-950 text-slate-400'}`}>✔ Verif.</button>
-                    <button onClick={() => setRadarFilterType('critic')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'critic' ? 'bg-amber-400 text-slate-950' : 'bg-slate-950 text-slate-400'}`}>🌟 Críticos</button>
-                  </div>
-                </div>
-
-                {currentCandidate ? (() => {
-                  const candidatePhotos = currentCandidate.photos?.length > 0 ? currentCandidate.photos : [currentCandidate.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'];
-                  const activePhoto = candidatePhotos[currentPhotoIndex] || candidatePhotos[0];
-
-                  return (
-                    <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-                      
-                      {/* CONTENEDOR DE FOTOS CON CARRUSEL DE MÚLTIPLES FOTOS */}
-                      <div className="relative h-96 w-full bg-slate-950 select-none">
-                        <img src={activePhoto} alt={currentCandidate.name} className="w-full h-full object-cover transition-opacity duration-300" />
-                        
-                        {/* Indicadores de fotos estilo app de citas (rayitas superiores) */}
-                        {candidatePhotos.length > 1 && (
-                          <div className="absolute top-3 left-3 right-3 flex gap-1 z-10">
-                            {candidatePhotos.map((_, pIdx) => (
-                              <div key={pIdx} className={`h-1 flex-1 rounded-full transition-all ${pIdx === currentPhotoIndex ? 'bg-amber-500 shadow-md shadow-amber-500' : 'bg-white/40'}`}></div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Botones invisibles táctiles o flechas para navegar fotos */}
-                        {candidatePhotos.length > 1 && (
-                          <>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setCurrentPhotoIndex(prev => (prev > 0 ? prev - 1 : candidatePhotos.length - 1)); }} 
-                              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-sm opacity-80 hover:opacity-100"
-                            >
-                              ‹
-                            </button>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setCurrentPhotoIndex(prev => (prev < candidatePhotos.length - 1 ? prev + 1 : 0)); }} 
-                              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-sm opacity-80 hover:opacity-100"
-                            >
-                              ›
-                            </button>
-                          </>
-                        )}
-
-                        <div className="absolute top-5 left-4 flex gap-2">
-                          <span className="bg-rose-600/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white shadow">{currentCandidate.sex || 'Perfil'} • Busca: {currentCandidate.interestedIn || 'Cualquiera'}</span>
-                          {currentCandidate.kycVerified && (
-                            <span className="bg-sky-500 text-slate-950 px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 shadow">
-                              ✔ Verificado
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="absolute bottom-4 left-4 right-4 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent pt-10 pb-2 px-2">
-                          <h2 className="text-2xl font-black text-white flex items-center gap-2 drop-shadow">
-                            {currentCandidate.name}, {currentCandidate.age || 25}
-                            {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Identidad Verificada">✔</span>}
-                          </h2>
-                          <p className="text-xs text-amber-300 font-medium drop-shadow">
-                            📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{(currentUser?.lat && currentUser?.lon && currentCandidate.lat && currentCandidate.lon) ? calculateDistanceKm(currentUser.lat, currentUser.lon, currentCandidate.lat, currentCandidate.lon) : (currentCandidate.distanceKm || 5)} km</b>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="p-6 space-y-4">
-                        <div className="bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-2xl">
-                          <p className="text-[10px] uppercase font-bold text-rose-400 mb-1">💬 Descripción para Citas:</p>
-                          <p className="text-xs italic text-slate-200">"{currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
-                        </div>
-                        
-                        <div className="flex justify-center gap-6 pt-2">
-                          <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-400 flex items-center justify-center text-xl font-bold shadow transition-all hover:scale-105">✖</button>
-                          <button onClick={() => { handleMatchUser(currentCandidate); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-110 transition-all">🍿</button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })() : (
-                  <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
-                    <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay más perfiles con estos filtros.</h3>
-                    <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'chats' && (
-              <div className="max-w-4xl mx-auto space-y-6">
-                <h2 className="text-2xl font-black text-white">💬 Chats & Matches</h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900 border border-slate-800 rounded-3xl p-4 min-h-[450px]">
-                  <div className="border-r border-slate-800 pr-3 space-y-2">
-                    <h3 className="text-xs font-bold text-amber-500 uppercase px-2">{t.activeChats}</h3>
-                    {chatsList.length === 0 ? (
-                      <p className="text-xs text-slate-400 p-2">{t.noChats}</p>
-                    ) : (
-                      chatsList.map(chat => (
-                        <div 
-                          key={chat.id} 
-                          onClick={() => setActiveChat(chat)}
-                          className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all ${activeChat?.id === chat.id ? 'bg-amber-500/20 border border-amber-500/50' : 'hover:bg-slate-800/60'}`}
-                        >
-                          <img src={chat.userAvatar} alt={chat.userName} className="w-12 h-12 rounded-full object-cover border border-amber-500/30" />
-                          <div className="overflow-hidden flex-1">
-                            <h4 className="font-bold text-white text-xs truncate">{chat.userName}</h4>
-                            <p className="text-[10px] text-slate-400 truncate">{chat.messages[chat.messages.length - 1]?.text || 'Match'}</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  <div className="md:col-span-2 flex flex-col justify-between bg-slate-950 rounded-2xl border border-slate-800 p-4">
-                    {activeChat ? (
-                      <>
-                        <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
-                          <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover" />
-                          <div>
-                            <h3 className="font-bold text-white text-sm">{activeChat.userName}</h3>
-                            <span className="text-[10px] text-emerald-400 font-bold">🟢 Online Cloud Sync</span>
-                          </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto space-y-3 py-4 max-h-[300px] px-1">
-                          {activeChat.messages.map(msg => {
-                            const isMe = msg.sender === currentUser?.name;
-                            return (
-                              <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                <div className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-amber-500 text-slate-950 font-medium' : 'bg-slate-900 border border-slate-800 text-slate-100'}`}>
-                                  {msg.text}
-                                </div>
-                                <span className="text-[9px] text-slate-500 mt-1 px-1">{msg.time}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        <form onSubmit={handleSendMessage} className="flex gap-2 pt-3 border-t border-slate-800">
-                          <input 
-                            type="text" 
-                            value={newMessageText} 
-                            onChange={(e) => setNewMessageText(e.target.value)} 
-                            placeholder={t.sendPlaceholder} 
-                            className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" 
-                            required 
-                          />
-                          <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider">
-                            {t.sendBtn}
-                          </button>
-                        </form>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-center py-20 space-y-2">
-                        <div className="text-3xl">🍿</div>
-                        <p className="text-xs text-slate-400">Selecciona un chat.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'critics' && (
-              <div className="space-y-6 max-w-3xl mx-auto">
-                <h2 className="text-2xl font-black">📰 Críticos & Medios</h2>
-                
-                {currentUser?.isCritic ? (
-                  <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-                    <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña Oficial (Insignia 🌟)</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <label className="block mb-1 text-slate-400">Película:</label>
-                        <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Oppenheimer..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
-                      </div>
-                      <div>
-                        <label className="block mb-1 text-slate-400">Puntaje (1-10):</label>
-                        <input type="number" min="1" max="10" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
-                      </div>
-                    </div>
-                    <div className="text-xs">
-                      <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
-                      <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu análisis..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-                    <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña Cloud</button>
-                  </form>
-                ) : (
-                  <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2 text-xs">
-                    <p className="text-amber-400 font-bold">🔒 Necesitas la Insignia de Crítico otorgada por el Administrador para publicar reseñas.</p>
-                  </div>
-                )}
-
-                <div className="space-y-4 pt-2">
-                  {reviewsList.map(rev => (
-                    <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
-                      <div className="flex justify-between items-start text-xs">
-                        <div>
-                          <span className="font-bold text-amber-500 flex items-center gap-1">
-                            {rev.author} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">🌟 Crítico</span>
-                          </span>
-                          <p className="text-[10px] text-slate-400">🎙️ Medio: {rev.mediaOutlet || 'Independiente'}</p>
-                        </div>
-                        <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
-                      </div>
-                      <h4 className="text-base font-black">{rev.movieTitle}</h4>
-                      <p className="text-xs text-slate-300 leading-relaxed">{rev.content}</p>
-
-                      <div className="flex items-center gap-4 pt-2 border-t border-slate-800 text-xs">
-                        <button onClick={() => handleLikeReview(rev)} className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 font-bold text-amber-400 hover:bg-slate-800">
-                          <span>🍿</span> <span>{rev.likes || 0} Me gusta</span>
-                        </button>
-                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed">{c.text}</p>
                     </div>
                   ))}
-                </div>
-              </div>
-            )}
 
-            {activeTab === 'profile' && currentUser && (
-              <div className="max-w-xl mx-auto space-y-6">
-                
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-black text-white text-base flex items-center gap-2">
-                        <span>🛡️ Insignia de Identidad Verificada</span>
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-1">
-                        {currentUser.kycVerified 
-                          ? "Tienes tu perfil verificado con tilde azul." 
-                          : "Obtén el tilde azul opcional verificando tu identidad con DNI para generar mayor confianza."}
-                      </p>
-                    </div>
-                    {currentUser.kycVerified ? (
-                      <span className="bg-sky-500/20 text-sky-400 border border-sky-500/40 text-xs font-black px-3 py-1.5 rounded-xl flex items-center gap-1">
-                        ✔ VERIFICADO
-                      </span>
-                    ) : (
-                      <button 
-                        onClick={handleStartKycProcess}
-                        className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow-lg shadow-sky-500/20 transition-all whitespace-nowrap"
-                      >
-                        🪪 Verificar DNI
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-4 shadow-xl">
-                  <h3 className="text-base font-black text-amber-400 flex items-center gap-2">
-                    <span>🚀 Plan de Usuario</span>
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    <div className={`p-4 rounded-2xl border transition-all ${!currentUser.isPremium ? 'bg-amber-500/10 border-amber-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-bold text-sm text-white">Free</span>
-                        {!currentUser.isPremium && <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ACTIVO</span>}
-                      </div>
-                      <p className="text-[11px] text-slate-300 mt-2"><b>Radar:</b> hasta 50 km</p>
-                      <button 
-                        type="button" 
-                        onClick={() => handleUpgradePlan(false)} 
-                        disabled={!currentUser.isPremium}
-                        className="w-full mt-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 font-bold py-2 rounded-xl text-xs transition-all"
-                      >
-                        {currentUser.isPremium ? "Cambiar a Free" : "Plan Actual"}
-                      </button>
-                    </div>
-
-                    <div className={`p-4 rounded-2xl border transition-all ${currentUser.isPremium ? 'bg-amber-500/20 border-amber-500 text-white shadow-lg shadow-amber-500/10' : 'bg-slate-950 border-amber-500/30 text-slate-200'}`}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-bold text-sm text-amber-400">⭐ Premium</span>
-                        {currentUser.isPremium && <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ACTIVO</span>}
-                      </div>
-                      <p className="text-xs font-black text-amber-300">u$d 4.99 / mes</p>
-                      <p className="text-[11px] text-slate-300 mt-1"><b>Radar:</b> hasta 500 km</p>
-                      <button 
-                        type="button" 
-                        onClick={() => handleUpgradePlan(true)} 
-                        disabled={currentUser.isPremium}
-                        className="w-full mt-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider transition-all"
-                      >
-                        {currentUser.isPremium ? "Plan Actual" : "Obtener Premium"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-4">
-                    <div>
-                      <h2 className="text-xl font-black flex items-center gap-2">
-                        {currentUser.name}
-                        {currentUser.kycVerified && <span className="text-sky-400 text-sm" title="Verificado">✔</span>}
-                      </h2>
-                      <p className="text-xs text-amber-500">{currentUser.roleLabel} {currentUser.isCritic ? '🌟' : ''}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 text-xs">
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <label className="font-bold text-amber-400">
-                          Mis Fotos Reales ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
-                        </label>
-                      </div>
-
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
-                        {editPhotos.map((photo, idx) => (
-                          <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
-                            <img src={photo} alt="Foto real" className="w-full h-full object-cover" />
-                            <button type="button" onClick={() => handleRemovePhoto(idx)} className="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow">✕</button>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-                        <label className="flex-1 cursor-pointer bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 px-4 rounded-xl text-center text-xs transition-all shadow-md">
-                          📁 Seleccionar Foto de la Galería
-                          <input type="file" accept="image/*" onChange={handleFileSelected} className="hidden" />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Mi Género:</label>
-                        <select value={editSex} onChange={(e) => setEditSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
-                          {SEXUALITIES_OPTIONS.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Quiero relacionarme con:</label>
-                        <select value={editInterestedIn} onChange={(e) => setEditInterestedIn(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
-                          {SEEKING_SEXUALITIES_OPTIONS.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 text-amber-400 font-bold">Biografía Pública:</label>
-                      <textarea rows="2" value={editPublicBio} onChange={(e) => setEditPublicBio(e.target.value)} placeholder="Tus gustos de cine..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 text-rose-400 font-bold">Biografía de Citas:</label>
-                      <textarea rows="2" value={editDatingBio} onChange={(e) => setEditDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
-                    </div>
-
-                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20">Guardar Perfil</button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {activeTab === 'admin' && isAdmin && (
-              <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <div>
-                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador Cloud</h2>
-                    <p className="text-xs text-amber-400 mt-1">Gestión de usuarios y verificaciones.</p>
-                  </div>
-                  <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
-                    Total Usuarios: {usersList.length}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {usersList.map(u => {
-                    const userPhotos = u.photos || [u.avatar];
-                    return (
-                      <div key={u.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
-                        <div className="flex gap-3 items-start">
-                          <img src={u.avatar} alt="Avatar" className="w-16 h-16 rounded-xl object-cover border border-slate-700" />
-                          <div className="overflow-hidden flex-1">
-                            <p className="font-bold text-white text-sm truncate flex items-center gap-1">
-                              {u.name} {u.kycVerified && <span className="text-sky-400 text-xs">✔</span>} {u.isCritic && '🌟'} {u.isPremium && '⭐'}
-                            </p>
-                            <p className="text-xs text-amber-400">{u.roleLabel}</p>
-                            <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
-                            <p className="text-[10px] text-slate-300 mt-1"><b>Edad:</b> {u.age || 25} años</p>
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 mb-1">Fotos del usuario:</p>
-                          <div className="flex gap-1 overflow-x-auto py-1">
-                            {userPhotos.map((p, pIdx) => (
-                              <div key={pIdx} className="relative group shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-slate-700 bg-slate-900">
-                                <img src={p} alt="mini" className="w-full h-full object-cover" />
-                                <button onClick={() => handleDeletePhoto(u.id, pIdx)} className="absolute inset-0 bg-rose-900/90 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity font-bold">
-                                  ✕ Borrar
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
-                          <button onClick={() => handleToggleKycAdmin(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.kycVerified ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                            {u.kycVerified ? '✔ Quitar Verificación' : '🪪 Otorgar Verificación Manual'}
-                          </button>
-
-                          <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                            {u.isCritic ? '🌟 Quitar Crítico' : '✨ Otorgar Crítico'}
-                          </button>
-
-                          <button onClick={() => handleToggleAdminPremium(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isPremium ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                            {u.isPremium ? '⭐ Quitar Premium' : '⭐ Otorgar Premium'}
-                          </button>
-                          
-                          {u.email.toLowerCase() !== 'marbuttice@gmail.com' && (
-                            <button onClick={() => handleDeleteUser(u.id)} className="w-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
-                              🗑️ Eliminar Usuario
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-          </main>
-
-          {showKycModal && (
-            <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-sky-400 flex items-center gap-2">
-                    <span>🪪 Verificación de Identidad</span>
-                  </h3>
-                  <button onClick={() => setShowKycModal(false)} className="text-slate-400 font-bold">✕</button>
-                </div>
-
-                {kycProcessing ? (
-                  <div className="text-center py-10 space-y-4">
-                    <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="text-sm font-bold text-sky-300">Validando datos biométricos...</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4 text-xs">
-                    <p className="text-slate-300 leading-relaxed">
-                      Sube una foto de tu documento y una selfie para obtener el tilde azul de identidad verificada.
-                    </p>
-
-                    <div className="space-y-3">
-                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
-                        <div><p className="font-bold text-white">1. DNI (Frente):</p></div>
-                        <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
-                          {kycDocFront ? "✔ Cargado" : "Subir"}
-                          <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('front', e)} className="hidden" />
-                        </label>
-                      </div>
-
-                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
-                        <div><p className="font-bold text-white">2. DNI (Dorso):</p></div>
-                        <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
-                          {kycDocBack ? "✔ Cargado" : "Subir"}
-                          <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('back', e)} className="hidden" />
-                        </label>
-                      </div>
-
-                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
-                        <div><p className="font-bold text-white">3. Selfie:</p></div>
-                        <label className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
-                          {kycSelfie ? "✔ Capturada" : "Tomar"}
-                          <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('selfie', e)} className="hidden" />
-                        </label>
-                      </div>
-                    </div>
-
-                    <button 
-                      onClick={handleFinalizeKycVerification} 
-                      className="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-sky-500/20"
-                    >
-                      Enviar Verificación
+                  <form onSubmit={handleAddComment} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+                    <textarea rows="3" value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} placeholder="Escribe tu respuesta..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500" required disabled={!currentUser} />
+                    <button type="submit" disabled={!currentUser} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider disabled:opacity-50">
+                      Publicar
                     </button>
+                  </form>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+                  <div>
+                    <h2 className="text-2xl font-black text-white">💬 Foros de Discusión</h2>
+                    <p className="text-xs text-slate-400 mt-1">Comparte tus teorías cinéfilas.</p>
+                  </div>
+                  <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
+                    ✍️ Nuevo Debate
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {forumTopics.length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center py-6">Aún no hay debates. ¡Sé el primero en abrir uno!</p>
+                  ) : (
+                    forumTopics.map(topic => (
+                      <div key={topic.id} className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl transition-all space-y-3 group">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">{topic.category}</span>
+                          <span className="text-slate-500 text-[10px]">{topic.date}</span>
+                        </div>
+                        <h3 onClick={() => setActiveTopic(topic)} className="text-base font-bold text-white group-hover:text-amber-400 transition-colors cursor-pointer">{topic.title}</h3>
+                        <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800">
+                          <span>Por <b>{topic.author}</b></span>
+                          <div className="flex items-center gap-3">
+                            <button onClick={() => handleLikeTopic(topic)} className="flex items-center gap-1 hover:text-amber-400 font-bold">
+                              <span>🍿</span> <span>{topic.likes || 0}</span>
+                            </button>
+                            <span className="text-amber-500 font-bold cursor-pointer" onClick={() => setActiveTopic(topic)}>💬 {topic.repliesCount || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          )}
+
+          {activeTab === 'radar' && (
+            <div className="flex flex-col items-center space-y-3">
+              
+              {/* Controles superiores del Radar */}
+              <div className="w-full max-w-md flex flex-wrap items-center justify-between gap-2 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-2xl text-xs shadow">
+                <div className="flex items-center gap-2">
+                  <span className="text-rose-400 font-bold">🎯 Radar: <b className="text-white">{matchRadiusKm} km</b></span>
+                  <input 
+                    type="range" 
+                    min="5" 
+                    max={maxAllowedSlider} 
+                    step="5"
+                    value={matchRadiusKm} 
+                    onChange={(e) => setMatchRadiusKm(Number(e.target.value))}
+                    className="w-24 accent-rose-500 cursor-pointer"
+                  />
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => setRadarFilterType('all')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'all' ? 'bg-amber-500 text-slate-950' : 'bg-slate-950 text-slate-400'}`}>Todos</button>
+                  <button onClick={() => setRadarFilterType('verified')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'verified' ? 'bg-sky-500 text-slate-950' : 'bg-slate-950 text-slate-400'}`}>✔ Verif.</button>
+                  <button onClick={() => setRadarFilterType('critic')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'critic' ? 'bg-amber-400 text-slate-950' : 'bg-slate-950 text-slate-400'}`}>🌟 Críticos</button>
+                </div>
+              </div>
+
+              {currentCandidate ? (() => {
+                const candidatePhotos = currentCandidate.photos?.length > 0 ? currentCandidate.photos : [currentCandidate.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'];
+                const activePhoto = candidatePhotos[currentPhotoIndex] || candidatePhotos[0];
+
+                return (
+                  <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+                    
+                    {/* CONTENEDOR DE FOTOS CON CARRUSEL DE MÚLTIPLES FOTOS */}
+                    <div className="relative h-96 w-full bg-slate-950 select-none">
+                      <img src={activePhoto} alt={currentCandidate.name} className="w-full h-full object-cover transition-opacity duration-300" />
+                      
+                      {/* Indicadores de fotos estilo app de citas (rayitas superiores) */}
+                      {candidatePhotos.length > 1 && (
+                        <div className="absolute top-3 left-3 right-3 flex gap-1 z-10">
+                          {candidatePhotos.map((_, pIdx) => (
+                            <div key={pIdx} className={`h-1 flex-1 rounded-full transition-all ${pIdx === currentPhotoIndex ? 'bg-amber-500 shadow-md shadow-amber-500' : 'bg-white/40'}`}></div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Botones invisibles táctiles o flechas para navegar fotos */}
+                      {candidatePhotos.length > 1 && (
+                        <>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setCurrentPhotoIndex(prev => (prev > 0 ? prev - 1 : candidatePhotos.length - 1)); }} 
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-sm opacity-80 hover:opacity-100"
+                          >
+                            ‹
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setCurrentPhotoIndex(prev => (prev < candidatePhotos.length - 1 ? prev + 1 : 0)); }} 
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-sm opacity-80 hover:opacity-100"
+                          >
+                            ›
+                          </button>
+                        </>
+                      )}
+
+                      <div className="absolute top-5 left-4 flex gap-2">
+                        <span className="bg-rose-600/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white shadow">{currentCandidate.sex || 'Perfil'} • Busca: {currentCandidate.interestedIn || 'Cualquiera'}</span>
+                        {currentCandidate.kycVerified && (
+                          <span className="bg-sky-500 text-slate-950 px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 shadow">
+                            ✔ Verificado
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="absolute bottom-4 left-4 right-4 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent pt-10 pb-2 px-2">
+                        <h2 className="text-2xl font-black text-white flex items-center gap-2 drop-shadow">
+                          {currentCandidate.name}, {currentCandidate.age || 25}
+                          {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Identidad Verificada">✔</span>}
+                        </h2>
+                        <p className="text-xs text-amber-300 font-medium drop-shadow">
+                          📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{(currentUser?.lat && currentUser?.lon && currentCandidate.lat && currentCandidate.lon) ? calculateDistanceKm(currentUser.lat, currentUser.lon, currentCandidate.lat, currentCandidate.lon) : (currentCandidate.distanceKm || 5)} km</b>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-6 space-y-4">
+                      <div className="bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-2xl">
+                        <p className="text-[10px] uppercase font-bold text-rose-400 mb-1">💬 Descripción para Citas:</p>
+                        <p className="text-xs italic text-slate-200">"{currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
+                      </div>
+                      
+                      <div className="flex justify-center gap-6 pt-2">
+                        <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-400 flex items-center justify-center text-xl font-bold shadow transition-all hover:scale-105">✖</button>
+                        <button onClick={() => { handleMatchUser(currentCandidate); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-110 transition-all">🍿</button>
+                      </div>
+                  </div>
+                </div>
+                );
+              })() : (
+                <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                  <div className="text-4xl">🎟️</div>
+                  <h3 className="text-xl font-bold">No hay más perfiles con estos filtros.</h3>
+                  <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'chats' && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <h2 className="text-2xl font-black text-white">💬 Chats & Matches</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900 border border-slate-800 rounded-3xl p-4 min-h-[450px]">
+                <div className="border-r border-slate-800 pr-3 space-y-2">
+                  <h3 className="text-xs font-bold text-amber-500 uppercase px-2">{t.activeChats}</h3>
+                  {chatsList.length === 0 ? (
+                    <p className="text-xs text-slate-400 p-2">{t.noChats}</p>
+                  ) : (
+                    chatsList.map(chat => (
+                      <div 
+                        key={chat.id} 
+                        onClick={() => setActiveChat(chat)}
+                        className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all ${activeChat?.id === chat.id ? 'bg-amber-500/20 border border-amber-500/50' : 'hover:bg-slate-800/60'}`}
+                      >
+                        <img src={chat.userAvatar} alt={chat.userName} className="w-12 h-12 rounded-full object-cover border border-amber-500/30" />
+                        <div className="overflow-hidden flex-1">
+                          <h4 className="font-bold text-white text-xs truncate">{chat.userName}</h4>
+                          <p className="text-[10px] text-slate-400 truncate">{chat.messages[chat.messages.length - 1]?.text || 'Match'}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="md:col-span-2 flex flex-col justify-between bg-slate-950 rounded-2xl border border-slate-800 p-4">
+                  {activeChat ? (
+                    <>
+                      <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+                        <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover" />
+                        <div>
+                          <h3 className="font-bold text-white text-sm">{activeChat.userName}</h3>
+                          <span className="text-[10px] text-emerald-400 font-bold">🟢 Online Cloud Sync</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto space-y-3 py-4 max-h-[300px] px-1">
+                        {activeChat.messages.map(msg => {
+                          const isMe = msg.sender === currentUser?.name;
+                          return (
+                            <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                              <div className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-amber-500 text-slate-950 font-medium' : 'bg-slate-900 border border-slate-800 text-slate-100'}`}>
+                                {msg.text}
+                            </div>
+                            <span className="text-[9px] text-slate-500 mt-1 px-1">{msg.time}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <form onSubmit={handleSendMessage} className="flex gap-2 pt-3 border-t border-slate-800">
+                      <input 
+                        type="text" 
+                        value={newMessageText} 
+                        onChange={(e) => setNewMessageText(e.target.value)} 
+                        placeholder={t.sendPlaceholder} 
+                        className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" 
+                        required 
+                      />
+                      <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider">
+                        {t.sendBtn}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center py-20 space-y-2">
+                    <div className="text-3xl">🍿</div>
+                    <p className="text-xs text-slate-400">Selecciona un chat.</p>
                   </div>
                 )}
               </div>
             </div>
+          </div>
           )}
 
-          {showInstallGuideModal && (
-            <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
-                <div className="text-4xl">📱✨</div>
-                <h3 className="text-xl font-black text-amber-400">Instalar Plottwisme</h3>
-                <p className="text-xs text-slate-300 leading-relaxed text-left bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                  <b>🌐 Android:</b> Abre el menú del navegador <b>( ⋮ )</b> y toca <b>"Instalar aplicación"</b>.<br/><br/>
-                  <b>🍏 iPhone:</b> Toca el botón <b>Compartir</b> y selecciona <b>"Agregar a Inicio"</b>.
-                </p>
-                <button onClick={() => setShowInstallGuideModal(false)} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">
-                  Entendido
-                </button>
-              </div>
-            </div>
-          )}
-
-          {showNewTopicModal && (
-            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">✍️ Crear Nuevo Debate</h3>
-                  <button onClick={() => setShowNewTopicModal(false)} className="text-slate-400 font-bold text-lg">✕</button>
-                </div>
-                <form onSubmit={handleCreateTopic} className="space-y-4 text-xs">
-                  <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Título:</label>
-                    <input type="text" value={newTopicTitle} onChange={(e) => setNewTopicTitle(e.target.value)} placeholder="Ej: ¿Cuál es el mejor final?" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+          {activeTab === 'critics' && (
+            <div className="space-y-6 max-w-3xl mx-auto">
+              <h2 className="text-2xl font-black">📰 Críticos & Medios</h2>
+              
+              {currentUser?.isCritic ? (
+                <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+                  <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña Oficial (Insignia 🌟)</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block mb-1 text-slate-400">Película:</label>
+                      <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Oppenheimer..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-slate-400">Puntaje (1-10):</label>
+                      <input type="number" min="1" max="10" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Categoría:</label>
-                    <select value={newTopicCategory} onChange={(e) => setNewTopicCategory(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
-                      <option value="Cine de Autor">Cine de Autor</option>
-                      <option value="Debates Clásicos">Debates Clásicos</option>
-                      <option value="Ciencia Ficción">Ciencia Ficción</option>
-                      <option value="Estrenos">Estrenos</option>
-                      <option value="Plot Twists">Plot Twists</option>
-                    </select>
+                  <div className="text-xs">
+                    <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
+                    <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu análisis..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                   </div>
-                  <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Contenido:</label>
-                    <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe tu propuesta..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                  </div>
-                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                    Publicar Debate
-                  </button>
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña Cloud</button>
                 </form>
+              ) : (
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2 text-xs">
+                  <p className="text-amber-400 font-bold">🔒 Necesitas la Insignia de Crítico otorgada por el Administrador para publicar reseñas.</p>
+                </div>
+              )}
+
+              <div className="space-y-4 pt-2">
+                {reviewsList.map(rev => (
+                  <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
+                    <div className="flex justify-between items-start text-xs">
+                      <div>
+                        <span className="font-bold text-amber-500 flex items-center gap-1">
+                          {rev.author} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">🌟 Crítico</span>
+                        </span>
+                        <p className="text-[10px] text-slate-400">🎙️ Medio: {rev.mediaOutlet || 'Independiente'}</p>
+                      </div>
+                      <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
+                    </div>
+                    <h4 className="text-base font-black">{rev.movieTitle}</h4>
+                    <p className="text-xs text-slate-300 leading-relaxed">{rev.content}</p>
+
+                    <div className="flex items-center gap-4 pt-2 border-t border-slate-800 text-xs">
+                      <button onClick={() => handleLikeReview(rev)} className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 font-bold text-amber-400 hover:bg-slate-800">
+                        <span>🍿</span> <span>{rev.likes || 0} Me gusta</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {showMatchModal && matchedUser && (
-            <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl">
-                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 p-1">
-                  <img src={matchedUser.photos?.[0] || matchedUser.avatar} alt="Match" className="w-full h-full rounded-full object-cover" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black text-amber-400">{t.matchTitle}</h3>
-                </div>
-                <div className="flex flex-col gap-2 pt-2">
-                  <button onClick={() => { setShowMatchModal(false); const chat = chatsList.find(c => c.userId === matchedUser.id); if (chat) setActiveChat(chat); setActiveTab('chats'); }} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">
-                    {t.openChatNow}
-                  </button>
-                  <button onClick={() => setShowMatchModal(false)} className="w-full bg-slate-800 text-slate-300 font-bold py-2.5 rounded-xl text-xs">
-                    {t.keepSearching}
-                  </button>
+          {activeTab === 'profile' && currentUser && (
+            <div className="max-w-xl mx-auto space-y-6">
+              
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-black text-white text-base flex items-center gap-2">
+                      <span>🛡️ Insignia de Identidad Verificada</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {currentUser.kycVerified 
+                        ? "Tienes tu perfil verificado con tilde azul." 
+                        : "Obtén el tilde azul opcional verificando tu identidad con DNI para generar mayor confianza."}
+                    </p>
+                  </div>
+                  {currentUser.kycVerified ? (
+                    <span className="bg-sky-500/20 text-sky-400 border border-sky-500/40 text-xs font-black px-3 py-1.5 rounded-xl flex items-center gap-1">
+                      ✔ VERIFICADO
+                    </span>
+                  ) : (
+                    <button 
+                      onClick={handleStartKycProcess}
+                      className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow-lg shadow-sky-500/20 transition-all whitespace-nowrap"
+                    >
+                      🪪 Verificar DNI
+                    </button>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
 
-          {showAuthModal && (
-            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">
-                    {authMode === 'signup' && '✨ Crear Cuenta'}
-                    {authMode === 'login' && '🔑 Iniciar Sesión'}
-                    {authMode === 'forgot' && '🔄 Recuperar Contraseña'}
-                  </h3>
-                  <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 font-bold text-lg">✕</button>
+              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-4 shadow-xl">
+                <h3 className="text-base font-black text-amber-400 flex items-center gap-2">
+                  <span>🚀 Plan de Usuario</span>
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className={`p-4 rounded-2xl border transition-all ${!currentUser.isPremium ? 'bg-amber-500/10 border-amber-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-bold text-sm text-white">Free</span>
+                      {!currentUser.isPremium && <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ACTIVO</span>}
+                    </div>
+                    <p className="text-[11px] text-slate-300 mt-2"><b>Radar:</b> hasta 50 km</p>
+                    <button 
+                      type="button" 
+                      onClick={() => handleUpgradePlan(false)} 
+                      disabled={!currentUser.isPremium}
+                      className="w-full mt-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 font-bold py-2 rounded-xl text-xs transition-all"
+                    >
+                      {currentUser.isPremium ? "Cambiar a Free" : "Plan Actual"}
+                    </button>
+                  </div>
+
+                  <div className={`p-4 rounded-2xl border transition-all ${currentUser.isPremium ? 'bg-amber-500/20 border-amber-500 text-white shadow-lg shadow-amber-500/10' : 'bg-slate-950 border-amber-500/30 text-slate-200'}`}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-bold text-sm text-amber-400">⭐ Premium</span>
+                      {currentUser.isPremium && <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ACTIVO</span>}
+                    </div>
+                    <p className="text-xs font-black text-amber-300">u$d 4.99 / mes</p>
+                    <p className="text-[11px] text-slate-300 mt-1"><b>Radar:</b> hasta 500 km</p>
+                    <button 
+                      type="button" 
+                      onClick={() => handleUpgradePlan(true)} 
+                      disabled={currentUser.isPremium}
+                      className="w-full mt-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider transition-all"
+                    >
+                      {currentUser.isPremium ? "Plan Actual" : "Obtener Premium"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+                  <div>
+                    <h2 className="text-xl font-black flex items-center gap-2">
+                      {currentUser.name}
+                      {currentUser.kycVerified && <span className="text-sky-400 text-sm" title="Verificado">✔</span>}
+                    </h2>
+                    <p className="text-xs text-amber-500">{currentUser.roleLabel} {currentUser.isCritic ? '🌟' : ''}</p>
+                  </div>
                 </div>
 
-                {authMode === 'signup' && (
-                  <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
-                    <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Nombre Completo:</label>
-                      <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Ej: Juan Pérez" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                <div className="space-y-4 text-xs">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="font-bold text-amber-400">
+                        Mis Fotos Reales ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
+                      </label>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Fecha Nacimiento (+18):</label>
-                        <input type="date" value={authBirthdate} onChange={(e) => setAuthBirthdate(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                      </div>
-                      <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Mi Género:</label>
-                        <select value={authSex} onChange={(e) => setAuthSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
-                          {SEXUALITIES_OPTIONS.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+                      {editPhotos.map((photo, idx) => (
+                        <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
+                          <img src={photo} alt="Foto real" className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => handleRemovePhoto(idx)} className="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow">✕</button>
+                        </div>
+                      ))}
                     </div>
 
+                    <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                      <label className="flex-1 cursor-pointer bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 px-4 rounded-xl text-center text-xs transition-all shadow-md">
+                        📁 Seleccionar Foto de la Galería
+                        <input type="file" accept="image/*" onChange={handleFileSelected} className="hidden" />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-2">
                     <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Interesado en (Radar de Citas):</label>
-                      <select value={authInterestedIn} onChange={(e) => setAuthInterestedIn(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                      <label className="block mb-1 text-slate-400 font-bold">Mi Género:</label>
+                      <select value={editSex} onChange={(e) => setEditSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                        {SEXUALITIES_OPTIONS.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-slate-400 font-bold">Quiero relacionarme con:</label>
+                      <select value={editInterestedIn} onChange={(e) => setEditInterestedIn(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
                         {SEEKING_SEXUALITIES_OPTIONS.map(opt => (
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
                       </select>
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="block mb-1 text-amber-400 font-bold">Biografía Pública:</label>
-                      <textarea rows="2" value={authPublicBio} onChange={(e) => setAuthPublicBio(e.target.value)} placeholder="Tus gustos generales..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
-                    </div>
+                  <div>
+                    <label className="block mb-1 text-amber-400 font-bold">Biografía Pública:</label>
+                    <textarea rows="2" value={editPublicBio} onChange={(e) => setEditPublicBio(e.target.value)} placeholder="Tus gustos de cine..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                  </div>
 
-                    <div>
-                      <label className="block mb-1 text-rose-400 font-bold">Biografía de Citas:</label>
-                      <textarea rows="2" value={authDatingBio} onChange={(e) => setAuthDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
-                    </div>
-                    
-                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-white">¿Solicitar Insignia de Crítico?</p>
-                        <p className="text-[10px] text-slate-400">Permite publicar reseñas de cine.</p>
-                      </div>
-                      <input type="checkbox" checked={authWantCritic} onChange={(e) => setAuthWantCritic(e.target.checked)} className="w-4 h-4 accent-amber-500 cursor-pointer" />
-                    </div>
+                  <div>
+                    <label className="block mb-1 text-rose-400 font-bold">Biografía de Citas:</label>
+                    <textarea rows="2" value={editDatingBio} onChange={(e) => setEditDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                  </div>
 
-                    <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
-                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Contraseña:</label>
-                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-
-                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Registrarme
-                    </button>
-                  </form>
-                )}
-
-                {authMode === 'login' && (
-                  <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
-                    <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
-                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="text-slate-400 font-bold">Contraseña:</label>
-                        <button type="button" onClick={() => { setAuthMode('forgot'); setResetStep(1); }} className="text-amber-400 font-bold hover:underline text-[11px]">¿Olvidaste tu contraseña?</button>
-                      </div>
-                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                    </div>
-
-                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                      Ingresar
-                    </button>
-                  </form>
-                )}
-
-                {authMode === 'forgot' && (
-                  <form onSubmit={handleForgotSubmit} className="space-y-4 text-xs">
-                    {resetStep === 1 ? (
-                      <>
-                        <p className="text-slate-300 leading-relaxed">Ingresa tu correo para restablecer tu contraseña.</p>
-                        <div>
-                          <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
-                          <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
-                        </div>
-                        <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
-                          Verificar Correo
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-emerald-300">
-                          ✅ ¡Solicitud enviada para <b>{forgotEmail}</b>!
-                        </div>
-                        <button type="button" onClick={() => { setAuthMode('login'); setResetStep(1); }} className="w-full bg-slate-800 text-slate-200 font-bold py-2.5 rounded-xl text-xs">
-                          Volver al inicio de sesión
-                        </button>
-                      </>
-                    )}
-                  </form>
-                )}
-
-                <div className="text-center pt-2 border-t border-slate-800 text-xs">
-                  {authMode === 'signup' && (
-                    <p className="text-slate-400">¿Ya tienes cuenta? <button onClick={() => { setAuthMode('login'); setResetStep(1); }} className="text-amber-400 font-bold underline">Inicia Sesión</button></p>
-                  )}
-                  {authMode === 'login' && (
-                    <p className="text-slate-400">¿No tienes cuenta? <button onClick={() => { setAuthMode('signup'); setResetStep(1); }} className="text-amber-400 font-bold underline">Regístrate gratis</button></p>
-                  )}
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20">Guardar Perfil</button>
                 </div>
-              </div>
+              </form>
             </div>
           )}
 
-        </div>
-      );
-    }
+          {activeTab === 'admin' && isAdmin && (
+            <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div>
+                  <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador Cloud</h2>
+                  <p className="text-xs text-amber-400 mt-1">Gestión de usuarios y verificaciones.</p>
+                </div>
+                <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
+                  Total Usuarios: {usersList.length}
+                </span>
+              </div>
 
-    try {
-      const rootElement = document.getElementById('root');
-      if (rootElement) {
-        const root = ReactDOM.createRoot(rootElement);
-        root.render(<App />);
-      }
-    } catch (e) { console.error(e); }
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {usersList.map(u => {
+                  const userPhotos = u.photos || [u.avatar];
+                  return (
+                    <div key={u.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
+                      <div className="flex gap-3 items-start">
+                        <img src={u.avatar} alt="Avatar" className="w-16 h-16 rounded-xl object-cover border border-slate-700" />
+                        <div className="overflow-hidden flex-1">
+                          <p className="font-bold text-white text-sm truncate flex items-center gap-1">
+                            {u.name} {u.kycVerified && <span className="text-sky-400 text-xs">✔</span>} {u.isCritic && '🌟'} {u.isPremium && '⭐'}
+                          </p>
+                          <p className="text-xs text-amber-400">{u.roleLabel}</p>
+                          <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
+                          <p className="text-[10px] text-slate-300 mt-1"><b>Edad:</b> {u.age || 25} años</p>
+                        </div>
+                      </div>
+
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 mb-1">Fotos del usuario:</p>
+                      <div className="flex gap-1 overflow-x-auto py-1">
+                        {userPhotos.map((p, pIdx) => (
+                          <div key={pIdx} className="relative group shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-slate-700 bg-slate-900">
+                            <img src={p} alt="mini" className="w-full h-full object-cover" />
+                            <button onClick={() => handleDeletePhoto(u.id, pIdx)} className="absolute inset-0 bg-rose-900/90 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity font-bold">
+                              ✕ Borrar
+                            </button>
+                        </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
+                      <button onClick={() => handleToggleKycAdmin(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.kycVerified ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                        {u.kycVerified ? '✔ Quitar Verificación' : '🪪 Otorgar Verificación Manual'}
+                      </button>
+
+                      <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                        {u.isCritic ? '🌟 Quitar Crítico' : '✨ Otorgar Crítico'}
+                      </button>
+
+                      <button onClick={() => handleToggleAdminPremium(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isPremium ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                        {u.isPremium ? '⭐ Quitar Premium' : '⭐ Otorgar Premium'}
+                      </button>
+                      
+                      {u.email.toLowerCase() !== 'marbuttice@gmail.com' && (
+                        <button onClick={() => handleDeleteUser(u.id)} className="w-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
+                          🗑️ Eliminar Usuario
+                      </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          )}
+
+        </main>
+
+        {showKycModal && (
+          <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 className="text-lg font-black text-sky-400 flex items-center gap-2">
+                  <span>🪪 Verificación de Identidad</span>
+                </h3>
+                <button onClick={() => setShowKycModal(false)} className="text-slate-400 font-bold">✕</button>
+              </div>
+
+              {kycProcessing ? (
+                <div className="text-center py-10 space-y-4">
+                  <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  <p className="text-sm font-bold text-sky-300">Validando datos biométricos...</p>
+                </div>
+              ) : (
+                <div className="space-y-4 text-xs">
+                  <p className="text-slate-300 leading-relaxed">
+                    Sube una foto de tu documento y una selfie para obtener el tilde azul de identidad verificada.
+                  </p>
+
+                  <div className="space-y-3">
+                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
+                      <div><p className="font-bold text-white">1. DNI (Frente):</p></div>
+                      <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
+                        {kycDocFront ? "✔ Cargado" : "Subir"}
+                        <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('front', e)} className="hidden" />
+                      </label>
+                    </div>
+
+                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
+                      <div><p className="font-bold text-white">2. DNI (Dorso):</p></div>
+                      <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
+                        {kycDocBack ? "✔ Cargado" : "Subir"}
+                        <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('back', e)} className="hidden" />
+                      </label>
+                    </div>
+
+                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
+                      <div><p className="font-bold text-white">3. Selfie:</p></div>
+                      <label className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
+                        {kycSelfie ? "✔ Capturada" : "Tomar"}
+                        <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('selfie', e)} className="hidden" />
+                      </label>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={handleFinalizeKycVerification} 
+                    className="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-sky-500/20"
+                  >
+                    Enviar Verificación
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {showInstallGuideModal && (
+          <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
+              <div className="text-4xl">📱✨</div>
+              <h3 className="text-xl font-black text-amber-400">Instalar Plottwisme</h3>
+              <p className="text-xs text-slate-300 leading-relaxed text-left bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <b>🌐 Android:</b> Abre el menú del navegador <b>( ⋮ )</b> y toca <b>"Instalar aplicación"</b>.<br/><br/>
+                <b>🍏 iPhone:</b> Toca el botón <b>Compartir</b> y selecciona <b>"Agregar a Inicio"</b>.
+              </p>
+              <button onClick={() => setShowInstallGuideModal(false)} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">
+                Entendido
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showNewTopicModal && (
+          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 className="text-lg font-black text-white">✍️ Crear Nuevo Debate</h3>
+                <button onClick={() => setShowNewTopicModal(false)} className="text-slate-400 font-bold text-lg">✕</button>
+              </div>
+              <form onSubmit={handleCreateTopic} className="space-y-4 text-xs">
+                <div>
+                  <label className="block mb-1 text-slate-400 font-bold">Título:</label>
+                  <input type="text" value={newTopicTitle} onChange={(e) => setNewTopicTitle(e.target.value)} placeholder="Ej: ¿Cuál es el mejor final?" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                </div>
+                <div>
+                  <label className="block mb-1 text-slate-400 font-bold">Categoría:</label>
+                  <select value={newTopicCategory} onChange={(e) => setNewTopicCategory(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                    <option value="Cine de Autor">Cine de Autor</option>
+                    <option value="Debates Clásicos">Debates Clásicos</option>
+                    <option value="Ciencia Ficción">Ciencia Ficción</option>
+                    <option value="Estrenos">Estrenos</option>
+                    <option value="Plot Twists">Plot Twists</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1 text-slate-400 font-bold">Contenido:</label>
+                  <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe tu propuesta..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                </div>
+                <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
+                  Publicar Debate
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showMatchModal && matchedUser && (
+          <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl">
+              <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 p-1">
+                <img src={matchedUser.photos?.[0] || matchedUser.avatar} alt="Match" className="w-full h-full rounded-full object-cover" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-amber-400">{t.matchTitle}</h3>
+              </div>
+              <div className="flex flex-col gap-2 pt-2">
+                <button onClick={() => { setShowMatchModal(false); const chat = chatsList.find(c => c.userId === matchedUser.id); if (chat) setActiveChat(chat); setActiveTab('chats'); }} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">
+                  {t.openChatNow}
+                </button>
+                <button onClick={() => setShowMatchModal(false)} className="w-full bg-slate-800 text-slate-300 font-bold py-2.5 rounded-xl text-xs">
+                  {t.keepSearching}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAuthModal && (
+          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 className="text-lg font-black text-white">
+                  {authMode === 'signup' && '✨ Crear Cuenta'}
+                  {authMode === 'login' && '🔑 Iniciar Sesión'}
+                  {authMode === 'forgot' && '🔄 Recuperar Contraseña'}
+                </h3>
+                <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 font-bold text-lg">✕</button>
+              </div>
+
+              {authMode === 'signup' && (
+                <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
+                  <div>
+                    <label className="block mb-1 text-slate-400 font-bold">Nombre Completo:</label>
+                    <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Ej: Juan Pérez" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block mb-1 text-slate-400 font-bold">Fecha Nacimiento (+18):</label>
+                      <input type="date" value={authBirthdate} onChange={(e) => setAuthBirthdate(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-slate-400 font-bold">Mi Género:</label>
+                      <select value={authSex} onChange={(e) => setAuthSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                        {SEXUALITIES_OPTIONS.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-slate-400 font-bold">Interesado en (Radar de Citas):</label>
+                    <select value={authInterestedIn} onChange={(e) => setAuthInterestedIn(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                      {SEEKING_SEXUALITIES_OPTIONS.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-amber-400 font-bold">Biografía Pública:</label>
+                    <textarea rows="2" value={authPublicBio} onChange={(e) => setAuthPublicBio(e.target.value)} placeholder="Tus gustos generales..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-rose-400 font-bold">Biografía de Citas:</label>
+                  <textarea rows="2" value={authDatingBio} onChange={(e) => setAuthDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                </div>
+                
+                <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-white">¿Solicitar Insignia de Crítico?</p>
+                    <p className="text-[10px] text-slate-400">Permite publicar reseñas de cine.</p>
+                  </div>
+                  <input type="checkbox" checked={authWantCritic} onChange={(e) => setAuthWantCritic(e.target.checked)} className="w-4 h-4 accent-amber-500 cursor-pointer" />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
+                  <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-slate-400 font-bold">Contraseña:</label>
+                  <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                </div>
+
+                <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
+                  Registrarme
+                </button>
+              </form>
+            )}
+
+            {authMode === 'login' && (
+              <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
+                <div>
+                  <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
+                  <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-slate-400 font-bold">Contraseña:</label>
+                    <button type="button" onClick={() => { setAuthMode('forgot'); setResetStep(1); }} className="text-amber-400 font-bold hover:underline text-[11px]">¿Olvidaste tu contraseña?</button>
+                  </div>
+                  <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                </div>
+
+                <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
+                  Ingresar
+                </button>
+              </form>
+            )}
+
+            {authMode === 'forgot' && (
+              <form onSubmit={handleForgotSubmit} className="space-y-4 text-xs">
+                {resetStep === 1 ? (
+                  <>
+                    <p className="text-slate-300 leading-relaxed">Ingresa tu correo para restablecer tu contraseña.</p>
+                    <div>
+                      <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
+                      <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    </div>
+                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
+                      Verificar Correo
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-emerald-300">
+                      ✅ ¡Solicitud enviada para <b>{forgotEmail}</b>!
+                    </div>
+                    <button type="button" onClick={() => { setAuthMode('login'); setResetStep(1); }} className="w-full bg-slate-800 text-slate-200 font-bold py-2.5 rounded-xl text-xs">
+                      Volver al inicio de sesión
+                    </button>
+                  </>
+                )}
+              </form>
+            )}
+
+            <div className="text-center pt-2 border-t border-slate-800 text-xs">
+              {authMode === 'signup' && (
+                <p className="text-slate-400">¿Ya tienes cuenta? <button onClick={() => { setAuthMode('login'); setResetStep(1); }} className="text-amber-400 font-bold underline">Inicia Sesión</button></p>
+              )}
+              {authMode === 'login' && (
+                <p className="text-slate-400">¿No tienes cuenta? <button onClick={() => { setAuthMode('signup'); setResetStep(1); }} className="text-amber-400 font-bold underline">Regístrate gratis</button></p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+    );
+  }
+
+  try {
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(<App />);
+    }
+  } catch (e) { console.error(e); }
+  </script>
+
+  <!-- Registro automático del Service Worker requerido por PWABuilder -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./pwabuilder-sw.js')
+          .then(reg => {
+            console.log('Service Worker registrado con éxito:', reg.scope);
+          })
+          .catch(err => {
+            console.log('Error al registrar el Service Worker:', err);
+          });
+      });
+    }
   </script>
 </body>
 </html>
