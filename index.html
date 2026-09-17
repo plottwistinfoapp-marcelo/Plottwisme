@@ -23,7 +23,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
-  <!-- Firebase SDKs (Firestore & Auth - Sin Storage para costo 0) -->
+  <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
@@ -172,7 +172,6 @@
       { id: 'premieres', label: '⭐ Estrenos & Reseñas IA', queryFormat: 'estrenos de cine actuales y criticas en {city}' }
     ];
 
-    // FÓRMULA DE HAVERSINE PARA CÁLCULO DE DISTANCIA GPS REAL
     const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
       if (!lat1 || !lon1 || !lat2 || !lon2) return Math.floor(Math.random() * 30) + 2;
       const R = 6371;
@@ -942,11 +941,14 @@
       const isAdmin = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
       const maxAllowedSlider = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 50);
 
+      // VARIABLE PARA SABER SI ESTAMOS VIENDO UN PERFIL EN EL RADAR
+      const isShowingRadarCard = activeTab === 'radar' && Boolean(currentCandidate);
+
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
-          {/* SI EL MODAL DE MATCH ESTÁ ACTIVO, SE OCULTA LA CABECERA COMPLETA */}
-          {!showMatchModal && (
+          {/* LA CABECERA Y EL MENÚ COMPLETO SE OCULTAN CUANDO SE MUESTRA UNA TARJETA EN EL RADAR O UN MODAL */}
+          {!showMatchModal && !isShowingRadarCard && (
             <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
               <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
                 
@@ -999,21 +1001,6 @@
                       className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-28 text-amber-300 focus:outline-none capitalize text-xs" 
                     />
                   </div>
-
-                  {activeTab === 'radar' && (
-                    <div className="flex items-center gap-2 border-l border-amber-500/30 pl-3">
-                      <span className="text-rose-400 font-bold whitespace-nowrap">🎯 Radar: <b className="text-white">{matchRadiusKm} km</b></span>
-                      <input 
-                        type="range" 
-                        min="5" 
-                        max={maxAllowedSlider} 
-                        step="5"
-                        value={matchRadiusKm} 
-                        onChange={(e) => setMatchRadiusKm(Number(e.target.value))}
-                        className="w-24 sm:w-28 accent-rose-500 cursor-pointer"
-                      />
-                    </div>
-                  )}
 
                   {isAdmin && (
                     <>
@@ -1218,61 +1205,93 @@
               </div>
             )}
 
+            {/* RADAR DE CITAS LIMPIO (PANTALLA COMPLETA) */}
             {activeTab === 'radar' && !showMatchModal && (
-              <div className="flex flex-col items-center space-y-4">
+              <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-6">
                 
-                <div className="w-full max-w-md flex flex-wrap items-center justify-between gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl text-xs">
-                  <span className="text-slate-400 font-bold">🔍 Filtrar Radar:</span>
-                  <div className="flex gap-1.5">
-                    <button onClick={() => setRadarFilterType('all')} className={`px-2.5 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'all' ? 'bg-amber-500 text-slate-950' : 'bg-slate-950 text-slate-300'}`}>Todos</button>
-                    <button onClick={() => setRadarFilterType('verified')} className={`px-2.5 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'verified' ? 'bg-sky-500 text-slate-950' : 'bg-slate-950 text-slate-300'}`}>✔ Verificados</button>
-                    <button onClick={() => setRadarFilterType('critic')} className={`px-2.5 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'critic' ? 'bg-amber-400 text-slate-950' : 'bg-slate-950 text-slate-300'}`}>🌟 Críticos</button>
-                  </div>
-                </div>
-
-                <div className="bg-slate-900 border border-amber-500/30 px-4 py-2 rounded-xl text-xs text-amber-400 font-bold text-center">
-                  🎯 Radar de Citas (GPS Activo): Mostrando perfiles en un radio de <b className="text-white">{matchRadiusKm} km</b>
-                </div>
-
                 {currentCandidate ? (
-                  <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-                    <div className="relative h-96 w-full bg-slate-950">
-                      <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-4 left-4 flex gap-2">
-                        <span className="bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">{currentCandidate.sex || 'Perfil'} • Busca: {currentCandidate.interestedIn || 'Cualquiera'}</span>
-                        {currentCandidate.kycVerified && (
-                          <span className="bg-sky-500 text-slate-950 px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1">
-                            ✔ Verificado
+                  <div className="w-full max-w-md flex flex-col items-center space-y-6 animate-fade-in">
+                    
+                    {/* Tarjeta del Candidato en la parte central */}
+                    <div className="w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
+                      <div className="relative h-96 sm:h-[420px] w-full bg-slate-950">
+                        <img src={currentCandidate.avatar} alt={currentCandidate.name} className="w-full h-full object-cover" />
+                        <div className="absolute top-4 left-4 flex gap-2">
+                          <span className="bg-rose-600 px-3 py-1 rounded-full text-xs font-bold text-white">
+                            {currentCandidate.sex || 'Perfil'} • Busca: {currentCandidate.interestedIn || 'Cualquiera'}
                           </span>
-                        )}
-                      </div>
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h2 className="text-2xl font-black text-white flex items-center gap-2">
-                          {currentCandidate.name}, {currentCandidate.age || 25}
-                          {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Identidad Verificada">✔</span>}
-                        </h2>
-                        <p className="text-xs text-amber-300 font-medium">
-                          📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{(currentUser?.lat && currentUser?.lon && currentCandidate.lat && currentCandidate.lon) ? calculateDistanceKm(currentUser.lat, currentUser.lon, currentCandidate.lat, currentCandidate.lon) : (currentCandidate.distanceKm || 5)} km</b>
-                        </p>
-                      </div>
-                    </div>
-                    <div className="p-6 space-y-4">
-                      <div className="bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-2xl">
-                        <p className="text-[10px] uppercase font-bold text-rose-400 mb-1">💬 Descripción para Citas:</p>
-                        <p className="text-xs italic text-slate-200">"{currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
+                          {currentCandidate.kycVerified && (
+                            <span className="bg-sky-500 text-slate-950 px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1">
+                              ✔ Verificado
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent p-6">
+                          <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+                            {currentCandidate.name}, {currentCandidate.age || 25}
+                            {currentCandidate.kycVerified && <span className="text-sky-400 text-xl" title="Identidad Verificada">✔</span>}
+                          </h2>
+                          <p className="text-xs text-amber-300 font-medium mt-1">
+                            📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{(currentUser?.lat && currentUser?.lon && currentCandidate.lat && currentCandidate.lon) ? calculateDistanceKm(currentUser.lat, currentUser.lon, currentCandidate.lat, currentCandidate.lon) : (currentCandidate.distanceKm || 5)} km</b>
+                          </p>
+                        </div>
                       </div>
                       
-                      <div className="flex justify-center gap-6 pt-2">
-                        <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 text-rose-400 flex items-center justify-center text-xl font-bold">✖</button>
-                        <button onClick={() => { handleMatchUser(currentCandidate); }} className="w-16 h-16 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-110 transition-all">🍿</button>
+                      <div className="p-5 bg-slate-900 border-t border-slate-800/80">
+                        <div className="bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-2xl">
+                          <p className="text-[10px] uppercase font-bold text-rose-400 mb-1">💬 Descripción para Citas:</p>
+                          <p className="text-xs italic text-slate-200">"{currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Botones de Acción de la Tarjeta */}
+                    <div className="flex justify-center items-center gap-6 w-full max-w-xs">
+                      <button 
+                        onClick={() => setCurrentIndex(prev => prev + 1)} 
+                        className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 text-rose-500 hover:bg-slate-800 hover:scale-105 flex items-center justify-center text-2xl font-bold transition-all shadow-lg"
+                        title="Descartar"
+                      >
+                        ✖
+                      </button>
+                      
+                      <button 
+                        onClick={() => { handleMatchUser(currentCandidate); }} 
+                        className="w-20 h-20 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center text-3xl font-black shadow-xl shadow-amber-500/20 hover:scale-110 transition-all"
+                        title="Hacer Match"
+                      >
+                        🍿
+                      </button>
+                    </div>
+
+                    {/* Botones Limpios Inferiores: Seguir buscando / Volver al menú */}
+                    <div className="w-full max-w-md space-y-3 pt-2">
+                      <button 
+                        onClick={() => setCurrentIndex(prev => prev + 1)} 
+                        className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-xl shadow-amber-500/20 hover:scale-[1.01] flex items-center justify-center gap-2"
+                      >
+                        <span>Seguir buscando</span>
+                        <span>🔍</span>
+                      </button>
+                      
+                      <button 
+                        onClick={() => { setActiveTab('cinema'); }} 
+                        className="w-full py-3.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 font-bold rounded-2xl text-xs border border-slate-800 transition-all hover:text-white flex items-center justify-center gap-2"
+                      >
+                        <span>Volver al menú</span>
+                        <span>↩</span>
+                      </button>
+                    </div>
+
                   </div>
                 ) : (
-                  <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                  <div className="text-center py-16 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl">
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay más perfiles con estos filtros.</h3>
-                    <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
+                    <h3 className="text-xl font-bold">No hay más perfiles disponibles.</h3>
+                    <div className="flex flex-col gap-3 pt-2">
+                      <button onClick={() => setCurrentIndex(0)} className="bg-amber-500 text-slate-950 px-5 py-3 rounded-xl text-xs font-black uppercase">Reiniciar Radar</button>
+                      <button onClick={() => setActiveTab('cinema')} className="bg-slate-800 text-slate-300 px-5 py-3 rounded-xl text-xs font-bold">Volver al Menú</button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1626,7 +1645,6 @@
           {showMatchModal && matchedUser && (
             <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-between p-6 sm:p-10 animate-fade-in">
               
-              {/* Encabezado Celebratorio */}
               <div className="text-center mt-4 space-y-2">
                 <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
                   ¡Hay Plot Twist!
@@ -1639,7 +1657,6 @@
                 </p>
               </div>
 
-              {/* Tarjeta de Perfil Destacada */}
               <div className="relative w-full max-w-xs sm:max-w-sm rounded-3xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900 my-auto">
                 <img 
                   src={matchedUser.avatar} 
@@ -1657,7 +1674,6 @@
                 </div>
               </div>
 
-              {/* Acciones Inferiores (Solo 2 Botones) */}
               <div className="w-full max-w-xs sm:max-w-sm space-y-3 mb-4">
                 <button 
                   onClick={() => { setShowMatchModal(false); setCurrentIndex(prev => prev + 1); }} 
