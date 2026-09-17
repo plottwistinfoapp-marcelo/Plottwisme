@@ -11,9 +11,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Plottwisme" />
   
-  <!-- Ícono Oficial Plottwisme -->
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/marbuttice/plottwisme/main/logo.png">
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/marbuttice/plottwisme/main/logo.png">
+  <!-- Ícono y Manifiesto Oficial Plottwisme -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="icon-512x512.png">
+  <link rel="apple-touch-icon" href="icon-512x512.png">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -952,7 +953,7 @@
               
               {/* Logo & Nombre */}
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }}>
-                <img src="https://raw.githubusercontent.com/marbuttice/plottwisme/main/logo.png" alt="Logo" className="w-8 h-8 rounded-xl object-cover shadow-md shadow-amber-500/20" />
+                <img src="icon-512x512.png" alt="Logo" className="w-8 h-8 rounded-xl object-cover shadow-md shadow-amber-500/20" />
                 <div className="hidden sm:block">
                   <h1 className="text-base font-black font-brand text-amber-500 flex items-center gap-1">
                     Plottwisme
@@ -1828,7 +1829,7 @@
 
                     <div>
                       <label className="block mb-1 text-slate-400 font-bold">Contraseña:</label>
-                      <input type="password" value5={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
@@ -1889,7 +1890,7 @@
                     <p className="text-slate-400">¿Ya tienes cuenta? <button onClick={() => { setAuthMode('login'); setResetStep(1); }} className="text-amber-400 font-bold underline">Inicia Sesión</button></p>
                   )}
                   {authMode === 'login' && (
-                    <p className="text-2xs text-slate-400">¿No tienes cuenta? <button onClick={() => { setAuthMode('signup'); setResetStep(1); }} className="text-amber-400 font-bold underline">Regístrate gratis</button></p>
+                    <p className="text-slate-400">¿No tienes cuenta? <button onClick={() => { setAuthMode('signup'); setResetStep(1); }} className="text-amber-400 font-bold underline">Regístrate gratis</button></p>
                   )}
                 </div>
               </div>
