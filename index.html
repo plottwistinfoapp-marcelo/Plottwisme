@@ -668,6 +668,10 @@
             const uid = userCred.user.uid;
             const defaultAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80';
             
+            // Calculamos fecha de expiración de los 15 días Premium de regalo por bienvenida
+            const trialExpiryDate = new Date();
+            trialExpiryDate.setDate(trialExpiryDate.getDate() + 15);
+
             const newUser = {
               id: uid,
               name: authName,
@@ -683,8 +687,9 @@
               lon: userCoords.lon,
               distanceKm: 5.0,
               role: 'general',
-              roleLabel: authWantCritic ? 'Solicitud Crítico Pendiente' : 'Cinéfilo Estándar',
-              isPremium: false,
+              roleLabel: 'Cinéfilo Premium ⭐ (Regalo 15 Días)',
+              isPremium: true,
+              premiumExpiresAt: trialExpiryDate.toISOString(),
               isCritic: authWantCritic,
               criticRequested: authWantCritic,
               verified: false,
@@ -696,7 +701,7 @@
 
             await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", uid), newUser);
             setCurrentUser(newUser);
-            alert('🎉 ¡Cuenta creada con éxito! Ya puedes usar Plottwisme.');
+            alert('🎉 ¡Bienvenido a Plottwisme! Como regalo de bienvenida, te hemos activado 15 DÍAS DE ACCESO PREMIUM ⭐ (Radar hasta 500 km y más beneficios). ¡Disfrútalo!');
           } else {
             let userCred;
             try {
