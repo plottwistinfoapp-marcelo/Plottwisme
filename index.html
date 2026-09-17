@@ -110,7 +110,8 @@
         sendBtn: "Enviar",
         matchTitle: "¡Es un Match Cinéfilo!",
         openChatNow: "💬 Abrir Chat Ahora",
-        keepSearching: "Seguir Buscando"
+        keepSearching: "Seguir Buscando",
+        backToMenu: "Volver al Menú"
       },
       en: {
         loading: "⏳ Loading Plottwisme...",
@@ -137,7 +138,8 @@
         sendBtn: "Send",
         matchTitle: "It's a Cinephile Match!",
         openChatNow: "💬 Open Chat Now",
-        keepSearching: "Keep Searching"
+        keepSearching: "Keep Searching",
+        backToMenu: "Back to Menu"
       }
     };
 
@@ -1726,24 +1728,58 @@
             </div>
           )}
 
+          {/* OVERLAY DE MATCH LIMPIO EN PANTALLA COMPLETA */}
           {showMatchModal && matchedUser && (
-            <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl">
-                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 p-1">
-                  <img src={matchedUser.avatar} alt="Match" className="w-full h-full rounded-full object-cover" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black text-amber-400">{t.matchTitle}</h3>
-                </div>
-                <div className="flex flex-col gap-2 pt-2">
-                  <button onClick={() => { setShowMatchModal(false); const chat = chatsList.find(c => c.userId === matchedUser.id); if (chat) setActiveChat(chat); setActiveTab('chats'); }} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">
-                    {t.openChatNow}
-                  </button>
-                  <button onClick={() => setShowMatchModal(false)} className="w-full bg-slate-800 text-slate-300 font-bold py-2.5 rounded-xl text-xs">
-                    {t.keepSearching}
-                  </button>
+            <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-between p-6 sm:p-10 animate-fade-in">
+              
+              {/* Encabezado Celebratorio */}
+              <div className="text-center mt-6 space-y-2">
+                <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
+                  ¡Hay Plot Twist!
+                </span>
+                <h3 className="text-3xl sm:text-4xl font-black text-white tracking-wide">
+                  {t.matchTitle}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400">
+                  Coincidieron en sus gustos de cine
+                </p>
+              </div>
+
+              {/* Tarjeta de Perfil Destacada */}
+              <div className="relative w-full max-w-xs sm:max-w-sm rounded-3xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900 my-auto">
+                <img 
+                  src={matchedUser.avatar} 
+                  alt={matchedUser.name} 
+                  className="w-full h-80 sm:h-96 object-cover" 
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent p-5">
+                  <h4 className="text-2xl font-black text-white flex items-center gap-2">
+                    {matchedUser.name}, {matchedUser.age || 25}
+                    {matchedUser.kycVerified && <span className="text-sky-400 text-base" title="Verificado">✔</span>}
+                  </h4>
+                  <p className="text-xs text-amber-300 font-medium mt-1">
+                    📍 {matchedUser.location || 'Cerca de ti'} • 📏 A aprox. <b>{(currentUser?.lat && currentUser?.lon && matchedUser.lat && matchedUser.lon) ? calculateDistanceKm(currentUser.lat, currentUser.lon, matchedUser.lat, matchedUser.lon) : (matchedUser.distanceKm || 5)} km</b>
+                  </p>
                 </div>
               </div>
+
+              {/* Acciones Inferiores (Solo 2 Botones) */}
+              <div className="w-full max-w-xs sm:max-w-sm space-y-3 mb-4">
+                <button 
+                  onClick={() => setShowMatchModal(false)} 
+                  className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider transition-all shadow-xl shadow-amber-500/20 hover:scale-[1.02]"
+                >
+                  {t.keepSearching}
+                </button>
+                
+                <button 
+                  onClick={() => { setShowMatchModal(false); setActiveTab('radar'); }} 
+                  className="w-full py-3.5 bg-slate-900/80 hover:bg-slate-800 text-slate-300 font-bold rounded-2xl text-xs border border-slate-800 transition-all hover:text-white"
+                >
+                  {t.backToMenu}
+                </button>
+              </div>
+
             </div>
           )}
 
