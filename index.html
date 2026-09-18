@@ -179,7 +179,7 @@
     ];
 
     const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
-      if (!lat1 || !lon1 || !lat2 || !lon2) return Math.floor(Math.random() * 30) + 2;
+      if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
       const R = 6371;
       const dLat = (lat2 - lat1) * (Math.PI / 180);
       const dLon = (lon2 - lon1) * (Math.PI / 180);
@@ -207,7 +207,7 @@
       const [userCity, setUserCity] = useState('');
       const [userCountryCode, setUserCountryCode] = useState('AR');
       const [userCoords, setUserCoords] = useState({ lat: null, lon: null });
-      const [matchRadiusKm, setMatchRadiusKm] = useState(100); // 100km por defecto para usuarios Free
+      const [matchRadiusKm, setMatchRadiusKm] = useState(100);
       const [radarFilterType, setRadarFilterType] = useState('all');
 
       const [chatsList, setChatsList] = useState([]);
@@ -446,7 +446,6 @@
           setEditTv(currentUser.socialLinks?.tv || '');
           setEditMuteNotifications(currentUser.muteNotifications || false);
           
-          // Ajustar radio por defecto según plan del usuario activo
           const emailCheck = currentUser.email?.toLowerCase().trim();
           const isAdminUser = emailCheck === 'marbuttice@gmail.com' || currentUser.role === 'admin';
           if (isAdminUser) {
@@ -854,11 +853,15 @@
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
         return others.filter(u => {
-          const dist = (currentUser?.lat && currentUser?.lon && u.lat && u.lon)
-            ? calculateDistanceKm(currentUser.lat, currentUser.lon, u.lat, u.lon)
-            : (u.distanceKm !== undefined ? u.distanceKm : Math.floor(Math.random() * 40) + 5);
+          // Si el usuario actual o el candidato no tienen coordenadas exactas en la BD, se descartan a menos que sea Admin
+          if (!currentUser?.lat || !currentUser?.lon || !u.lat || !u.lon) {
+            return isAdmin;
+          }
 
-          if (!isAdmin && dist > effectiveRadius) return false;
+          const dist = calculateDistanceKm(currentUser.lat, currentUser.lon, u.lat, u.lon);
+
+          // Si supera el radio efectivo o los 1000km reales, se descarta estrictamente
+          if (!isAdmin && (dist > effectiveRadius || dist > 1000)) return false;
 
           if (radarFilterType === 'verified' && !u.kycVerified) return false;
           if (radarFilterType === 'critic' && !u.isCritic) return false;
@@ -1310,6 +1313,9 @@
                 {currentCandidate ? (() => {
                   const candidatePhotos = currentCandidate.photos?.length > 0 ? currentCandidate.photos : [currentCandidate.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'];
                   const activePhoto = candidatePhotos[currentPhotoIndex] || candidatePhotos[0];
+                  const computedDist = (currentUser?.lat && currentUser?.lon && currentCandidate.lat && currentCandidate.lon) 
+                    ? calculateDistanceKm(currentUser.lat, currentUser.lon, currentCandidate.lat, currentCandidate.lon) 
+                    : (currentCandidate.distanceKm || 5);
 
                   return (
                     <div className={`w-full max-w-md ${cardBg} rounded-3xl overflow-hidden shadow-2xl`}>
@@ -1357,7 +1363,7 @@
                             {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Identidad Verificada">✔</span>}
                           </h2>
                           <p className="text-xs text-amber-400 font-medium drop-shadow">
-                            📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{(currentUser?.lat && currentUser?.lon && currentCandidate.lat && currentCandidate.lon) ? calculateDistanceKm(currentUser.lat, currentUser.lon, currentCandidate.lat, currentCandidate.lon) : (currentCandidate.distanceKm || 5)} km</b>
+                            📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{computedDist} km</b>
                           </p>
                         </div>
                       </div>
