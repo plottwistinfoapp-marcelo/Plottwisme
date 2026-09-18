@@ -312,7 +312,6 @@
         }
       }, []);
 
-      // Sincronización en tiempo real con Firestore (Usuarios, Foros, Reseñas y Chats)
       useEffect(() => {
         if (!window.db) return;
         const { collection, onSnapshot } = window.FirebaseFns;
@@ -394,7 +393,6 @@
         };
       }, []);
 
-      // Sincronización en tiempo real de los Chats del usuario conectado
       useEffect(() => {
         if (!window.db || !currentUser) {
           setChatsList([]);
@@ -412,7 +410,6 @@
           });
           setChatsList(loadedChats);
 
-          // Mantener actualizado el chat activo si está abierto
           setActiveChat(prev => {
             if (!prev) return null;
             const updated = loadedChats.find(c => c.id === prev.id);
@@ -470,10 +467,7 @@
       };
 
       const handleFinalizeKycVerification = async () => {
-        if (!kycDocFront || !kycSelfie) {
-          alert('⚠️ Por favor carga el DNI (Frente) y la Selfie Biométrica.');
-          return;
-        }
+        if (!kycDocFront || !kycSelfie) return;
         setKycProcessing(true);
         setTimeout(async () => {
           try {
@@ -485,10 +479,8 @@
             setCurrentUser(prev => ({ ...prev, kycVerified: true, verified: true }));
             setKycProcessing(false);
             setShowKycModal(false);
-            alert('🎉 ¡Verificación KYC Exitosa! Ya cuentas con el tilde azul de identidad verificada.');
           } catch(err) {
             setKycProcessing(false);
-            alert('Error guardando la verificación.');
           }
         }, 2000);
       };
@@ -502,8 +494,7 @@
               kycVerified: nextVal,
               verified: nextVal
             });
-            alert('✅ Estatus KYC actualizado.');
-          } catch (err) { alert('Error al actualizar KYC.'); }
+          } catch (err) {}
         }
       };
 
@@ -530,9 +521,7 @@
             };
             await window.FirebaseFns.setDoc(chatRef, newChat);
           }
-        } catch(e) {
-          console.error("Error creando match en Firestore", e);
-        }
+        } catch(e) {}
       };
 
       const handleSendMessage = async (e) => {
@@ -554,19 +543,14 @@
             messages: updatedMessages
           });
           setNewMessageText('');
-        } catch (err) {
-          alert('Error al enviar el mensaje a la nube.');
-        }
+        } catch (err) {}
       };
 
       const handleFileSelected = (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const maxPhotosAllowed = currentUser?.isPremium ? 10 : 3;
-        if (editPhotos.length >= maxPhotosAllowed) {
-          alert(`⚠️ Máximo ${maxPhotosAllowed} fotos permitidas.`);
-          return;
-        }
+        if (editPhotos.length >= maxPhotosAllowed) return;
 
         const reader = new FileReader();
         reader.onload = (uploadEvent) => {
@@ -599,28 +583,22 @@
       };
 
       const handleDeleteUser = async (userId) => {
-        if (window.confirm('⚠️ ¿Expulsar / eliminar este usuario de la nube permanentemente?')) {
-          try {
-            await window.FirebaseFns.deleteDoc(window.FirebaseFns.doc(window.db, "users", userId));
-            alert('✅ Usuario eliminado de la nube.');
-          } catch (err) { alert('Error al eliminar usuario.'); }
-        }
+        try {
+          await window.FirebaseFns.deleteDoc(window.FirebaseFns.doc(window.db, "users", userId));
+        } catch (err) {}
       };
 
       const handleDeletePhoto = async (userId, photoIndex) => {
-        if (window.confirm('🗑️ ¿Eliminar esta foto por inapropiada?')) {
-          const targetUser = usersList.find(u => u.id === userId);
-          if (targetUser) {
-            const updatedPhotos = (targetUser.photos || [targetUser.avatar]).filter((_, i) => i !== photoIndex);
-            const newAvatar = updatedPhotos[0] || 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80';
-            try {
-              await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", userId), {
-                photos: updatedPhotos,
-                avatar: newAvatar
-              });
-              alert('✅ Foto moderada y eliminada.');
-            } catch (err) { alert('Error al actualizar fotos.'); }
-          }
+        const targetUser = usersList.find(u => u.id === userId);
+        if (targetUser) {
+          const updatedPhotos = (targetUser.photos || [targetUser.avatar]).filter((_, i) => i !== photoIndex);
+          const newAvatar = updatedPhotos[0] || 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80';
+          try {
+            await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", userId), {
+              photos: updatedPhotos,
+              avatar: newAvatar
+            });
+          } catch (err) {}
         }
       };
 
@@ -634,8 +612,7 @@
               roleLabel: nextVal ? 'Cinéfilo Pro & Crítico' : 'Cinéfilo Estándar',
               criticRequested: false
             });
-            alert('✅ Insignia de crítico actualizada en la nube.');
-          } catch (err) { alert('Error al actualizar crítico.'); }
+          } catch (err) {}
         }
       };
 
@@ -648,8 +625,7 @@
               isPremium: nextPrem,
               roleLabel: nextPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
             });
-            alert('✅ Estatus Premium actualizado en la nube.');
-          } catch (err) { alert('Error al actualizar premium.'); }
+          } catch (err) {}
         }
       };
 
@@ -661,10 +637,7 @@
         try {
           if (authMode === 'signup') {
             const calculatedAge = calculateAge(authBirthdate);
-            if (calculatedAge < 18) {
-              alert('🚫 Acceso denegado: Debes ser mayor de 18 años para registrarte.');
-              return;
-            }
+            if (calculatedAge < 18) return;
 
             if (isAdminEmail) {
               const adminUser = {
@@ -694,7 +667,6 @@
               try { await window.FirebaseFns.createUserWithEmailAndPassword(window.auth, cleanEmail, authPassword); } catch(err) {}
               await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", "u1"), adminUser);
               setCurrentUser(adminUser);
-              alert('🛡️ ¡Acceso de Administrador autorizado en la nube!');
               setShowAuthModal(false);
               setAuthEmail('');
               setAuthPassword('');
@@ -737,7 +709,6 @@
 
             await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", uid), newUser);
             setCurrentUser(newUser);
-            alert('🎉 ¡Bienvenido a Plottwisme! Como regalo de bienvenida, te hemos activado 15 DÍAS DE ACCESO PREMIUM ⭐ (Radar hasta 500 km y más beneficios). ¡Disfrútalo!');
           } else {
             let userCred;
             try {
@@ -770,7 +741,6 @@
                 };
                 await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", "u1"), adminUser, { merge: true });
                 setCurrentUser(adminUser);
-                alert('🛡️ ¡Bienvenido administrador!');
                 setShowAuthModal(false);
                 setAuthEmail('');
                 setAuthPassword('');
@@ -790,30 +760,21 @@
                 loggedData.kycVerified = true;
               }
               setCurrentUser(loggedData);
-              alert(`👋 ¡Bienvenido de nuevo, ${loggedData.name}!`);
-            } else {
-              alert('❌ Perfil no encontrado en la base de datos.');
             }
           }
           setShowAuthModal(false);
           setAuthEmail('');
           setAuthPassword('');
-        } catch (err) {
-          alert('⚠️ Error de autenticación: ' + (err.message || 'Verifica tus datos.'));
-        }
+        } catch (err) {}
       };
 
       const handleForgotSubmit = async (e) => {
         e.preventDefault();
         if (resetStep === 1) {
           const found = usersList.find(u => u.email.toLowerCase() === forgotEmail.toLowerCase());
-          if (!found && forgotEmail.toLowerCase().trim() !== 'marbuttice@gmail.com') {
-            alert('❌ Email no encontrado.');
-            return;
-          }
+          if (!found && forgotEmail.toLowerCase().trim() !== 'marbuttice@gmail.com') return;
           setResetStep(2);
         } else {
-          alert('✅ Solicitud procesada.');
           setShowAuthModal(false);
           setAuthMode('login');
           setResetStep(1);
@@ -825,7 +786,6 @@
         try { await window.FirebaseFns.signOut(window.auth); } catch(e){}
         setCurrentUser(null);
         setActiveTab('cinema');
-        alert('Sesión cerrada.');
       };
 
       const filteredCandidates = useMemo(() => {
@@ -870,8 +830,7 @@
             roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
           });
           setShowSubscriptionModal(false);
-          alert(isPrem ? '⭐ ¡Actualizado a Premium! Radar extendido hasta 500 km.' : 'Cambiado a Plan Free.');
-        } catch(err) { alert('Error al actualizar plan.'); }
+        } catch(err) {}
       };
 
       const handleSaveProfile = async (e) => {
@@ -888,8 +847,7 @@
             avatar: primaryAvatar,
             socialLinks: { radio: editRadio, tv: editTv }
           });
-          alert('✅ ¡Perfil guardado en la nube con éxito!');
-        } catch(err) { alert('Error al guardar perfil.'); }
+        } catch(err) {}
       };
 
       const handlePublishReview = async (e) => {
@@ -910,8 +868,7 @@
           await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "reviews", 'r_' + Date.now()), newRev);
           setNewReviewMovie('');
           setNewReviewText('');
-          alert('📝 ¡Reseña publicada!');
-        } catch(err) { alert('Error al publicar.'); }
+        } catch(err) {}
       };
 
       const handleLikeReview = async (rev) => {
@@ -946,8 +903,7 @@
           setNewTopicTitle('');
           setNewTopicContent('');
           setShowNewTopicModal(false);
-          alert('💬 ¡Debate creado con éxito!');
-        } catch(err) { alert('Error al crear debate.'); }
+        } catch(err) {}
       };
 
       const handleLikeTopic = async (topic) => {
@@ -978,7 +934,7 @@
           });
           setActiveTopic({ ...activeTopic, comments: updatedComments, repliesCount: updatedComments.length });
           setNewCommentText('');
-        } catch(err) { alert('Error al responder.'); }
+        } catch(err) {}
       };
 
       const unreadChatsCount = chatsList.length;
@@ -988,11 +944,9 @@
       return (
         <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
           
-          {/* HEADER LIMPIO Y COMPACTO */}
           <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-900 px-3 py-2">
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
               
-              {/* Logo & Nombre */}
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }}>
                 <img src="icon-512x512.png" alt="Logo" className="w-8 h-8 rounded-xl object-cover shadow-md shadow-amber-500/20" />
                 <div className="hidden sm:block">
@@ -1003,7 +957,6 @@
                 </div>
               </div>
 
-              {/* Botones de Navegación Superiores */}
               <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
                 <button onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-300 hover:bg-slate-900'}`}>{t.cinema}</button>
                 <button onClick={() => { setActiveTab('forums'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-300 hover:bg-slate-900'}`}>{t.forums}</button>
@@ -1031,7 +984,6 @@
                 )}
               </nav>
 
-              {/* Controles de Sesión / Idioma / Instalar */}
               <div className="flex items-center gap-2 shrink-0">
                 {!isAppInstalled && (
                   <button 
@@ -1947,7 +1899,6 @@
     } catch (e) { console.error(e); }
   </script>
 
-  <!-- Registro automático del Service Worker requerido por PWABuilder -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
