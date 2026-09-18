@@ -281,38 +281,25 @@
       };
 
       useEffect(() => {
-        const checkInstalled = () => {
+        const checkStandalone = () => {
           const isStandalone = 
             window.matchMedia('(display-mode: standalone)').matches || 
             window.navigator.standalone || 
             document.referrer.includes('android-app://');
-          if (isStandalone) {
-            setIsAppInstalled(true);
-            setInstallPromptEvent(null);
-          }
+          if (isStandalone) setIsAppInstalled(true);
         };
-        checkInstalled();
+        checkStandalone();
 
         const handleBeforeInstallPrompt = (e) => {
           e.preventDefault();
-          // Si ya está instalada, no mostramos el prompt personalizado
-          const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-          if (!isStandalone) {
-            setInstallPromptEvent(e);
-          }
-        };
-
-        const handleAppInstalled = () => {
-          setIsAppInstalled(true);
-          setInstallPromptEvent(null);
+          setInstallPromptEvent(e);
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        window.addEventListener('appinstalled', handleAppInstalled);
+        window.addEventListener('appinstalled', () => setIsAppInstalled(true));
 
         return () => {
           window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-          window.removeEventListener('appinstalled', handleAppInstalled);
         };
       }, []);
 
@@ -1036,16 +1023,19 @@
       return (
         <div className={`flex flex-col min-h-screen ${themeBg} transition-colors duration-300`}>
           
-          {installPromptEvent && !isAppInstalled && (
+          {!isAppInstalled && (
             <div className="bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 px-4 py-2 text-xs font-black flex items-center justify-between shadow-md z-50 sticky top-0">
               <span className="flex items-center gap-1.5">📱 ¡Lleva Plottwisme contigo! Instálala en tu dispositivo con un solo toque.</span>
               <button 
                 onClick={async () => {
-                  installPromptEvent.prompt();
-                  const choiceResult = await installPromptEvent.userChoice;
-                  if (choiceResult.outcome === 'accepted') {
-                    setInstallPromptEvent(null);
-                    setIsAppInstalled(true);
+                  if (installPromptEvent) {
+                    installPromptEvent.prompt();
+                    const choiceResult = await installPromptEvent.userChoice;
+                    if (choiceResult.outcome === 'accepted') {
+                      setIsAppInstalled(true);
+                    }
+                  } else {
+                    setShowInstallGuideModal(true);
                   }
                 }}
                 className="bg-slate-950 text-amber-400 px-3 py-1 rounded-xl uppercase tracking-wider hover:scale-105 transition-transform"
@@ -1055,7 +1045,7 @@
             </div>
           )}
 
-          <header className={`sticky ${installPromptEvent && !isAppInstalled ? 'top-8' : 'top-0'} z-40 ${navBg} backdrop-blur-md border-b px-3 py-2 transition-colors`}>
+          <header className={`sticky ${!isAppInstalled ? 'top-8' : 'top-0'} z-40 ${navBg} backdrop-blur-md border-b px-3 py-2 transition-colors`}>
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
               
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }}>
@@ -1104,19 +1094,22 @@
                   {isDarkMode ? '☀️' : '🌙'}
                 </button>
 
-                {!isAppInstalled && installPromptEvent && (
+                {!isAppInstalled && (
                   <button 
                     onClick={async () => {
-                      installPromptEvent.prompt();
-                      const choiceResult = await installPromptEvent.userChoice;
-                      if (choiceResult.outcome === 'accepted') {
-                        setInstallPromptEvent(null);
-                        setIsAppInstalled(true);
+                      if (installPromptEvent) {
+                        installPromptEvent.prompt();
+                        const choiceResult = await installPromptEvent.userChoice;
+                        if (choiceResult.outcome === 'accepted') {
+                          setIsAppInstalled(true);
+                        }
+                      } else {
+                        setShowInstallGuideModal(true);
                       }
                     }}
                     className="bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 font-black px-2.5 py-1.5 rounded-xl text-[11px] shadow-lg shadow-amber-500/20 whitespace-nowrap hidden md:flex items-center gap-1"
                   >
-                    <span>📱</span> <span>Instalar App</span>
+                    <span>📱</span> <span>Instalar</span>
                   </button>
                 )}
 
