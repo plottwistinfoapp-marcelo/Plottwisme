@@ -286,16 +286,34 @@
             window.matchMedia('(display-mode: standalone)').matches || 
             window.navigator.standalone || 
             document.referrer.includes('android-app://');
-          if (isStandalone) setIsAppInstalled(true);
+          if (isStandalone) {
+            setIsAppInstalled(true);
+            setInstallPromptEvent(null);
+          }
         };
         checkInstalled();
 
         const handleBeforeInstallPrompt = (e) => {
           e.preventDefault();
-          setInstallPromptEvent(e);
+          // Si ya está instalada, no mostramos el prompt personalizado
+          const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+          if (!isStandalone) {
+            setInstallPromptEvent(e);
+          }
         };
+
+        const handleAppInstalled = () => {
+          setIsAppInstalled(true);
+          setInstallPromptEvent(null);
+        };
+
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        window.addEventListener('appinstalled', handleAppInstalled);
+
+        return () => {
+          window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+          window.removeEventListener('appinstalled', handleAppInstalled);
+        };
       }, []);
 
       useEffect(() => {
@@ -471,7 +489,6 @@
         const countryParam = userCountryCode ? `&gl=${userCountryCode.toLowerCase()}` : '';
         const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query.trim())}${countryParam}&hl=${lang}`;
         
-        // Abrir directamente en pestaña optimizada para que el navegador móvil mantenga la app en segundo plano sin errores de bloqueo de Iframe
         window.open(searchUrl, '_blank');
       };
 
@@ -1028,6 +1045,7 @@
                   const choiceResult = await installPromptEvent.userChoice;
                   if (choiceResult.outcome === 'accepted') {
                     setInstallPromptEvent(null);
+                    setIsAppInstalled(true);
                   }
                 }}
                 className="bg-slate-950 text-amber-400 px-3 py-1 rounded-xl uppercase tracking-wider hover:scale-105 transition-transform"
@@ -1086,12 +1104,19 @@
                   {isDarkMode ? '☀️' : '🌙'}
                 </button>
 
-                {!isAppInstalled && (
+                {!isAppInstalled && installPromptEvent && (
                   <button 
-                    onClick={() => setShowInstallGuideModal(true)}
+                    onClick={async () => {
+                      installPromptEvent.prompt();
+                      const choiceResult = await installPromptEvent.userChoice;
+                      if (choiceResult.outcome === 'accepted') {
+                        setInstallPromptEvent(null);
+                        setIsAppInstalled(true);
+                      }
+                    }}
                     className="bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 font-black px-2.5 py-1.5 rounded-xl text-[11px] shadow-lg shadow-amber-500/20 whitespace-nowrap hidden md:flex items-center gap-1"
                   >
-                    <span>📱</span> <span>Instalar</span>
+                    <span>📱</span> <span>Instalar App</span>
                   </button>
                 )}
 
