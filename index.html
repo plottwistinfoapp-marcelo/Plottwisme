@@ -68,7 +68,6 @@
 
     const QUICK_EMOJIS = ['🍿', '🍷', '🎬', '⭐', '❤️', '🔥', '😂', '👏', '🎟️', '🍕', '😎', '🎉'];
     
-    // Stickers asegurados mediante codificación interna y componentes nativos autoportantes
     const CINE_STICKERS = [
       { id: 'st_1', name: 'Pochoclos Popcorn', url: 'STCK:🍿', subtitle: 'Pochoclos', label: '🍿 Pochoclos' },
       { id: 'st_2', name: 'Copa de Vino', url: 'STCK:🍷', subtitle: 'Brindis', label: '🍷 Brindis' },
@@ -1431,7 +1430,7 @@
                           <div className="overflow-hidden flex-1">
                             <h4 className={`font-bold ${textColor} text-xs truncate`}>{chat.userName}</h4>
                             <p className={`text-[10px] ${mutedText} truncate`}>
-                              {chat.messages[chat.messages.length - 1]?.isSticker ? '🎬 [Sticker]' : (chat.messages[chat.messages.length - 1]?.text || 'Match')}
+                              {chat.messages[chat.messages.length - 1]?.isSticker || chat.messages[chat.messages.length - 1]?.text?.startsWith('STCK:') ? '🎬 [Sticker]' : (chat.messages[chat.messages.length - 1]?.text || 'Match')}
                             </p>
                           </div>
                         </div>
@@ -1459,7 +1458,7 @@
                             return (
                               <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                                 {isStickerMsg ? (
-                                  <div className={`p-3 rounded-2xl max-w-[45%] ${cardBg} border border-amber-500/40 shadow-md flex items-center justify-center text-4xl bg-gradient-to-br from-amber-500/10 to-rose-500/10`}>
+                                  <div className={`p-4 rounded-2xl ${cardBg} border border-amber-500/40 shadow-md flex items-center justify-center text-4xl bg-gradient-to-br from-amber-500/10 to-rose-500/10`}>
                                     <span>{stickerEmoji}</span>
                                   </div>
                                 ) : (
