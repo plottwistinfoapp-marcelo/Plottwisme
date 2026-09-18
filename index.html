@@ -66,6 +66,15 @@
   <script type="text/babel">
     const { useState, useMemo, useEffect } = React;
 
+    const QUICK_EMOJIS = ['🍿', '🍷', '🎬', '⭐', '❤️', '🔥', '😂', '👏', '🎟️', '🍕', '😎', '🎉'];
+    
+    const CINE_STICKERS = [
+      { id: 'st_1', name: 'Pochoclos Popcorn', url: 'https://images.unsplash.com/photo-1585647347385-236b8b57262e?w=200&auto=format&fit=crop&q=80', label: '🍿 Pochoclos' },
+      { id: 'st_2', name: 'Copa de Vino', url: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=200&auto=format&fit=crop&q=80', label: '🍷 Brindis' },
+      { id: 'st_3', name: 'Claqueta de Cine', url: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=200&auto=format&fit=crop&q=80', label: '🎬 Acción' },
+      { id: 'st_4', name: 'Butaca de Cine', url: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=200&auto=format&fit=crop&q=80', label: '🎟️ Sala VIP' }
+    ];
+
     const getBrowserLang = () => {
       const languages = navigator.languages || [navigator.language || navigator.userLanguage || 'es'];
       for (let lang of languages) {
@@ -105,7 +114,7 @@
         consultGoogle: "Consultar con IA",
         activeChats: "Chats Activos",
         noChats: "Aún no tienes matches. ¡Ve al Radar Citas y haz Match al instante!",
-        sendPlaceholder: "Escribe un mensaje para coordinar una cita...",
+        sendPlaceholder: "Escribe un mensaje, emoji o sticker...",
         sendBtn: "Enviar",
         matchTitle: "¡Es un Match Cinéfilo!",
         openChatNow: "💬 Abrir Chat Ahora",
@@ -132,7 +141,7 @@
         consultGoogle: "Check with AI",
         activeChats: "Active Chats",
         noChats: "No matches yet. Go to Radar Dating and match instantly!",
-        sendPlaceholder: "Type a message to coordinate a date...",
+        sendPlaceholder: "Type a message, emoji or sticker...",
         sendBtn: "Send",
         matchTitle: "It's a Cinephile Match!",
         openChatNow: "💬 Open Chat Now",
@@ -202,6 +211,9 @@
       const [chatsList, setChatsList] = useState([]);
       const [activeChat, setActiveChat] = useState(null);
       const [newMessageText, setNewMessageText] = useState('');
+      const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+      const [showStickerPicker, setShowStickerPicker] = useState(false);
+
       const [showMatchModal, setShowMatchModal] = useState(false);
       const [matchedUser, setMatchedUser] = useState(null);
 
@@ -501,7 +513,7 @@
       };
 
       const triggerPushNotification = (title, body) => {
-        if (currentUser?.muteNotifications) return; // Silenciado por el usuario
+        if (currentUser?.muteNotifications) return;
         if ("Notification" in window && Notification.permission === "granted") {
           try {
             navigator.serviceWorker.ready.then(reg => {
@@ -545,15 +557,17 @@
         } catch(e) {}
       };
 
-      const handleSendMessage = async (e) => {
-        e.preventDefault();
-        if (!newMessageText.trim() || !activeChat || !currentUser) return;
+      const handleSendMessage = async (e, customText = null, isSticker = false) => {
+        if (e) e.preventDefault();
+        const textToSend = customText !== null ? customText : newMessageText;
+        if (!textToSend.trim() || !activeChat || !currentUser) return;
 
         const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         const newMsg = {
           id: 'msg_' + Date.now(),
           sender: currentUser.name,
-          text: newMessageText,
+          text: textToSend,
+          isSticker: isSticker,
           time: timeStr
         };
 
@@ -563,8 +577,10 @@
           await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "chats", activeChat.id), {
             messages: updatedMessages
           });
-          setNewMessageText('');
-          triggerPushNotification(`Nuevo mensaje de ${currentUser.name} 💬`, newMessageText);
+          if (customText === null) setNewMessageText('');
+          setShowEmojiPicker(false);
+          setShowStickerPicker(false);
+          triggerPushNotification(`Nuevo mensaje de ${currentUser.name} 💬`, isSticker ? 'Sticker cinéfilo 🎬' : textToSend);
         } catch (err) {}
       };
 
@@ -948,14 +964,15 @@
         } catch(e) {}
       };
 
-      const handleAddComment = async (e) => {
-        e.preventDefault();
-        if (!currentUser || !newCommentText || !activeTopic) return;
+      const handleAddComment = async (e, customText = null) => {
+        if (e) e.preventDefault();
+        const textToAdd = customText !== null ? customText : newCommentText;
+        if (!currentUser || !textToAdd || !activeTopic) return;
         const comment = {
           id: 'c_' + Date.now(),
           author: currentUser.name,
           date: new Date().toISOString().split('T')[0],
-          text: newCommentText
+          text: textToAdd
         };
         const updatedComments = [...(activeTopic.comments || []), comment];
         try {
@@ -964,7 +981,8 @@
             repliesCount: updatedComments.length
           });
           setActiveTopic({ ...activeTopic, comments: updatedComments, repliesCount: updatedComments.length });
-          setNewCommentText('');
+          if (customText === null) setNewCommentText('');
+          setShowEmojiPicker(false);
         } catch(err) {}
       };
 
@@ -1157,10 +1175,22 @@
                         </div>
                       ))}
 
-                      <form onSubmit={handleAddComment} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-                        <textarea rows="3" value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} placeholder="Escribe tu respuesta..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500" required disabled={!currentUser} />
+                      <form onSubmit={handleAddComment} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 relative">
+                        <div className="flex items-center gap-2">
+                          <textarea rows="2" value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} placeholder="Escribe tu respuesta..." className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500" required disabled={!currentUser} />
+                          <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-xl text-base" title="Emojis">😀</button>
+                        </div>
+
+                        {showEmojiPicker && (
+                          <div className="absolute bottom-16 right-4 bg-slate-950 border border-slate-800 p-3 rounded-2xl shadow-2xl grid grid-cols-6 gap-2 z-20">
+                            {QUICK_EMOJIS.map(em => (
+                              <button key={em} type="button" onClick={() => setNewCommentText(prev => prev + em)} className="text-lg hover:scale-125 transition-transform p-1">{em}</button>
+                            ))}
+                          </div>
+                        )}
+
                         <button type="submit" disabled={!currentUser} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider disabled:opacity-50">
-                          Publicar
+                          Publicar Respuesta
                         </button>
                       </form>
                     </div>
@@ -1320,20 +1350,22 @@
                       chatsList.map(chat => (
                         <div 
                           key={chat.id} 
-                          onClick={() => setActiveChat(chat)}
+                          onClick={() => { setActiveChat(chat); setShowEmojiPicker(false); setShowStickerPicker(false); }}
                           className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all ${activeChat?.id === chat.id ? 'bg-amber-500/20 border border-amber-500/50' : 'hover:bg-slate-800/60'}`}
                         >
                           <img src={chat.userAvatar} alt={chat.userName} className="w-12 h-12 rounded-full object-cover border border-amber-500/30" />
                           <div className="overflow-hidden flex-1">
                             <h4 className="font-bold text-white text-xs truncate">{chat.userName}</h4>
-                            <p className="text-[10px] text-slate-400 truncate">{chat.messages[chat.messages.length - 1]?.text || 'Match'}</p>
+                            <p className="text-[10px] text-slate-400 truncate">
+                              {chat.messages[chat.messages.length - 1]?.isSticker ? '🎬 [Sticker]' : (chat.messages[chat.messages.length - 1]?.text || 'Match')}
+                            </p>
                           </div>
                         </div>
                       ))
                     )}
                   </div>
 
-                  <div className="md:col-span-2 flex flex-col justify-between bg-slate-950 rounded-2xl border border-slate-800 p-4">
+                  <div className="md:col-span-2 flex flex-col justify-between bg-slate-950 rounded-2xl border border-slate-800 p-4 relative">
                     {activeChat ? (
                       <>
                         <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
@@ -1344,30 +1376,65 @@
                           </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto space-y-3 py-4 max-h-[300px] px-1">
+                        <div className="flex-1 overflow-y-auto space-y-3 py-4 max-h-[260px] px-1">
                           {(activeChat.messages || []).map(msg => {
                             const isMe = msg.sender === currentUser?.name;
                             return (
                               <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                <div className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-amber-500 text-slate-950 font-medium' : 'bg-slate-900 border border-slate-800 text-slate-100'}`}>
-                                  {msg.text}
-                                </div>
+                                {msg.isSticker ? (
+                                  <div className={`p-2 rounded-2xl max-w-[50%] bg-slate-900 border border-amber-500/40`}>
+                                    <img src={msg.text} alt="Sticker" className="w-32 h-32 object-cover rounded-xl shadow" />
+                                  </div>
+                                ) : (
+                                  <div className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-amber-500 text-slate-950 font-medium' : 'bg-slate-900 border border-slate-800 text-slate-100'}`}>
+                                    {msg.text}
+                                  </div>
+                                )}
                                 <span className="text-[9px] text-slate-500 mt-1 px-1">{msg.time}</span>
                               </div>
                             );
                           })}
                         </div>
 
-                        <form onSubmit={handleSendMessage} className="flex gap-2 pt-3 border-t border-slate-800">
+                        {/* SELECTOR DE EMOJIS FLOTANTE */}
+                        {showEmojiPicker && (
+                          <div className="absolute bottom-20 left-4 bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-2xl grid grid-cols-6 gap-2 z-20">
+                            {QUICK_EMOJIS.map(em => (
+                              <button key={em} type="button" onClick={() => setNewMessageText(prev => prev + em)} className="text-xl hover:scale-125 transition-transform p-1">{em}</button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* SELECTOR DE STICKERS CINÉFILOS */}
+                        {showStickerPicker && (
+                          <div className="absolute bottom-20 left-4 right-4 bg-slate-900 border border-amber-500/40 p-4 rounded-2xl shadow-2xl z-20">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-xs font-bold text-amber-400">🍿 Stickers Cinéfilos</span>
+                              <button onClick={() => setShowStickerPicker(false)} className="text-slate-400 text-xs font-bold">✕ Cerrar</button>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {CINE_STICKERS.map(st => (
+                                <div key={st.id} onClick={() => handleSendMessage(null, st.url, true)} className="bg-slate-950 border border-slate-800 hover:border-amber-500 p-2 rounded-xl cursor-pointer text-center space-y-1 transition-all hover:scale-105">
+                                  <img src={st.url} alt={st.label} className="w-full h-16 object-cover rounded-lg" />
+                                  <p className="text-[10px] font-bold text-white truncate">{st.label}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2 pt-3 border-t border-slate-800">
+                          <button type="button" onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false); }} className="bg-slate-900 hover:bg-slate-800 border border-slate-800 px-2.5 py-2.5 rounded-xl text-base" title="Emojis">😀</button>
+                          <button type="button" onClick={() => { setShowStickerPicker(!showStickerPicker); setShowEmojiPicker(false); }} className="bg-slate-900 hover:bg-slate-800 border border-slate-800 px-2.5 py-2.5 rounded-xl text-xs font-bold text-amber-400" title="Stickers">🍿 Stickers</button>
+
                           <input 
                             type="text" 
                             value={newMessageText} 
                             onChange={(e) => setNewMessageText(e.target.value)} 
                             placeholder={t.sendPlaceholder} 
                             className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" 
-                            required 
                           />
-                          <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider">
+                          <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider">
                             {t.sendBtn}
                           </button>
                         </form>
