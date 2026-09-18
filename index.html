@@ -11,7 +11,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Plottwisme" />
   
-  <!-- Ícono y Manifiesto Oficial Plottwisme -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="icon-512x512.png">
   <link rel="apple-touch-icon" href="icon-512x512.png">
@@ -254,6 +253,7 @@
       const [editPhotos, setEditPhotos] = useState([]);
       const [editRadio, setEditRadio] = useState('');
       const [editTv, setEditTv] = useState('');
+      const [editMuteNotifications, setEditMuteNotifications] = useState(false);
 
       const calculateAge = (birthdateStr) => {
         if (!birthdateStr) return 25;
@@ -344,6 +344,7 @@
               isCritic: true,
               verified: true,
               kycVerified: true,
+              muteNotifications: false,
               photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
               avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
               socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
@@ -429,6 +430,7 @@
           setEditPhotos(currentUser.photos || (currentUser.avatar ? [currentUser.avatar] : []));
           setEditRadio(currentUser.socialLinks?.radio || '');
           setEditTv(currentUser.socialLinks?.tv || '');
+          setEditMuteNotifications(currentUser.muteNotifications || false);
         }
       }, [currentUser]);
 
@@ -498,6 +500,24 @@
         }
       };
 
+      const triggerPushNotification = (title, body) => {
+        if (currentUser?.muteNotifications) return; // Silenciado por el usuario
+        if ("Notification" in window && Notification.permission === "granted") {
+          try {
+            navigator.serviceWorker.ready.then(reg => {
+              reg.showNotification(title, {
+                body: body,
+                icon: 'icon-512x512.png',
+                badge: 'icon-512x512.png',
+                vibrate: [200, 100, 200]
+              });
+            });
+          } catch (e) {
+            new Notification(title, { body });
+          }
+        }
+      };
+
       const handleMatchUser = async (candidate) => {
         if (!currentUser) { setShowAuthModal(true); return; }
         setMatchedUser(candidate);
@@ -520,6 +540,7 @@
               ]
             };
             await window.FirebaseFns.setDoc(chatRef, newChat);
+            triggerPushNotification("¡Nuevo Match en Plottwisme! 🍿", `Hiciste match con ${candidate.name}. ¡Abre el chat!`);
           }
         } catch(e) {}
       };
@@ -543,6 +564,7 @@
             messages: updatedMessages
           });
           setNewMessageText('');
+          triggerPushNotification(`Nuevo mensaje de ${currentUser.name} 💬`, newMessageText);
         } catch (err) {}
       };
 
@@ -635,6 +657,10 @@
         const isAdminEmail = cleanEmail === 'marbuttice@gmail.com';
 
         try {
+          if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission();
+          }
+
           if (authMode === 'signup') {
             const calculatedAge = calculateAge(authBirthdate);
             if (calculatedAge < 18) return;
@@ -660,6 +686,7 @@
                 isCritic: true,
                 verified: true,
                 kycVerified: true,
+                muteNotifications: false,
                 photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
                 avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
                 socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
@@ -702,6 +729,7 @@
               criticRequested: authWantCritic,
               verified: false,
               kycVerified: false,
+              muteNotifications: false,
               photos: [defaultAvatar],
               avatar: defaultAvatar,
               socialLinks: {}
@@ -735,6 +763,7 @@
                   isCritic: true,
                   verified: true,
                   kycVerified: true,
+                  muteNotifications: false,
                   photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80'],
                   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
                   socialLinks: { radio: 'Frecuencia Cine', tv: 'Canal 12 Misiones' }
@@ -845,8 +874,10 @@
             interestedIn: editInterestedIn,
             photos: editPhotos,
             avatar: primaryAvatar,
-            socialLinks: { radio: editRadio, tv: editTv }
+            socialLinks: { radio: editRadio, tv: editTv },
+            muteNotifications: editMuteNotifications
           });
+          setCurrentUser(prev => ({ ...prev, muteNotifications: editMuteNotifications }));
         } catch(err) {}
       };
 
@@ -1410,6 +1441,28 @@
             {activeTab === 'profile' && currentUser && (
               <div className="max-w-xl mx-auto space-y-6">
                 
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-black text-white text-base flex items-center gap-2">
+                        <span>🔔 Notificaciones Push</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Silencia o activa las alertas de mensajes y matches en tu dispositivo.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between bg-slate-950 border border-slate-800 p-3 rounded-2xl text-xs">
+                    <span className="font-bold text-slate-200">Silenciar Notificaciones</span>
+                    <input 
+                      type="checkbox" 
+                      checked={editMuteNotifications} 
+                      onChange={(e) => setEditMuteNotifications(e.target.checked)} 
+                      className="w-5 h-5 accent-amber-500 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl">
                   <div className="flex items-center justify-between">
                     <div>
