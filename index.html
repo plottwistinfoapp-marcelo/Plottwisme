@@ -105,7 +105,7 @@
         logout: "🚪 Salir",
         signup: "✨ Crear Cuenta",
         login: "🔑 Iniciar Sesión",
-        cityPlaceholder: "Tu Ciudad",
+        cityPlaceholder: "Detectando ubicación...",
         engineTitle: "Cartelera Oficial con IA & Mapas Interactivos",
         cinemaRealtime: "Cartelera Inteligente en Tiempo Real para",
         cinemaSubtitle: "Accede instantáneamente al panel con IA de Google que integra mapas interactivos, horarios, salas y opciones de cines en tu ciudad.",
@@ -132,7 +132,7 @@
         logout: "🚪 Logout",
         signup: "✨ Sign Up",
         login: "🔑 Login",
-        cityPlaceholder: "Your City",
+        cityPlaceholder: "Detecting location...",
         engineTitle: "Official AI & Interactive Maps Cartelera",
         cinemaRealtime: "Smart Real-Time Showtimes for",
         cinemaSubtitle: "Instantly access the Google AI panel featuring interactive maps, showtimes, theaters, and screening options in your city.",
@@ -195,7 +195,6 @@
       const [lang, setLang] = useState(() => getBrowserLang());
       const t = TRANSLATIONS[lang] || TRANSLATIONS.es;
 
-      // Estado de Tema Claro / Oscuro (Por defecto oscuro)
       const [isDarkMode, setIsDarkMode] = useState(true);
 
       const [usersList, setUsersList] = useState([]);
@@ -319,7 +318,8 @@
                 setUserCity('Buenos Aires');
               }
             },
-            () => { setUserCity('Buenos Aires'); }
+            () => { setUserCity('Buenos Aires'); },
+            { timeout: 10000 }
           );
         } else {
           setUserCity('Buenos Aires');
@@ -991,7 +991,6 @@
       const isAdmin = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
       const maxAllowedSlider = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 50);
 
-      // Clases dinámicas según el tema
       const themeBg = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900';
       const navBg = isDarkMode ? 'bg-slate-950/95 border-slate-900' : 'bg-white/95 border-slate-200';
       const cardBg = isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-md';
@@ -1003,7 +1002,6 @@
       return (
         <div className={`flex flex-col min-h-screen ${themeBg} transition-colors duration-300`}>
           
-          {/* BANNER FLOTANTE DE INSTALACIÓN AUTOMÁTICA */}
           {installPromptEvent && !isAppInstalled && (
             <div className="bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 px-4 py-2 text-xs font-black flex items-center justify-between shadow-md z-50 sticky top-0">
               <span className="flex items-center gap-1.5">📱 ¡Lleva Plottwisme contigo! Instálala en tu dispositivo con un solo toque.</span>
@@ -1063,7 +1061,6 @@
               </nav>
 
               <div className="flex items-center gap-2 shrink-0">
-                {/* BOTÓN MODO CLARO / OSCURO */}
                 <button 
                   onClick={() => setIsDarkMode(!isDarkMode)} 
                   className={`p-1.5 rounded-xl text-xs border transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800 text-amber-400' : 'bg-slate-200 border-slate-300 text-amber-600'}`}
@@ -1108,7 +1105,7 @@
                       value={userCity} 
                       onChange={(e) => setUserCity(e.target.value)} 
                       placeholder={t.cityPlaceholder}
-                      className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-32 text-amber-500 focus:outline-none capitalize text-xs" 
+                      className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-36 text-amber-500 focus:outline-none capitalize text-xs" 
                     />
                   </div>
                   {isAdmin && (
@@ -1434,7 +1431,6 @@
                           })}
                         </div>
 
-                        {/* SELECTOR DE EMOJIS FLOTANTE */}
                         {showEmojiPicker && (
                           <div className={`absolute bottom-20 left-4 ${cardBg} p-3 rounded-2xl shadow-2xl grid grid-cols-6 gap-2 z-20`}>
                             {QUICK_EMOJIS.map(em => (
@@ -1443,7 +1439,6 @@
                           </div>
                         )}
 
-                        {/* SELECTOR DE STICKERS CINÉFILOS */}
                         {showStickerPicker && (
                           <div className={`absolute bottom-20 left-4 right-4 ${cardBg} border border-amber-500/40 p-4 rounded-2xl shadow-2xl z-20`}>
                             <div className="flex justify-between items-center mb-2">
