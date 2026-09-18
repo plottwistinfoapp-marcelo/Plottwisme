@@ -50,13 +50,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .font-brand { font-family: 'Outfit', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="antialiased bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
+<body class="antialiased selection:bg-amber-500 selection:text-slate-950">
   <div id="root">
     <div class="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
       ⏳ Sintonizando Plottwisme Dating Cloud Pro...
@@ -195,6 +195,9 @@
       const [lang, setLang] = useState(() => getBrowserLang());
       const t = TRANSLATIONS[lang] || TRANSLATIONS.es;
 
+      // Estado de Tema Claro / Oscuro (Por defecto oscuro)
+      const [isDarkMode, setIsDarkMode] = useState(true);
+
       const [usersList, setUsersList] = useState([]);
       const [currentUser, setCurrentUser] = useState(null);
       
@@ -219,7 +222,6 @@
 
       const [showAuthModal, setShowAuthModal] = useState(false);
       const [authMode, setAuthMode] = useState('signup');
-      const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
       
       const [showKycModal, setShowKycModal] = useState(false);
       const [kycDocFront, setKycDocFront] = useState(null);
@@ -874,7 +876,6 @@
             isPremium: isPrem,
             roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
           });
-          setShowSubscriptionModal(false);
         } catch(err) {}
       };
 
@@ -990,16 +991,44 @@
       const isAdmin = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
       const maxAllowedSlider = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 50);
 
+      // Clases dinámicas según el tema
+      const themeBg = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900';
+      const navBg = isDarkMode ? 'bg-slate-950/95 border-slate-900' : 'bg-white/95 border-slate-200';
+      const cardBg = isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-md';
+      const subCardBg = isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200';
+      const textColor = isDarkMode ? 'text-slate-100' : 'text-slate-900';
+      const mutedText = isDarkMode ? 'text-slate-400' : 'text-slate-600';
+      const inputBg = isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-white border-slate-300 text-slate-900';
+
       return (
-        <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
+        <div className={`flex flex-col min-h-screen ${themeBg} transition-colors duration-300`}>
           
-          <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-900 px-3 py-2">
+          {/* BANNER FLOTANTE DE INSTALACIÓN AUTOMÁTICA */}
+          {installPromptEvent && !isAppInstalled && (
+            <div className="bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 px-4 py-2 text-xs font-black flex items-center justify-between shadow-md z-50 sticky top-0">
+              <span className="flex items-center gap-1.5">📱 ¡Lleva Plottwisme contigo! Instálala en tu dispositivo con un solo toque.</span>
+              <button 
+                onClick={async () => {
+                  installPromptEvent.prompt();
+                  const choiceResult = await installPromptEvent.userChoice;
+                  if (choiceResult.outcome === 'accepted') {
+                    setInstallPromptEvent(null);
+                  }
+                }}
+                className="bg-slate-950 text-amber-400 px-3 py-1 rounded-xl uppercase tracking-wider hover:scale-105 transition-transform"
+              >
+                Instalar Ahora
+              </button>
+            </div>
+          )}
+
+          <header className={`sticky ${installPromptEvent && !isAppInstalled ? 'top-8' : 'top-0'} z-40 ${navBg} backdrop-blur-md border-b px-3 py-2 transition-colors`}>
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
               
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }}>
                 <img src="icon-512x512.png" alt="Logo" className="w-8 h-8 rounded-xl object-cover shadow-md shadow-amber-500/20" />
                 <div className="hidden sm:block">
-                  <h1 className="text-base font-black font-brand text-amber-500 flex items-center gap-1">
+                  <h1 className={`text-base font-black font-brand text-amber-500 flex items-center gap-1`}>
                     Plottwisme
                     {currentUser?.kycVerified && <span className="text-xs text-sky-400" title="Identidad Verificada">✔</span>}
                   </h1>
@@ -1007,11 +1036,11 @@
               </div>
 
               <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
-                <button onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-300 hover:bg-slate-900'}`}>{t.cinema}</button>
-                <button onClick={() => { setActiveTab('forums'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-300 hover:bg-slate-900'}`}>{t.forums}</button>
-                <button onClick={() => { setActiveTab('radar'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-300 hover:bg-slate-900'}`}>{t.radar}</button>
+                <button onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950 shadow' : `${mutedText} hover:${isDarkMode ? 'bg-slate-900' : 'bg-slate-200'}`}`}>{t.cinema}</button>
+                <button onClick={() => { setActiveTab('forums'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950 shadow' : `${mutedText} hover:${isDarkMode ? 'bg-slate-900' : 'bg-slate-200'}`}`}>{t.forums}</button>
+                <button onClick={() => { setActiveTab('radar'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950 shadow' : `${mutedText} hover:${isDarkMode ? 'bg-slate-900' : 'bg-slate-200'}`}`}>{t.radar}</button>
                 
-                <button onClick={() => { setActiveTab('chats'); setActiveTopic(null); }} className={`relative px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'chats' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-300 hover:bg-slate-900'}`}>
+                <button onClick={() => { setActiveTab('chats'); setActiveTopic(null); }} className={`relative px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'chats' ? 'bg-amber-500 text-slate-950 shadow' : `${mutedText} hover:${isDarkMode ? 'bg-slate-900' : 'bg-slate-200'}`}`}>
                   {t.chats}
                   {unreadChatsCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-rose-600 text-white font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow animate-pulse">
@@ -1020,20 +1049,29 @@
                   )}
                 </button>
 
-                <button onClick={() => { setActiveTab('critics'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-300 hover:bg-slate-900'}`}>{t.critics}</button>
+                <button onClick={() => { setActiveTab('critics'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'critics' ? 'bg-amber-500 text-slate-950 shadow' : `${mutedText} hover:${isDarkMode ? 'bg-slate-900' : 'bg-slate-200'}`}`}>{t.critics}</button>
                 
                 {currentUser && (
-                  <button onClick={() => { setActiveTab('profile'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-300 hover:bg-slate-900'}`}>{t.profile}</button>
+                  <button onClick={() => { setActiveTab('profile'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'profile' ? 'bg-amber-500 text-slate-950 shadow' : `${mutedText} hover:${isDarkMode ? 'bg-slate-900' : 'bg-slate-200'}`}`}>{t.profile}</button>
                 )}
 
                 {isAdmin && (
-                  <button onClick={() => { setActiveTab('admin'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950 shadow' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>
+                  <button onClick={() => { setActiveTab('admin'); setActiveTopic(null); }} className={`px-2.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950 shadow' : 'bg-amber-500/20 text-amber-500 border border-amber-500/40'}`}>
                     🛡️ Admin
                   </button>
                 )}
               </nav>
 
               <div className="flex items-center gap-2 shrink-0">
+                {/* BOTÓN MODO CLARO / OSCURO */}
+                <button 
+                  onClick={() => setIsDarkMode(!isDarkMode)} 
+                  className={`p-1.5 rounded-xl text-xs border transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800 text-amber-400' : 'bg-slate-200 border-slate-300 text-amber-600'}`}
+                  title={isDarkMode ? "Cambiar a Modo Claro" : "Cambiar a Modo Oscuro"}
+                >
+                  {isDarkMode ? '☀️' : '🌙'}
+                </button>
+
                 {!isAppInstalled && (
                   <button 
                     onClick={() => setShowInstallGuideModal(true)}
@@ -1044,11 +1082,11 @@
                 )}
 
                 {currentUser ? (
-                  <button onClick={handleLogout} className="p-1.5 rounded-xl text-xs bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800" title={t.logout}>
+                  <button onClick={handleLogout} className={`p-1.5 rounded-xl text-xs border ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-slate-200 border-slate-300 text-slate-700'}`} title={t.logout}>
                     🚪
                   </button>
                 ) : (
-                  <button onClick={() => { setAuthMode('login'); setResetStep(1); setShowAuthModal(true); }} className="px-2.5 py-1 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 whitespace-nowrap">
+                  <button onClick={() => { setAuthMode('login'); setResetStep(1); setShowAuthModal(true); }} className="px-2.5 py-1 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 whitespace-nowrap shadow">
                     {t.login}
                   </button>
                 )}
@@ -1062,7 +1100,7 @@
             {activeTab === 'cinema' && (
               <div className="space-y-8">
                 
-                <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/80 border border-amber-500/30 px-4 py-3 rounded-2xl text-xs shadow-lg">
+                <div className={`flex flex-wrap items-center justify-between gap-3 ${cardBg} border border-amber-500/30 px-4 py-3 rounded-2xl text-xs shadow-lg`}>
                   <div className="flex items-center gap-2">
                     <span className="text-amber-500 font-bold">📍 Ciudad (Cines):</span>
                     <input 
@@ -1070,14 +1108,14 @@
                       value={userCity} 
                       onChange={(e) => setUserCity(e.target.value)} 
                       placeholder={t.cityPlaceholder}
-                      className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-32 text-amber-300 focus:outline-none capitalize text-xs" 
+                      className="bg-transparent border-b border-amber-500/50 px-1 py-0.5 font-bold w-32 text-amber-500 focus:outline-none capitalize text-xs" 
                     />
                   </div>
                   {isAdmin && (
                     <select 
                       value={userCountryCode} 
                       onChange={(e) => setUserCountryCode(e.target.value)}
-                      className="bg-slate-950 text-amber-300 font-bold rounded-lg px-2 py-1 text-xs border border-amber-500/30 focus:outline-none cursor-pointer"
+                      className={`${isDarkMode ? 'bg-slate-950' : 'bg-slate-100'} text-amber-500 font-bold rounded-lg px-2 py-1 text-xs border border-amber-500/30 focus:outline-none cursor-pointer`}
                     >
                       {COUNTRY_CODES.map(c => (
                         <option key={c.code} value={c.code}>{c.name}</option>
@@ -1086,15 +1124,15 @@
                   )}
                 </div>
 
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/30 p-8 shadow-2xl">
+                <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r ${isDarkMode ? 'from-amber-500/20 via-slate-900 to-slate-900 border-amber-500/30' : 'from-amber-500/30 via-white to-white border-amber-500/40'} border p-8 shadow-2xl`}>
                   <div className="max-w-2xl space-y-4">
                     <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-3 py-1 rounded-md uppercase tracking-wider">
                       {t.engineTitle}
                     </span>
-                    <h2 className="text-3xl font-black text-white leading-tight">
-                      {t.cinemaRealtime} <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
+                    <h2 className={`text-3xl font-black ${textColor} leading-tight`}>
+                      {t.cinemaRealtime} <span className="text-amber-500 capitalize">{userCity || 'tu ciudad'}</span>
                     </h2>
-                    <p className="text-sm text-slate-300 leading-relaxed">
+                    <p className={`text-sm ${mutedText} leading-relaxed`}>
                       {t.cinemaSubtitle}
                     </p>
                     <div className="pt-2">
@@ -1110,9 +1148,9 @@
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <h3 className={`text-lg font-black ${textColor} flex items-center gap-2`}>
                     <span>⚡ {t.directSearch}</span>
-                    <span className="text-amber-400 capitalize">{userCity || 'tu ciudad'}</span>
+                    <span className="text-amber-500 capitalize">{userCity || 'tu ciudad'}</span>
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1120,13 +1158,13 @@
                       <div 
                         key={cat.id} 
                         onClick={() => openGoogleAIElEngine(cat.queryFormat)}
-                        className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 shadow-lg group flex flex-col justify-between space-y-4"
+                        className={`${cardBg} hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 shadow-lg group flex flex-col justify-between space-y-4`}
                       >
                         <div>
-                          <h4 className="font-bold text-white group-hover:text-amber-400 transition-colors text-sm">{cat.label}</h4>
-                          <p className="text-xs text-slate-400 mt-1">Con IA & Mapas Google.</p>
+                          <h4 className={`font-bold ${textColor} group-hover:text-amber-500 transition-colors text-sm`}>{cat.label}</h4>
+                          <p className={`text-xs ${mutedText} mt-1`}>Con IA & Mapas Google.</p>
                         </div>
-                        <div className="text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t border-slate-800">
+                        <div className={`text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
                           <span>{t.consultGoogle}</span>
                           <span>↗</span>
                         </div>
@@ -1141,22 +1179,22 @@
               <div className="space-y-6 max-w-4xl mx-auto">
                 {activeTopic ? (
                   <div className="space-y-6">
-                    <button onClick={() => setActiveTopic(null)} className="bg-slate-900 border border-slate-800 text-amber-400 hover:text-amber-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all">
+                    <button onClick={() => setActiveTopic(null)} className={`${cardBg} text-amber-500 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all`}>
                       <span>← Volver</span>
                     </button>
 
-                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
-                        <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase">
+                    <div className={`${cardBg} p-6 rounded-3xl space-y-4 shadow-xl`}>
+                      <div className={`flex flex-wrap items-center justify-between gap-2 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'} pb-3`}>
+                        <span className="bg-amber-500/20 text-amber-500 border border-amber-500/40 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase">
                           {activeTopic.category}
                         </span>
-                        <span className="text-xs text-slate-400">Por <b>{activeTopic.author}</b> • {activeTopic.date}</span>
+                        <span className={`text-xs ${mutedText}`}>Por <b>{activeTopic.author}</b> • {activeTopic.date}</span>
                       </div>
-                      <h2 className="text-2xl font-black text-white">{activeTopic.title}</h2>
-                      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{activeTopic.content}</p>
+                      <h2 className={`text-2xl font-black ${textColor}`}>{activeTopic.title}</h2>
+                      <p className={`text-sm ${mutedText} leading-relaxed whitespace-pre-line`}>{activeTopic.content}</p>
                       
                       <div className="flex items-center gap-4 pt-2">
-                        <button onClick={() => handleLikeTopic(activeTopic)} className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs font-bold text-amber-400 hover:bg-slate-800">
+                        <button onClick={() => handleLikeTopic(activeTopic)} className={`flex items-center gap-1.5 ${subCardBg} px-3 py-1.5 rounded-xl border text-xs font-bold text-amber-500`}>
                           <span>🍿</span> <span>{activeTopic.likes || 0} Me gusta</span>
                         </button>
                       </div>
@@ -1166,23 +1204,23 @@
                       <h3 className="text-lg font-black text-amber-500">💬 Respuestas ({activeTopic.comments?.length || 0})</h3>
 
                       {(activeTopic.comments || []).map(c => (
-                        <div key={c.id} className="bg-slate-900/80 border border-slate-800/80 p-4 rounded-2xl space-y-2">
-                          <div className="flex justify-between items-center text-xs text-slate-400">
-                            <span className="font-bold text-white">{c.author}</span>
+                        <div key={c.id} className={`${cardBg} p-4 rounded-2xl space-y-2`}>
+                          <div className={`flex justify-between items-center text-xs ${mutedText}`}>
+                            <span className={`font-bold ${textColor}`}>{c.author}</span>
                             <span>{c.date}</span>
                           </div>
-                          <p className="text-xs text-slate-300 leading-relaxed">{c.text}</p>
+                          <p className={`text-xs ${mutedText} leading-relaxed`}>{c.text}</p>
                         </div>
                       ))}
 
-                      <form onSubmit={handleAddComment} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 relative">
+                      <form onSubmit={handleAddComment} className={`${cardBg} p-4 rounded-2xl space-y-3 relative`}>
                         <div className="flex items-center gap-2">
-                          <textarea rows="2" value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} placeholder="Escribe tu respuesta..." className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500" required disabled={!currentUser} />
-                          <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-xl text-base" title="Emojis">😀</button>
+                          <textarea rows="2" value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} placeholder="Escribe tu respuesta..." className={`flex-1 ${inputBg} rounded-xl p-3 text-xs focus:outline-none focus:border-amber-500`} required disabled={!currentUser} />
+                          <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className={`${subCardBg} p-2.5 rounded-xl text-base`} title="Emojis">😀</button>
                         </div>
 
                         {showEmojiPicker && (
-                          <div className="absolute bottom-16 right-4 bg-slate-950 border border-slate-800 p-3 rounded-2xl shadow-2xl grid grid-cols-6 gap-2 z-20">
+                          <div className={`absolute bottom-16 right-4 ${cardBg} p-3 rounded-2xl shadow-2xl grid grid-cols-6 gap-2 z-20`}>
                             {QUICK_EMOJIS.map(em => (
                               <button key={em} type="button" onClick={() => setNewCommentText(prev => prev + em)} className="text-lg hover:scale-125 transition-transform p-1">{em}</button>
                             ))}
@@ -1197,10 +1235,10 @@
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+                    <div className={`${cardBg} p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl`}>
                       <div>
-                        <h2 className="text-2xl font-black text-white">💬 Foros de Discusión</h2>
-                        <p className="text-xs text-slate-400 mt-1">Comparte tus teorías cinéfilas.</p>
+                        <h2 className={`text-2xl font-black ${textColor}`}>💬 Foros de Discusión</h2>
+                        <p className={`text-xs ${mutedText} mt-1`}>Comparte tus teorías cinéfilas.</p>
                       </div>
                       <button onClick={() => currentUser ? setShowNewTopicModal(true) : setShowAuthModal(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs shadow-lg shadow-amber-500/20 whitespace-nowrap">
                         ✍️ Nuevo Debate
@@ -1209,19 +1247,19 @@
 
                     <div className="space-y-4">
                       {forumTopics.length === 0 ? (
-                        <p className="text-xs text-slate-400 text-center py-6">Aún no hay debates. ¡Sé el primero en abrir uno!</p>
+                        <p className={`text-xs ${mutedText} text-center py-6`}>Aún no hay debates. ¡Sé el primero en abrir uno!</p>
                       ) : (
                         forumTopics.map(topic => (
-                          <div key={topic.id} className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 p-5 rounded-2xl transition-all space-y-3 group">
+                          <div key={topic.id} className={`${cardBg} hover:border-amber-500/60 p-5 rounded-2xl transition-all space-y-3 group`}>
                             <div className="flex justify-between items-center text-xs">
-                              <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">{topic.category}</span>
-                              <span className="text-slate-500 text-[10px]">{topic.date}</span>
+                              <span className="bg-amber-500/10 text-amber-500 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">{topic.category}</span>
+                              <span className={`${mutedText} text-[10px]`}>{topic.date}</span>
                             </div>
-                            <h3 onClick={() => setActiveTopic(topic)} className="text-base font-bold text-white group-hover:text-amber-400 transition-colors cursor-pointer">{topic.title}</h3>
-                            <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800">
+                            <h3 onClick={() => setActiveTopic(topic)} className={`text-base font-bold ${textColor} group-hover:text-amber-500 transition-colors cursor-pointer`}>{topic.title}</h3>
+                            <div className={`flex justify-between items-center text-xs ${mutedText} pt-1 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
                               <span>Por <b>{topic.author}</b></span>
                               <div className="flex items-center gap-3">
-                                <button onClick={() => handleLikeTopic(topic)} className="flex items-center gap-1 hover:text-amber-400 font-bold">
+                                <button onClick={() => handleLikeTopic(topic)} className="flex items-center gap-1 hover:text-amber-500 font-bold">
                                   <span>🍿</span> <span>{topic.likes || 0}</span>
                                 </button>
                                 <span className="text-amber-500 font-bold cursor-pointer" onClick={() => setActiveTopic(topic)}>💬 {topic.repliesCount || 0}</span>
@@ -1239,9 +1277,9 @@
             {activeTab === 'radar' && (
               <div className="flex flex-col items-center space-y-3">
                 
-                <div className="w-full max-w-md flex flex-wrap items-center justify-between gap-2 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-2xl text-xs shadow">
+                <div className={`w-full max-w-md flex flex-wrap items-center justify-between gap-2 ${cardBg} px-4 py-2 rounded-2xl text-xs shadow`}>
                   <div className="flex items-center gap-2">
-                    <span className="text-rose-400 font-bold">🎯 Radar: <b className="text-white">{matchRadiusKm} km</b></span>
+                    <span className="text-rose-500 font-bold">🎯 Radar: <b className={textColor}>{matchRadiusKm} km</b></span>
                     <input 
                       type="range" 
                       min="5" 
@@ -1253,9 +1291,9 @@
                     />
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => setRadarFilterType('all')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'all' ? 'bg-amber-500 text-slate-950' : 'bg-slate-950 text-slate-400'}`}>Todos</button>
-                    <button onClick={() => setRadarFilterType('verified')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'verified' ? 'bg-sky-500 text-slate-950' : 'bg-slate-950 text-slate-400'}`}>✔ Verif.</button>
-                    <button onClick={() => setRadarFilterType('critic')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'critic' ? 'bg-amber-400 text-slate-950' : 'bg-slate-950 text-slate-400'}`}>🌟 Críticos</button>
+                    <button onClick={() => setRadarFilterType('all')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'all' ? 'bg-amber-500 text-slate-950' : `${subCardBg} ${mutedText}`}`}>Todos</button>
+                    <button onClick={() => setRadarFilterType('verified')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'verified' ? 'bg-sky-500 text-slate-950' : `${subCardBg} ${mutedText}`}`}>✔ Verif.</button>
+                    <button onClick={() => setRadarFilterType('critic')} className={`px-2 py-1 rounded-xl font-bold transition-all ${radarFilterType === 'critic' ? 'bg-amber-400 text-slate-950' : `${subCardBg} ${mutedText}`}`}>🌟 Críticos</button>
                   </div>
                 </div>
 
@@ -1264,9 +1302,9 @@
                   const activePhoto = candidatePhotos[currentPhotoIndex] || candidatePhotos[0];
 
                   return (
-                    <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+                    <div className={`w-full max-w-md ${cardBg} rounded-3xl overflow-hidden shadow-2xl`}>
                       
-                      <div className="relative h-96 w-full bg-slate-950 select-none">
+                      <div className="relative h-96 w-full bg-slate-900 select-none">
                         <img src={activePhoto} alt={currentCandidate.name} className="w-full h-full object-cover transition-opacity duration-300" />
                         
                         {candidatePhotos.length > 1 && (
@@ -1308,7 +1346,7 @@
                             {currentCandidate.name}, {currentCandidate.age || 25}
                             {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Identidad Verificada">✔</span>}
                           </h2>
-                          <p className="text-xs text-amber-300 font-medium drop-shadow">
+                          <p className="text-xs text-amber-400 font-medium drop-shadow">
                             📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{(currentUser?.lat && currentUser?.lon && currentCandidate.lat && currentCandidate.lon) ? calculateDistanceKm(currentUser.lat, currentUser.lon, currentCandidate.lat, currentCandidate.lon) : (currentCandidate.distanceKm || 5)} km</b>
                           </p>
                         </div>
@@ -1316,22 +1354,22 @@
 
                       <div className="p-6 space-y-4">
                         <div className="bg-rose-500/10 border border-rose-500/30 p-3.5 rounded-2xl">
-                          <p className="text-[10px] uppercase font-bold text-rose-400 mb-1">💬 Descripción para Citas:</p>
-                          <p className="text-xs italic text-slate-200">"{currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
+                          <p className="text-[10px] uppercase font-bold text-rose-500 mb-1">💬 Descripción para Citas:</p>
+                          <p className={`text-xs italic ${textColor}`}>"{currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.'}"</p>
                         </div>
                         
                         <div className="flex justify-center gap-6 pt-2">
-                          <button onClick={() => setCurrentIndex(prev => prev + 1)} className="w-14 h-14 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-400 flex items-center justify-center text-xl font-bold shadow transition-all hover:scale-105">✖</button>
+                          <button onClick={() => setCurrentIndex(prev => prev + 1)} className={`w-14 h-14 rounded-full ${subCardBg} text-rose-500 flex items-center justify-center text-xl font-bold shadow transition-all hover:scale-105`}>✖</button>
                           <button onClick={() => { handleMatchUser(currentCandidate); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-110 transition-all">🍿</button>
                         </div>
                       </div>
                     </div>
                   );
                 })() : (
-                  <div className="text-center py-20 space-y-4 max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                  <div className={`text-center py-20 space-y-4 max-w-md ${cardBg} p-8 rounded-3xl`}>
                     <div className="text-4xl">🎟️</div>
-                    <h3 className="text-xl font-bold">No hay más perfiles con estos filtros.</h3>
-                    <button onClick={() => setCurrentIndex(0)} className="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar Radar</button>
+                    <h3 className={`text-xl font-bold ${textColor}`}>No hay más perfiles con estos filtros.</h3>
+                    <button onClick={() => setCurrentIndex(0)} className={`${subCardBg} ${textColor} px-4 py-2 rounded-xl text-xs font-bold`}>Reiniciar Radar</button>
                   </div>
                 )}
               </div>
@@ -1339,24 +1377,24 @@
 
             {activeTab === 'chats' && (
               <div className="max-w-4xl mx-auto space-y-6">
-                <h2 className="text-2xl font-black text-white">💬 Chats & Matches</h2>
+                <h2 className={`text-2xl font-black ${textColor}`}>💬 Chats & Matches</h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900 border border-slate-800 rounded-3xl p-4 min-h-[450px]">
-                  <div className="border-r border-slate-800 pr-3 space-y-2">
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${cardBg} rounded-3xl p-4 min-h-[450px]`}>
+                  <div className={`border-r ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pr-3 space-y-2`}>
                     <h3 className="text-xs font-bold text-amber-500 uppercase px-2">{t.activeChats}</h3>
                     {chatsList.length === 0 ? (
-                      <p className="text-xs text-slate-400 p-2">{t.noChats}</p>
+                      <p className={`text-xs ${mutedText} p-2`}>{t.noChats}</p>
                     ) : (
                       chatsList.map(chat => (
                         <div 
                           key={chat.id} 
                           onClick={() => { setActiveChat(chat); setShowEmojiPicker(false); setShowStickerPicker(false); }}
-                          className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all ${activeChat?.id === chat.id ? 'bg-amber-500/20 border border-amber-500/50' : 'hover:bg-slate-800/60'}`}
+                          className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all ${activeChat?.id === chat.id ? 'bg-amber-500/20 border border-amber-500/50' : `${isDarkMode ? 'hover:bg-slate-800/60' : 'hover:bg-slate-100'}`}`}
                         >
                           <img src={chat.userAvatar} alt={chat.userName} className="w-12 h-12 rounded-full object-cover border border-amber-500/30" />
                           <div className="overflow-hidden flex-1">
-                            <h4 className="font-bold text-white text-xs truncate">{chat.userName}</h4>
-                            <p className="text-[10px] text-slate-400 truncate">
+                            <h4 className={`font-bold ${textColor} text-xs truncate`}>{chat.userName}</h4>
+                            <p className={`text-[10px] ${mutedText} truncate`}>
                               {chat.messages[chat.messages.length - 1]?.isSticker ? '🎬 [Sticker]' : (chat.messages[chat.messages.length - 1]?.text || 'Match')}
                             </p>
                           </div>
@@ -1365,14 +1403,14 @@
                     )}
                   </div>
 
-                  <div className="md:col-span-2 flex flex-col justify-between bg-slate-950 rounded-2xl border border-slate-800 p-4 relative">
+                  <div className={`md:col-span-2 flex flex-col justify-between ${subCardBg} rounded-2xl border p-4 relative`}>
                     {activeChat ? (
                       <>
-                        <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+                        <div className={`flex items-center gap-3 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-3`}>
                           <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover" />
                           <div>
-                            <h3 className="font-bold text-white text-sm">{activeChat.userName}</h3>
-                            <span className="text-[10px] text-emerald-400 font-bold">🟢 Online Cloud Sync</span>
+                            <h3 className={`font-bold ${textColor} text-sm`}>{activeChat.userName}</h3>
+                            <span className="text-[10px] text-emerald-500 font-bold">🟢 Online Cloud Sync</span>
                           </div>
                         </div>
 
@@ -1382,15 +1420,15 @@
                             return (
                               <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                                 {msg.isSticker ? (
-                                  <div className={`p-2 rounded-2xl max-w-[50%] bg-slate-900 border border-amber-500/40`}>
+                                  <div className={`p-2 rounded-2xl max-w-[50%] ${cardBg} border border-amber-500/40`}>
                                     <img src={msg.text} alt="Sticker" className="w-32 h-32 object-cover rounded-xl shadow" />
                                   </div>
                                 ) : (
-                                  <div className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-amber-500 text-slate-950 font-medium' : 'bg-slate-900 border border-slate-800 text-slate-100'}`}>
+                                  <div className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-amber-500 text-slate-950 font-medium' : `${cardBg} ${textColor}`}`}>
                                     {msg.text}
                                   </div>
                                 )}
-                                <span className="text-[9px] text-slate-500 mt-1 px-1">{msg.time}</span>
+                                <span className="text-[9px] text-slate-400 mt-1 px-1">{msg.time}</span>
                               </div>
                             );
                           })}
@@ -1398,7 +1436,7 @@
 
                         {/* SELECTOR DE EMOJIS FLOTANTE */}
                         {showEmojiPicker && (
-                          <div className="absolute bottom-20 left-4 bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-2xl grid grid-cols-6 gap-2 z-20">
+                          <div className={`absolute bottom-20 left-4 ${cardBg} p-3 rounded-2xl shadow-2xl grid grid-cols-6 gap-2 z-20`}>
                             {QUICK_EMOJIS.map(em => (
                               <button key={em} type="button" onClick={() => setNewMessageText(prev => prev + em)} className="text-xl hover:scale-125 transition-transform p-1">{em}</button>
                             ))}
@@ -1407,32 +1445,32 @@
 
                         {/* SELECTOR DE STICKERS CINÉFILOS */}
                         {showStickerPicker && (
-                          <div className="absolute bottom-20 left-4 right-4 bg-slate-900 border border-amber-500/40 p-4 rounded-2xl shadow-2xl z-20">
+                          <div className={`absolute bottom-20 left-4 right-4 ${cardBg} border border-amber-500/40 p-4 rounded-2xl shadow-2xl z-20`}>
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-xs font-bold text-amber-400">🍿 Stickers Cinéfilos</span>
-                              <button onClick={() => setShowStickerPicker(false)} className="text-slate-400 text-xs font-bold">✕ Cerrar</button>
+                              <span className="text-xs font-bold text-amber-500">🍿 Stickers Cinéfilos</span>
+                              <button onClick={() => setShowStickerPicker(false)} className={`${mutedText} text-xs font-bold`}>✕ Cerrar</button>
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                               {CINE_STICKERS.map(st => (
-                                <div key={st.id} onClick={() => handleSendMessage(null, st.url, true)} className="bg-slate-950 border border-slate-800 hover:border-amber-500 p-2 rounded-xl cursor-pointer text-center space-y-1 transition-all hover:scale-105">
+                                <div key={st.id} onClick={() => handleSendMessage(null, st.url, true)} className={`${subCardBg} hover:border-amber-500 p-2 rounded-xl cursor-pointer text-center space-y-1 transition-all hover:scale-105`}>
                                   <img src={st.url} alt={st.label} className="w-full h-16 object-cover rounded-lg" />
-                                  <p className="text-[10px] font-bold text-white truncate">{st.label}</p>
+                                  <p className={`text-[10px] font-bold ${textColor} truncate`}>{st.label}</p>
                                 </div>
                               ))}
                             </div>
                           </div>
                         )}
 
-                        <form onSubmit={(e) => handleSendMessage(e)} className="flex items-center gap-2 pt-3 border-t border-slate-800">
-                          <button type="button" onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false); }} className="bg-slate-900 hover:bg-slate-800 border border-slate-800 px-2.5 py-2.5 rounded-xl text-base" title="Emojis">😀</button>
-                          <button type="button" onClick={() => { setShowStickerPicker(!showStickerPicker); setShowEmojiPicker(false); }} className="bg-slate-900 hover:bg-slate-800 border border-slate-800 px-2.5 py-2.5 rounded-xl text-xs font-bold text-amber-400" title="Stickers">🍿 Stickers</button>
+                        <form onSubmit={(e) => handleSendMessage(e)} className={`flex items-center gap-2 pt-3 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
+                          <button type="button" onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false); }} className={`${cardBg} px-3 py-2.5 rounded-xl text-base`} title="Emojis">😀</button>
+                          <button type="button" onClick={() => { setShowStickerPicker(!showStickerPicker); setShowEmojiPicker(false); }} className={`${cardBg} px-3 py-2.5 rounded-xl text-xs font-bold text-amber-500`} title="Stickers">🍿 Stickers</button>
 
                           <input 
                             type="text" 
                             value={newMessageText} 
                             onChange={(e) => setNewMessageText(e.target.value)} 
                             placeholder={t.sendPlaceholder} 
-                            className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" 
+                            className={`flex-1 ${inputBg} rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500`} 
                           />
                           <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider">
                             {t.sendBtn}
@@ -1442,7 +1480,7 @@
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full text-center py-20 space-y-2">
                         <div className="text-3xl">🍿</div>
-                        <p className="text-xs text-slate-400">Selecciona un chat.</p>
+                        <p className={`text-xs ${mutedText}`}>Selecciona un chat.</p>
                       </div>
                     )}
                   </div>
@@ -1452,50 +1490,50 @@
 
             {activeTab === 'critics' && (
               <div className="space-y-6 max-w-3xl mx-auto">
-                <h2 className="text-2xl font-black">📰 Críticos & Medios</h2>
+                <h2 className={`text-2xl font-black ${textColor}`}>📰 Críticos & Medios</h2>
                 
                 {currentUser?.isCritic ? (
-                  <form onSubmit={handlePublishReview} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+                  <form onSubmit={handlePublishReview} className={`${cardBg} rounded-3xl p-6 space-y-4 shadow-xl`}>
                     <h3 className="text-sm font-black text-amber-500">✍️ Publicar Reseña Oficial (Insignia 🌟)</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div>
-                        <label className="block mb-1 text-slate-400">Película:</label>
-                        <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Oppenheimer..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                        <label className={`block mb-1 ${mutedText}`}>Película:</label>
+                        <input type="text" value={newReviewMovie} onChange={(e) => setNewReviewMovie(e.target.value)} placeholder="Ej: Oppenheimer..." className={`w-full ${inputBg} rounded-xl p-2.5`} required />
                       </div>
                       <div>
-                        <label className="block mb-1 text-slate-400">Puntaje (1-10):</label>
-                        <input type="number" min="1" max="10" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" required />
+                        <label className={`block mb-1 ${mutedText}`}>Puntaje (1-10):</label>
+                        <input type="number" min="1" max="10" value={newReviewRating} onChange={(e) => setNewReviewRating(e.target.value)} className={`w-full ${inputBg} rounded-xl p-2.5`} required />
                       </div>
                     </div>
                     <div className="text-xs">
-                      <label className="block mb-1 text-slate-400">Análisis / Reseña:</label>
-                      <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu análisis..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <label className={`block mb-1 ${mutedText}`}>Análisis / Reseña:</label>
+                      <textarea rows="3" value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Escribe tu análisis..." className={`w-full ${inputBg} rounded-xl p-3`} required />
                     </div>
                     <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">Publicar Reseña Cloud</button>
                   </form>
                 ) : (
-                  <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2 text-xs">
-                    <p className="text-amber-400 font-bold">🔒 Necesitas la Insignia de Crítico otorgada por el Administrador para publicar reseñas.</p>
+                  <div className={`${cardBg} p-6 rounded-2xl text-center space-y-2 text-xs`}>
+                    <p className="text-amber-500 font-bold">🔒 Necesitas la Insignia de Crítico otorgada por el Administrador para publicar reseñas.</p>
                   </div>
                 )}
 
                 <div className="space-y-4 pt-2">
                   {reviewsList.map(rev => (
-                    <div key={rev.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
+                    <div key={rev.id} className={`${cardBg} rounded-3xl p-6 space-y-3`}>
                       <div className="flex justify-between items-start text-xs">
                         <div>
                           <span className="font-bold text-amber-500 flex items-center gap-1">
-                            {rev.author} <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">🌟 Crítico</span>
+                            {rev.author} <span className="text-[10px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded">🌟 Crítico</span>
                           </span>
-                          <p className="text-[10px] text-slate-400">🎙️ Medio: {rev.mediaOutlet || 'Independiente'}</p>
+                          <p className={`text-[10px] ${mutedText}`}>🎙️ Medio: {rev.mediaOutlet || 'Independiente'}</p>
                         </div>
                         <span className="bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-xs">★ {rev.rating}/10</span>
                       </div>
-                      <h4 className="text-base font-black">{rev.movieTitle}</h4>
-                      <p className="text-xs text-slate-300 leading-relaxed">{rev.content}</p>
+                      <h4 className={`text-base font-black ${textColor}`}>{rev.movieTitle}</h4>
+                      <p className={`text-xs ${mutedText} leading-relaxed`}>{rev.content}</p>
 
-                      <div className="flex items-center gap-4 pt-2 border-t border-slate-800 text-xs">
-                        <button onClick={() => handleLikeReview(rev)} className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 font-bold text-amber-400 hover:bg-slate-800">
+                      <div className={`flex items-center gap-4 pt-2 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-100'} text-xs`}>
+                        <button onClick={() => handleLikeReview(rev)} className={`flex items-center gap-1.5 ${subCardBg} px-3 py-1.5 rounded-xl border font-bold text-amber-500`}>
                           <span>🍿</span> <span>{rev.likes || 0} Me gusta</span>
                         </button>
                       </div>
@@ -1508,19 +1546,19 @@
             {activeTab === 'profile' && currentUser && (
               <div className="max-w-xl mx-auto space-y-6">
                 
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+                <div className={`${cardBg} rounded-3xl p-6 space-y-4 shadow-xl`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-black text-white text-base flex items-center gap-2">
+                      <h3 className={`font-black ${textColor} text-base flex items-center gap-2`}>
                         <span>🔔 Notificaciones Push</span>
                       </h3>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className={`text-xs ${mutedText} mt-1`}>
                         Silencia o activa las alertas de mensajes y matches en tu dispositivo.
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between bg-slate-950 border border-slate-800 p-3 rounded-2xl text-xs">
-                    <span className="font-bold text-slate-200">Silenciar Notificaciones</span>
+                  <div className={`flex items-center justify-between ${subCardBg} border p-3 rounded-2xl text-xs`}>
+                    <span className={`font-bold ${textColor}`}>Silenciar Notificaciones</span>
                     <input 
                       type="checkbox" 
                       checked={editMuteNotifications} 
@@ -1530,13 +1568,13 @@
                   </div>
                 </div>
 
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl">
+                <div className={`${cardBg} rounded-3xl p-6 space-y-3 shadow-xl`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-black text-white text-base flex items-center gap-2">
+                      <h3 className={`font-black ${textColor} text-base flex items-center gap-2`}>
                         <span>🛡️ Insignia de Identidad Verificada</span>
                       </h3>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className={`text-xs ${mutedText} mt-1`}>
                         {currentUser.kycVerified 
                           ? "Tienes tu perfil verificado con tilde azul." 
                           : "Obtén el tilde azul opcional verificando tu identidad con DNI para generar mayor confianza."}
@@ -1557,35 +1595,35 @@
                   </div>
                 </div>
 
-                <div className="bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-4 shadow-xl">
-                  <h3 className="text-base font-black text-amber-400 flex items-center gap-2">
+                <div className={`${cardBg} border border-amber-500/40 rounded-3xl p-6 space-y-4 shadow-xl`}>
+                  <h3 className="text-base font-black text-amber-500 flex items-center gap-2">
                     <span>🚀 Plan de Usuario</span>
                   </h3>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    <div className={`p-4 rounded-2xl border transition-all ${!currentUser.isPremium ? 'bg-amber-500/10 border-amber-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+                    <div className={`p-4 rounded-2xl border transition-all ${!currentUser.isPremium ? 'bg-amber-500/10 border-amber-500 text-amber-600 font-bold' : `${subCardBg} ${mutedText}`}`}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="font-bold text-sm text-white">Free</span>
+                        <span className={`font-bold text-sm ${textColor}`}>Free</span>
                         {!currentUser.isPremium && <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ACTIVO</span>}
                       </div>
-                      <p className="text-[11px] text-slate-300 mt-2"><b>Radar:</b> hasta 50 km</p>
+                      <p className={`text-[11px] ${mutedText} mt-2`}><b>Radar:</b> hasta 50 km</p>
                       <button 
                         type="button" 
                         onClick={() => handleUpgradePlan(false)} 
                         disabled={!currentUser.isPremium}
-                        className="w-full mt-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 font-bold py-2 rounded-xl text-xs transition-all"
+                        className={`w-full mt-3 ${subCardBg} disabled:opacity-40 font-bold py-2 rounded-xl text-xs transition-all`}
                       >
                         {currentUser.isPremium ? "Cambiar a Free" : "Plan Actual"}
                       </button>
                     </div>
 
-                    <div className={`p-4 rounded-2xl border transition-all ${currentUser.isPremium ? 'bg-amber-500/20 border-amber-500 text-white shadow-lg shadow-amber-500/10' : 'bg-slate-950 border-amber-500/30 text-slate-200'}`}>
+                    <div className={`p-4 rounded-2xl border transition-all ${currentUser.isPremium ? 'bg-amber-500/20 border-amber-500 text-amber-500 shadow-lg shadow-amber-500/10' : `${subCardBg} ${textColor}`}`}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="font-bold text-sm text-amber-400">⭐ Premium</span>
+                        <span className="font-bold text-sm text-amber-500">⭐ Premium</span>
                         {currentUser.isPremium && <span className="bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ACTIVO</span>}
                       </div>
-                      <p className="text-xs font-black text-amber-300">u$d 4.99 / mes</p>
-                      <p className="text-[11px] text-slate-300 mt-1"><b>Radar:</b> hasta 500 km</p>
+                      <p className="text-xs font-black text-amber-500">u$d 4.99 / mes</p>
+                      <p className={`text-[11px] ${mutedText} mt-1`}><b>Radar:</b> hasta 500 km</p>
                       <button 
                         type="button" 
                         onClick={() => handleUpgradePlan(true)} 
@@ -1598,10 +1636,10 @@
                   </div>
                 </div>
 
-                <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+                <form onSubmit={handleSaveProfile} className={`${cardBg} rounded-3xl p-6 space-y-5 shadow-xl`}>
+                  <div className={`flex justify-between items-center border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-4`}>
                     <div>
-                      <h2 className="text-xl font-black flex items-center gap-2">
+                      <h2 className={`text-xl font-black ${textColor} flex items-center gap-2`}>
                         {currentUser.name}
                         {currentUser.kycVerified && <span className="text-sky-400 text-sm" title="Verificado">✔</span>}
                       </h2>
@@ -1612,21 +1650,21 @@
                   <div className="space-y-4 text-xs">
                     <div>
                       <div className="flex justify-between items-center mb-2">
-                        <label className="font-bold text-amber-400">
+                        <label className="font-bold text-amber-500">
                           Mis Fotos Reales ({editPhotos.length} / {currentUser?.isPremium ? '10' : '3'}):
                         </label>
                       </div>
 
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
                         {editPhotos.map((photo, idx) => (
-                          <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
+                          <div key={idx} className={`relative group aspect-square rounded-2xl overflow-hidden border ${isDarkMode ? 'border-slate-800 bg-slate-950' : 'border-slate-300 bg-white'}`}>
                             <img src={photo} alt="Foto real" className="w-full h-full object-cover" />
                             <button type="button" onClick={() => handleRemovePhoto(idx)} className="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow">✕</button>
                           </div>
                         ))}
                       </div>
 
-                      <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                      <div className={`flex items-center gap-3 ${subCardBg} border p-4 rounded-2xl`}>
                         <label className="flex-1 cursor-pointer bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 px-4 rounded-xl text-center text-xs transition-all shadow-md">
                           📁 Seleccionar Foto de la Galería
                           <input type="file" accept="image/*" onChange={handleFileSelected} className="hidden" />
@@ -1636,16 +1674,16 @@
 
                     <div className="grid grid-cols-2 gap-3 pt-2">
                       <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Mi Género:</label>
-                        <select value={editSex} onChange={(e) => setEditSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                        <label className={`block mb-1 ${mutedText} font-bold`}>Mi Género:</label>
+                        <select value={editSex} onChange={(e) => setEditSex(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`}>
                           {SEXUALITIES_OPTIONS.map(opt => (
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
                         </select>
                       </div>
                       <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Quiero relacionarme con:</label>
-                        <select value={editInterestedIn} onChange={(e) => setEditInterestedIn(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                        <label className={`block mb-1 ${mutedText} font-bold`}>Quiero relacionarme con:</label>
+                        <select value={editInterestedIn} onChange={(e) => setEditInterestedIn(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`}>
                           {SEEKING_SEXUALITIES_OPTIONS.map(opt => (
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
@@ -1654,13 +1692,13 @@
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-amber-400 font-bold">Biografía Pública:</label>
-                      <textarea rows="2" value={editPublicBio} onChange={(e) => setEditPublicBio(e.target.value)} placeholder="Tus gustos de cine..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                      <label className="block mb-1 text-amber-500 font-bold">Biografía Pública:</label>
+                      <textarea rows="2" value={editPublicBio} onChange={(e) => setEditPublicBio(e.target.value)} placeholder="Tus gustos de cine..." className={`w-full ${inputBg} rounded-xl p-3`} />
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-rose-400 font-bold">Biografía de Citas:</label>
-                      <textarea rows="2" value={editDatingBio} onChange={(e) => setEditDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                      <label className="block mb-1 text-rose-500 font-bold">Biografía de Citas:</label>
+                      <textarea rows="2" value={editDatingBio} onChange={(e) => setEditDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className={`w-full ${inputBg} rounded-xl p-3`} />
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20">Guardar Perfil</button>
@@ -1670,13 +1708,13 @@
             )}
 
             {activeTab === 'admin' && isAdmin && (
-              <div className="max-w-4xl mx-auto bg-slate-900 border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className={`max-w-4xl mx-auto ${cardBg} border border-amber-500/40 rounded-3xl p-6 space-y-6 shadow-2xl`}>
+                <div className={`flex items-center justify-between border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-4`}>
                   <div>
-                    <h2 className="text-2xl font-black text-white">🛡️ Panel Administrador Cloud</h2>
-                    <p className="text-xs text-amber-400 mt-1">Gestión de usuarios y verificaciones.</p>
+                    <h2 className={`text-2xl font-black ${textColor}`}>🛡️ Panel Administrador Cloud</h2>
+                    <p className={`text-xs text-amber-500 mt-1`}>Gestión de usuarios y verificaciones.</p>
                   </div>
-                  <span className="bg-amber-500/20 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold">
+                  <span className="bg-amber-500/25 border border-amber-500/50 text-amber-500 px-3 py-1 rounded-xl text-xs font-bold">
                     Total Usuarios: {usersList.length}
                   </span>
                 </div>
@@ -1685,24 +1723,24 @@
                   {usersList.map(u => {
                     const userPhotos = u.photos || [u.avatar];
                     return (
-                      <div key={u.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
+                      <div key={u.id} className={`${subCardBg} border p-4 rounded-xl flex flex-col gap-3`}>
                         <div className="flex gap-3 items-start">
                           <img src={u.avatar} alt="Avatar" className="w-16 h-16 rounded-xl object-cover border border-slate-700" />
                           <div className="overflow-hidden flex-1">
-                            <p className="font-bold text-white text-sm truncate flex items-center gap-1">
+                            <p className={`font-bold ${textColor} text-sm truncate flex items-center gap-1`}>
                               {u.name} {u.kycVerified && <span className="text-sky-400 text-xs">✔</span>} {u.isCritic && '🌟'} {u.isPremium && '⭐'}
                             </p>
-                            <p className="text-xs text-amber-400">{u.roleLabel}</p>
-                            <p className="text-[10px] text-slate-400 break-all">{u.email}</p>
-                            <p className="text-[10px] text-slate-300 mt-1"><b>Edad:</b> {u.age || 25} años</p>
+                            <p className="text-xs text-amber-500">{u.roleLabel}</p>
+                            <p className={`text-[10px] ${mutedText} break-all`}>{u.email}</p>
+                            <p className={`text-[10px] ${textColor} mt-1`}><b>Edad:</b> {u.age || 25} años</p>
                           </div>
                         </div>
 
                         <div>
-                          <p className="text-[10px] font-bold text-slate-400 mb-1">Fotos del usuario:</p>
+                          <p className={`text-[10px] font-bold ${mutedText} mb-1`}>Fotos del usuario:</p>
                           <div className="flex gap-1 overflow-x-auto py-1">
                             {userPhotos.map((p, pIdx) => (
-                              <div key={pIdx} className="relative group shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-slate-700 bg-slate-900">
+                              <div key={pIdx} className={`relative group shrink-0 w-12 h-12 rounded-lg overflow-hidden border ${isDarkMode ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
                                 <img src={p} alt="mini" className="w-full h-full object-cover" />
                                 <button onClick={() => handleDeletePhoto(u.id, pIdx)} className="absolute inset-0 bg-rose-900/90 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity font-bold">
                                   ✕ Borrar
@@ -1712,21 +1750,21 @@
                           </div>
                         </div>
                         
-                        <div className="flex flex-col gap-2 border-t border-slate-800 pt-3">
-                          <button onClick={() => handleToggleKycAdmin(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.kycVerified ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                        <div className={`flex flex-col gap-2 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pt-3`}>
+                          <button onClick={() => handleToggleKycAdmin(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.kycVerified ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : `${subCardBg} ${textColor} border-slate-700`}`}>
                             {u.kycVerified ? '✔ Quitar Verificación' : '🪪 Otorgar Verificación Manual'}
                           </button>
 
-                          <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                          <button onClick={() => handleToggleCriticBadge(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isCritic ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : `${subCardBg} ${textColor} border-slate-700`}`}>
                             {u.isCritic ? '🌟 Quitar Crítico' : '✨ Otorgar Crítico'}
                           </button>
 
-                          <button onClick={() => handleToggleAdminPremium(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isPremium ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                          <button onClick={() => handleToggleAdminPremium(u.id)} className={`w-full text-[10px] font-bold py-1.5 rounded-lg border ${u.isPremium ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' : `${subCardBg} ${textColor} border-slate-700`}`}>
                             {u.isPremium ? '⭐ Quitar Premium' : '⭐ Otorgar Premium'}
                           </button>
                           
                           {u.email.toLowerCase() !== 'marbuttice@gmail.com' && (
-                            <button onClick={() => handleDeleteUser(u.id)} className="w-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
+                            <button onClick={() => handleDeleteUser(u.id)} className="w-full bg-rose-500/20 text-rose-500 hover:bg-rose-500/30 text-[10px] font-bold py-1.5 rounded-lg border border-rose-500/30">
                               🗑️ Eliminar Usuario
                             </button>
                           )}
@@ -1742,12 +1780,12 @@
 
           {showKycModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div className={`${cardBg} border border-sky-500/50 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl`}>
+                <div className={`flex justify-between items-center border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-3`}>
                   <h3 className="text-lg font-black text-sky-400 flex items-center gap-2">
                     <span>🪪 Verificación de Identidad</span>
                   </h3>
-                  <button onClick={() => setShowKycModal(false)} className="text-slate-400 font-bold">✕</button>
+                  <button onClick={() => setShowKycModal(false)} className={`${mutedText} font-bold`}>✕</button>
                 </div>
 
                 {kycProcessing ? (
@@ -1757,29 +1795,29 @@
                   </div>
                 ) : (
                   <div className="space-y-4 text-xs">
-                    <p className="text-slate-300 leading-relaxed">
+                    <p className={`${mutedText} leading-relaxed`}>
                       Sube una foto de tu documento y una selfie para obtener el tilde azul de identidad verificada.
                     </p>
 
                     <div className="space-y-3">
-                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
-                        <div><p className="font-bold text-white">1. DNI (Frente):</p></div>
+                      <div className={`${subCardBg} border p-3 rounded-2xl flex items-center justify-between`}>
+                        <div><p className={`font-bold ${textColor}`}>1. DNI (Frente):</p></div>
                         <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
                           {kycDocFront ? "✔ Cargado" : "Subir"}
                           <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('front', e)} className="hidden" />
                         </label>
                       </div>
 
-                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
-                        <div><p className="font-bold text-white">2. DNI (Dorso):</p></div>
+                      <div className={`${subCardBg} border p-3 rounded-2xl flex items-center justify-between`}>
+                        <div><p className={`font-bold ${textColor}`}>2. DNI (Dorso):</p></div>
                         <label className="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
                           {kycDocBack ? "✔ Cargado" : "Subir"}
                           <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('back', e)} className="hidden" />
                         </label>
                       </div>
 
-                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
-                        <div><p className="font-bold text-white">3. Selfie:</p></div>
+                      <div className={`${subCardBg} border p-3 rounded-2xl flex items-center justify-between`}>
+                        <div><p className={`font-bold ${textColor}`}>3. Selfie:</p></div>
                         <label className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl cursor-pointer">
                           {kycSelfie ? "✔ Capturada" : "Tomar"}
                           <input type="file" accept="image/*" onChange={(e) => handleSimulateKycUpload('selfie', e)} className="hidden" />
@@ -1801,10 +1839,10 @@
 
           {showInstallGuideModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
+              <div className={`${cardBg} border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl`}>
                 <div className="text-4xl">📱✨</div>
-                <h3 className="text-xl font-black text-amber-400">Instalar Plottwisme</h3>
-                <p className="text-xs text-slate-300 leading-relaxed text-left bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <h3 className="text-xl font-black text-amber-500">Instalar Plottwisme</h3>
+                <p className={`text-xs ${mutedText} leading-relaxed text-left ${subCardBg} p-4 rounded-2xl border`}>
                   <b>🌐 Android:</b> Abre el menú del navegador <b>( ⋮ )</b> y toca <b>"Instalar aplicación"</b>.<br/><br/>
                   <b>🍏 iPhone:</b> Toca el botón <b>Compartir</b> y selecciona <b>"Agregar a Inicio"</b>.
                 </p>
@@ -1817,19 +1855,19 @@
 
           {showNewTopicModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">✍️ Crear Nuevo Debate</h3>
-                  <button onClick={() => setShowNewTopicModal(false)} className="text-slate-400 font-bold text-lg">✕</button>
+              <div className={`${cardBg} border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative`}>
+                <div className={`flex justify-between items-center border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-3`}>
+                  <h3 className={`text-lg font-black ${textColor}`}>✍️ Crear Nuevo Debate</h3>
+                  <button onClick={() => setShowNewTopicModal(false)} className={`${mutedText} font-bold text-lg`}>✕</button>
                 </div>
                 <form onSubmit={handleCreateTopic} className="space-y-4 text-xs">
                   <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Título:</label>
-                    <input type="text" value={newTopicTitle} onChange={(e) => setNewTopicTitle(e.target.value)} placeholder="Ej: ¿Cuál es el mejor final?" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    <label className={`block mb-1 ${mutedText} font-bold`}>Título:</label>
+                    <input type="text" value={newTopicTitle} onChange={(e) => setNewTopicTitle(e.target.value)} placeholder="Ej: ¿Cuál es el mejor final?" className={`w-full ${inputBg} rounded-xl p-3`} required />
                   </div>
                   <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Categoría:</label>
-                    <select value={newTopicCategory} onChange={(e) => setNewTopicCategory(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                    <label className={`block mb-1 ${mutedText} font-bold`}>Categoría:</label>
+                    <select value={newTopicCategory} onChange={(e) => setNewTopicCategory(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`}>
                       <option value="Cine de Autor">Cine de Autor</option>
                       <option value="Debates Clásicos">Debates Clásicos</option>
                       <option value="Ciencia Ficción">Ciencia Ficción</option>
@@ -1838,8 +1876,8 @@
                     </select>
                   </div>
                   <div>
-                    <label className="block mb-1 text-slate-400 font-bold">Contenido:</label>
-                    <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe tu propuesta..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                    <label className={`block mb-1 ${mutedText} font-bold`}>Contenido:</label>
+                    <textarea rows="4" value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} placeholder="Escribe tu propuesta..." className={`w-full ${inputBg} rounded-xl p-3`} required />
                   </div>
                   <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
                     Publicar Debate
@@ -1851,18 +1889,18 @@
 
           {showMatchModal && matchedUser && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl">
+              <div className={`${cardBg} border border-amber-500/50 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl`}>
                 <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 p-1">
                   <img src={matchedUser.photos?.[0] || matchedUser.avatar} alt="Match" className="w-full h-full rounded-full object-cover" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-amber-400">{t.matchTitle}</h3>
+                  <h3 className="text-2xl font-black text-amber-500">{t.matchTitle}</h3>
                 </div>
                 <div className="flex flex-col gap-2 pt-2">
                   <button onClick={() => { setShowMatchModal(false); const chat = chatsList.find(c => c.userId === matchedUser.id); if (chat) setActiveChat(chat); setActiveTab('chats'); }} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">
                     {t.openChatNow}
                   </button>
-                  <button onClick={() => setShowMatchModal(false)} className="w-full bg-slate-800 text-slate-300 font-bold py-2.5 rounded-xl text-xs">
+                  <button onClick={() => setShowMatchModal(false)} className={`w-full ${subCardBg} ${textColor} font-bold py-2.5 rounded-xl text-xs`}>
                     {t.keepSearching}
                   </button>
                 </div>
@@ -1872,31 +1910,31 @@
 
           {showAuthModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="text-lg font-black text-white">
+              <div className={`${cardBg} border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto`}>
+                <div className={`flex justify-between items-center border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-3`}>
+                  <h3 className={`text-lg font-black ${textColor}`}>
                     {authMode === 'signup' && '✨ Crear Cuenta'}
                     {authMode === 'login' && '🔑 Iniciar Sesión'}
                     {authMode === 'forgot' && '🔄 Recuperar Contraseña'}
                   </h3>
-                  <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className="text-slate-400 font-bold text-lg">✕</button>
+                  <button onClick={() => { setShowAuthModal(false); setResetStep(1); }} className={`${mutedText} font-bold text-lg`}>✕</button>
                 </div>
 
                 {authMode === 'signup' && (
                   <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
                     <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Nombre Completo:</label>
-                      <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Ej: Juan Pérez" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <label className={`block mb-1 ${mutedText} font-bold`}>Nombre Completo:</label>
+                      <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Ej: Juan Pérez" className={`w-full ${inputBg} rounded-xl p-3`} required />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Fecha Nacimiento (+18):</label>
-                        <input type="date" value={authBirthdate} onChange={(e) => setAuthBirthdate(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                        <label className={`block mb-1 ${mutedText} font-bold`}>Fecha Nacimiento (+18):</label>
+                        <input type="date" value={authBirthdate} onChange={(e) => setAuthBirthdate(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`} required />
                       </div>
                       <div>
-                        <label className="block mb-1 text-slate-400 font-bold">Mi Género:</label>
-                        <select value={authSex} onChange={(e) => setAuthSex(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                        <label className={`block mb-1 ${mutedText} font-bold`}>Mi Género:</label>
+                        <select value={authSex} onChange={(e) => setAuthSex(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`}>
                           {SEXUALITIES_OPTIONS.map(opt => (
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
@@ -1905,8 +1943,8 @@
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Interesado en (Radar de Citas):</label>
-                      <select value={authInterestedIn} onChange={(e) => setAuthInterestedIn(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200">
+                      <label className={`block mb-1 ${mutedText} font-bold`}>Interesado en (Radar de Citas):</label>
+                      <select value={authInterestedIn} onChange={(e) => setAuthInterestedIn(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`}>
                         {SEEKING_SEXUALITIES_OPTIONS.map(opt => (
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
@@ -1914,31 +1952,31 @@
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-amber-400 font-bold">Biografía Pública:</label>
-                      <textarea rows="2" value={authPublicBio} onChange={(e) => setAuthPublicBio(e.target.value)} placeholder="Tus gustos generales..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                      <label className="block mb-1 text-amber-500 font-bold">Biografía Pública:</label>
+                      <textarea rows="2" value={authPublicBio} onChange={(e) => setAuthPublicBio(e.target.value)} placeholder="Tus gustos generales..." className={`w-full ${inputBg} rounded-xl p-3`} />
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-rose-400 font-bold">Biografía de Citas:</label>
-                      <textarea rows="2" value={authDatingBio} onChange={(e) => setAuthDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" />
+                      <label className="block mb-1 text-rose-500 font-bold">Biografía de Citas:</label>
+                      <textarea rows="2" value={authDatingBio} onChange={(e) => setAuthDatingBio(e.target.value)} placeholder="Lo que buscas para citas..." className={`w-full ${inputBg} rounded-xl p-3`} />
                     </div>
                     
-                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                    <div className={`${subCardBg} border p-3 rounded-xl flex items-center justify-between`}>
                       <div>
-                        <p className="font-bold text-white">¿Solicitar Insignia de Crítico?</p>
-                        <p className="text-[10px] text-slate-400">Permite publicar reseñas de cine.</p>
+                        <p className={`font-bold ${textColor}`}>¿Solicitar Insignia de Crítico?</p>
+                        <p className={`text-[10px] ${mutedText}`}>Permite publicar reseñas de cine.</p>
                       </div>
                       <input type="checkbox" checked={authWantCritic} onChange={(e) => setAuthWantCritic(e.target.checked)} className="w-4 h-4 accent-amber-500 cursor-pointer" />
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
-                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <label className={`block mb-1 ${mutedText} font-bold`}>Correo Electrónico:</label>
+                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className={`w-full ${inputBg} rounded-xl p-3`} required />
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Contraseña:</label>
-                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <label className={`block mb-1 ${mutedText} font-bold`}>Contraseña:</label>
+                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className={`w-full ${inputBg} rounded-xl p-3`} required />
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
@@ -1950,16 +1988,16 @@
                 {authMode === 'login' && (
                   <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
                     <div>
-                      <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
-                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <label className={`block mb-1 ${mutedText} font-bold`}>Correo Electrónico:</label>
+                      <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className={`w-full ${inputBg} rounded-xl p-3`} required />
                     </div>
 
                     <div>
                       <div className="flex justify-between items-center mb-1">
-                        <label className="text-slate-400 font-bold">Contraseña:</label>
-                        <button type="button" onClick={() => { setAuthMode('forgot'); setResetStep(1); }} className="text-amber-400 font-bold hover:underline text-[11px]">¿Olvidaste tu contraseña?</button>
+                        <label className={`${mutedText} font-bold`}>Contraseña:</label>
+                        <button type="button" onClick={() => { setAuthMode('forgot'); setResetStep(1); }} className="text-amber-500 font-bold hover:underline text-[11px]">¿Olvidaste tu contraseña?</button>
                       </div>
-                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="••••••••" className={`w-full ${inputBg} rounded-xl p-3`} required />
                     </div>
 
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
@@ -1972,10 +2010,10 @@
                   <form onSubmit={handleForgotSubmit} className="space-y-4 text-xs">
                     {resetStep === 1 ? (
                       <>
-                        <p className="text-slate-300 leading-relaxed">Ingresa tu correo para restablecer tu contraseña.</p>
+                        <p className={`${mutedText} leading-relaxed`}>Ingresa tu correo para restablecer tu contraseña.</p>
                         <div>
-                          <label className="block mb-1 text-slate-400 font-bold">Correo Electrónico:</label>
-                          <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200" required />
+                          <label className={`block mb-1 ${mutedText} font-bold`}>Correo Electrónico:</label>
+                          <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="tuemail@ejemplo.com" className={`w-full ${inputBg} rounded-xl p-3`} required />
                         </div>
                         <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase tracking-wider transition-all">
                           Verificar Correo
@@ -1986,7 +2024,7 @@
                         <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-emerald-300">
                           ✅ ¡Solicitud enviada para <b>{forgotEmail}</b>!
                         </div>
-                        <button type="button" onClick={() => { setAuthMode('login'); setResetStep(1); }} className="w-full bg-slate-800 text-slate-200 font-bold py-2.5 rounded-xl text-xs">
+                        <button type="button" onClick={() => { setAuthMode('login'); setResetStep(1); }} className={`w-full ${subCardBg} ${textColor} font-bold py-2.5 rounded-xl text-xs`}>
                           Volver al inicio de sesión
                         </button>
                       </>
@@ -1994,12 +2032,12 @@
                   </form>
                 )}
 
-                <div className="text-center pt-2 border-t border-slate-800 text-xs">
+                <div className={`text-center pt-2 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} text-xs`}>
                   {authMode === 'signup' && (
-                    <p className="text-slate-400">¿Ya tienes cuenta? <button onClick={() => { setAuthMode('login'); setResetStep(1); }} className="text-amber-400 font-bold underline">Inicia Sesión</button></p>
+                    <p className={mutedText}>¿Ya tienes cuenta? <button onClick={() => { setAuthMode('login'); setResetStep(1); }} className="text-amber-500 font-bold underline">Inicia Sesión</button></p>
                   )}
                   {authMode === 'login' && (
-                    <p className="text-slate-400">¿No tienes cuenta? <button onClick={() => { setAuthMode('signup'); setResetStep(1); }} className="text-amber-400 font-bold underline">Regístrate gratis</button></p>
+                    <p className={mutedText}>¿No tienes cuenta? <button onClick={() => { setAuthMode('signup'); setResetStep(1); }} className="text-amber-500 font-bold underline">Regístrate gratis</button></p>
                   )}
                 </div>
               </div>
