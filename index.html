@@ -210,6 +210,9 @@
       const [matchRadiusKm, setMatchRadiusKm] = useState(100);
       const [radarFilterType, setRadarFilterType] = useState('all');
 
+      // Estado para el modal de cartelera interna
+      const [activeCinemaUrl, setActiveCinemaUrl] = useState(null);
+
       const [chatsList, setChatsList] = useState([]);
       const [activeChat, setActiveChat] = useState(null);
       const [newMessageText, setNewMessageText] = useState('');
@@ -469,7 +472,10 @@
           .replace('{city}', cleanCity)
           .replace('{country}', '');
         const countryParam = userCountryCode ? `&gl=${userCountryCode.toLowerCase()}` : '';
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(query.trim())}${countryParam}&hl=${lang}`, '_blank');
+        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query.trim())}${countryParam}&hl=${lang}`;
+        
+        // Abrir dentro del modal flotante integrado para que no saque al usuario de la PWA
+        setActiveCinemaUrl(searchUrl);
       };
 
       const handleStartKycProcess = () => {
@@ -853,14 +859,12 @@
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
         return others.filter(u => {
-          // Si el usuario actual o el candidato no tienen coordenadas exactas en la BD, se descartan a menos que sea Admin
           if (!currentUser?.lat || !currentUser?.lon || !u.lat || !u.lon) {
             return isAdmin;
           }
 
           const dist = calculateDistanceKm(currentUser.lat, currentUser.lon, u.lat, u.lon);
 
-          // Si supera el radio efectivo o los 1000km reales, se descarta estrictamente
           if (!isAdmin && (dist > effectiveRadius || dist > 1000)) return false;
 
           if (radarFilterType === 'verified' && !u.kycVerified) return false;
@@ -1791,6 +1795,31 @@
             )}
 
           </main>
+
+          {/* MODAL INTEGRADO PARA VER CARTELERA SIN SALIR DE LA APP */}
+          {activeCinemaUrl && (
+            <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col">
+              <div className="bg-slate-900 border-b border-amber-500/40 px-4 py-3 flex items-center justify-between shadow-lg">
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-500 text-lg">🎬</span>
+                  <span className="font-bold text-sm text-slate-100">Cartelera Inteligente en Vivo</span>
+                </div>
+                <button 
+                  onClick={() => setActiveCinemaUrl(null)}
+                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-1.5 rounded-xl text-xs shadow transition-all"
+                >
+                  ✕ Volver a Plottwisme
+                </button>
+              </div>
+              <div className="flex-1 w-full bg-white relative">
+                <iframe 
+                  src={activeCinemaUrl} 
+                  title="Cartelera de Cines" 
+                  className="w-full h-full border-0"
+                />
+              </div>
+            </div>
+          )}
 
           {showKycModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
