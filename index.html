@@ -194,7 +194,6 @@
       return Math.round(R * c * 10) / 10;
     };
 
-    // Componente de Google Maps integrado oficial
     function CinemaMapComponent({ userCity, isDarkMode, cardBg, textColor }) {
       const encodedQuery = encodeURIComponent(`cines en ${userCity}`);
       const mapSrc = `https://www.google.com/maps?q=${encodedQuery}&output=embed`;
@@ -1111,13 +1110,15 @@
               </nav>
 
               <div className="flex items-center gap-2 shrink-0">
-                <button 
-                  onClick={() => setForcedAdminTest(!forcedAdminTest)} 
-                  className={`px-2 py-1 rounded-lg text-[10px] font-black border transition-all ${forcedAdminTest ? 'bg-emerald-500 text-slate-950 border-emerald-400' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
-                  title="Interruptor rápido para alternar modo pruebas de admin"
-                >
-                  {forcedAdminTest ? '⚙️ Test Admin: ON' : '⚙️ Test Admin: OFF'}
-                </button>
+                {currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' && (
+                  <button 
+                    onClick={() => setForcedAdminTest(!forcedAdminTest)} 
+                    className={`px-2 py-1 rounded-lg text-[10px] font-black border transition-all ${forcedAdminTest ? 'bg-emerald-500 text-slate-950 border-emerald-400' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                    title="Interruptor rápido para alternar modo pruebas de admin"
+                  >
+                    {forcedAdminTest ? '⚙️ Test Admin: ON' : '⚙️ Test Admin: OFF'}
+                  </button>
+                )}
 
                 <button 
                   onClick={() => setIsDarkMode(!isDarkMode)} 
