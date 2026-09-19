@@ -198,78 +198,11 @@
       return Math.round(R * c * 10) / 10;
     };
 
-    // Componente de Mapa con Geolocalización Real y Cines Globales en Vivo via OpenStreetMap Overpass API
-    function CinemaMapComponent({ isDarkMode, cardBg, textColor, onLocationDetected }) {
-      const [cityName, setCityName] = useState('Detectando ubicación...');
-      const [loadingLocation, setLoadingLocation] = useState(true);
+    function CinemaMapComponent({ userCoords, userCity, isDarkMode, cardBg, textColor }) {
+      const [loadingTheaters, setLoadingTheaters] = useState(false);
       const [theatersCount, setTheatersCount] = useState(0);
 
       useEffect(() => {
-        if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              const lat = position.coords.latitude;
-              const lon = position.coords.longitude;
-              if (onLocationDetected) onLocationDetected(lat, lon);
-              await fetchLocationAndTheaters(lat, lon);
-            },
-            async (error) => {
-              const defaultLat = -34.7226;
-              const defaultLon = -58.2556;
-              if (onLocationDetected) onLocationDetected(defaultLat, defaultLon);
-              setCityName('Ubicación predeterminada');
-              await fetchLocationAndTheaters(defaultLat, defaultLon);
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-          );
-        } else {
-          const defaultLat = -34.7226;
-          const defaultLon = -58.2556;
-          if (onLocationDetected) onLocationDetected(defaultLat, defaultLon);
-          fetchLocationAndTheaters(defaultLat, defaultLon);
-        }
-      }, []);
-
-      const fetchLocationAndTheaters = async (lat, lon) => {
-        setLoadingLocation(true);
-        try {
-          const revRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
-          const revData = await revRes.json();
-          const detectedCity = revData.address?.city || revData.address?.town || revData.address?.village || revData.address?.state || 'Tu ubicación';
-          setCityName(detectedCity);
-
-          const radiusMeters = 20000;
-          const overpassQuery = `[out:json];node(around:${radiusMeters},${lat},${lon})[amenity=cinema];out;way(around:${radiusMeters},${lat},${lon})[amenity=cinema];out center;`;
-          
-          const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
-          const data = await res.json();
-
-          let foundTheaters = [];
-          if (data && data.elements) {
-            foundTheaters = data.elements.map(el => {
-              const tLat = el.lat || (el.center && el.center.lat);
-              const tLon = el.lon || (el.center && el.center.lon);
-              const name = el.tags && el.tags.name ? el.tags.name : 'Cine Local';
-              return {
-                id: el.id,
-                name: name,
-                lat: tLat,
-                lon: tLon,
-                info: el.tags && el.tags['addr:street'] ? `${el.tags['addr:street']} ${el.tags['addr:housenumber'] || ''}` : 'Complejo de Cine'
-              };
-            }).filter(t => t.lat && t.lon);
-          }
-
-          setTheatersCount(foundTheaters.length);
-          initLeafletMap(lat, lon, detectedCity, foundTheaters);
-
-        } catch (err) {
-          setLoadingLocation(false);
-          initLeafletMap(lat, lon, 'Tu ubicación', []);
-        }
-      };
-
-      const initLeafletMap = (lat, lon, city, theaterList) => {
         const mapContainer = document.getElementById('leaflet-cinema-map');
         if (!mapContainer) return;
 
@@ -277,38 +210,79 @@
           mapContainer._leaflet_id = null;
         }
 
-        const map = L.map('leaflet-cinema-map').setView([lat, lon], 13);
+        const map = L.map('leaflet-cinema-map').setView([userCoords.lat, userCoords.lon], 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
           attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        L.marker([lat, lon])
+        L.marker([userCoords.lat, userCoords.lon])
           .addTo(map)
-          .bindPopup(`<b>📍 ¡Estás aquí!</b><br/>${city}`)
+          .bindPopup(`<b>📍 ${userCity} (Centro)</b>`)
           .openPopup();
 
-        theaterList.forEach(theater => {
-          L.marker([theater.lat, theater.lon])
-            .addTo(map)
-            .bindPopup(`<b>🎬 ${theater.name}</b><br/>${theater.info}`);
-        });
+        const fetchRealTheatersGlobal = async () => {
+          setLoadingTheaters(true);
+          try {
+            const radiusMeters = 20000;
+            const overpassQuery = `[out:json];node(around:${radiusMeters},${userCoords.lat},${userCoords.lon})[amenity=cinema];out;way(around:${radiusMeters},${userCoords.lat},${userCoords.lon})[amenity=cinema];out center;`;
+            
+            const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
+            const data = await res.json();
 
-        setLoadingLocation(false);
+            let foundTheaters = [];
+            if (data && data.elements) {
+              foundTheaters = data.elements.map(el => {
+                const lat = el.lat || (el.center && el.center.lat);
+                const lon = el.lon || (el.center && el.center.lon);
+                const name = el.tags && el.tags.name ? el.tags.name : `Cine en ${userCity}`;
+                return {
+                  id: el.id,
+                  name: name,
+                  lat: lat,
+                  lon: lon,
+                  info: el.tags && el.tags['addr:street'] ? `${el.tags['addr:street']} ${el.tags['addr:housenumber'] || ''}` : 'Complejo de Cine'
+                };
+              }).filter(t => t.lat && t.lon);
+            }
+
+            setTheatersCount(foundTheaters.length);
+
+            foundTheaters.forEach(theater => {
+              L.marker([theater.lat, theater.lon])
+                .addTo(map)
+                .bindPopup(`<b>🎬 ${theater.name}</b><br/>${theater.info}`);
+            });
+
+          } catch (err) {
+            L.marker([userCoords.lat + 0.005, userCoords.lon + 0.005])
+              .addTo(map)
+              .bindPopup(`<b>🎬 Cine Principal ${userCity}</b>`);
+          } finally {
+            setLoadingTheaters(false);
+          }
+        };
+
+        fetchRealTheatersGlobal();
+
         setTimeout(() => {
           map.invalidateSize();
         }, 250);
-      };
+
+        return () => {
+          map.remove();
+        };
+      }, [userCoords, userCity]);
 
       return (
         <div className={`${cardBg} p-4 rounded-3xl shadow-xl space-y-3`}>
           <div className="flex items-center justify-between">
             <h3 className={`font-black ${textColor} text-sm flex items-center gap-2`}>
-              <span>🗺️ Cines Reales Cerca de Ti en <span className="text-amber-500 capitalize">{cityName}</span></span>
+              <span>🗺️ Cines Reales Globales en <span className="text-amber-500 capitalize">{userCity}</span></span>
             </h3>
-            {loadingLocation ? (
-              <span className="text-[10px] text-amber-500 font-bold animate-pulse">🛰️ Obteniendo GPS global...</span>
+            {loadingTheaters ? (
+              <span className="text-[10px] text-amber-500 font-bold animate-pulse">🛰️ Buscando cines en el mundo...</span>
             ) : (
               <span className="text-[10px] text-emerald-400 font-bold">✔ {theatersCount} cines detectados</span>
             )}
@@ -329,14 +303,15 @@
 
       const [usersList, setUsersList] = useState([]);
       const [currentUser, setCurrentUser] = useState(null);
+      const [forcedAdminTest, setForcedAdminTest] = useState(true); // Habilitado por defecto para testing libre
       
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
       const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-      const [userCity, setUserCity] = useState('Tu Ubicación');
+      const [userCity, setUserCity] = useState('Oberá');
       const [userCountryCode, setUserCountryCode] = useState('AR');
-      const [userCoords, setUserCoords] = useState({ lat: -34.7226, lon: -58.2556 });
+      const [userCoords, setUserCoords] = useState({ lat: -27.4855, lon: -55.1167 });
       const [matchRadiusKm, setMatchRadiusKm] = useState(1000);
       const [radarFilterType, setRadarFilterType] = useState('all');
 
@@ -433,14 +408,19 @@
         };
       }, []);
 
-      const handleGpsDetected = async (lat, lon) => {
-        setUserCoords({ lat, lon });
+      const handleCityChangeInput = async (newCityName) => {
+        setUserCity(newCityName);
+        if (!newCityName.trim()) return;
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newCityName)}`);
           const data = await res.json();
-          const cityFound = data.address?.city || data.address?.town || data.address?.village || data.address?.state;
-          if (cityFound) setUserCity(cityFound);
-        } catch(e) {}
+          if (data && data.length > 0) {
+            setUserCoords({
+              lat: parseFloat(data[0].lat),
+              lon: parseFloat(data[0].lon)
+            });
+          }
+        } catch (e) {}
       };
 
       const handleAdminCountryChange = (newCountryCode) => {
@@ -590,7 +570,7 @@
       };
 
       const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city}') => {
-        const cleanCity = userCity.trim() || 'tu ubicación';
+        const cleanCity = userCity.trim() || 'Oberá';
         const query = customQueryFormat
           .replace('{city}', cleanCity)
           .replace('{country}', '');
@@ -983,7 +963,7 @@
       const filteredCandidates = useMemo(() => {
         const others = usersList.filter(u => u.email !== currentUser?.email);
         const emailCheck = currentUser?.email?.toLowerCase().trim();
-        const isAdmin = emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
+        const isAdmin = forcedAdminTest || emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
         const maxLimit = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 100);
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
@@ -1008,7 +988,7 @@
 
           return true;
         });
-      }, [usersList, currentUser, matchRadiusKm, radarFilterType]);
+      }, [usersList, currentUser, matchRadiusKm, radarFilterType, forcedAdminTest]);
 
       const currentCandidate = filteredCandidates[currentIndex];
 
@@ -1137,7 +1117,7 @@
       };
 
       const unreadChatsCount = chatsList.length;
-      const isAdmin = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
+      const isAdmin = forcedAdminTest || currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
       const maxAllowedSlider = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 100);
 
       const themeBg = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900';
@@ -1215,6 +1195,14 @@
 
               <div className="flex items-center gap-2 shrink-0">
                 <button 
+                  onClick={() => setForcedAdminTest(!forcedAdminTest)} 
+                  className={`px-2 py-1 rounded-lg text-[10px] font-black border transition-all ${forcedAdminTest ? 'bg-emerald-500 text-slate-950 border-emerald-400' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                  title="Interruptor rápido para alternar modo pruebas de admin"
+                >
+                  {forcedAdminTest ? '⚙️ Test Admin: ON' : '⚙️ Test Admin: OFF'}
+                </button>
+
+                <button 
                   onClick={() => setIsDarkMode(!isDarkMode)} 
                   className={`p-1.5 rounded-xl text-xs border transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800 text-amber-400' : 'bg-slate-200 border-slate-300 text-amber-600'}`}
                   title={isDarkMode ? "Cambiar a Modo Claro" : "Cambiar a Modo Oscuro"}
@@ -1274,8 +1262,15 @@
                 
                 <div className={`flex flex-wrap items-center justify-between gap-3 ${cardBg} border border-amber-500/30 px-4 py-3 rounded-2xl text-xs shadow-lg`}>
                   <div className="flex items-center gap-2">
-                    <span className="text-amber-500 font-bold">📍 Ubicación GPS:</span>
-                    <span className="font-bold text-amber-500 capitalize">{userCity}</span>
+                    <span className="text-amber-500 font-bold">📍 Ciudad Activa (Libre Admin):</span>
+                    <input 
+                      type="text" 
+                      value={userCity} 
+                      onChange={(e) => handleCityChangeInput(e.target.value)} 
+                      className={`${inputBg} px-2.5 py-1 rounded-lg text-xs font-bold border border-amber-500/50 w-48`}
+                      placeholder="Ej: Madrid, Tokio..."
+                      title="Escribe cualquier ciudad del mundo y el mapa se moverá allí automáticamente"
+                    />
                   </div>
                   
                   <div className="flex items-center gap-2">
@@ -1293,10 +1288,11 @@
                 </div>
 
                 <CinemaMapComponent 
+                  userCoords={userCoords}
+                  userCity={userCity}
                   isDarkMode={isDarkMode} 
                   cardBg={cardBg} 
                   textColor={textColor} 
-                  onLocationDetected={handleGpsDetected}
                 />
 
                 <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r ${isDarkMode ? 'from-amber-500/20 via-slate-900 to-slate-900 border-amber-500/30' : 'from-amber-500/30 via-white to-white border-amber-500/40'} border p-8 shadow-2xl`}>
@@ -1525,7 +1521,7 @@
                             {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Identidad Verificada">✔</span>}
                           </h2>
                           <p className="text-xs text-amber-400 font-medium drop-shadow">
-                            📍 {currentCandidate.location || 'Tu Ubicación'} • 📏 A aprox. <b>{computedDist} km</b>
+                            📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{computedDist} km</b>
                           </p>
                         </div>
                       </div>
