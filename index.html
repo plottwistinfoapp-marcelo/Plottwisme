@@ -220,8 +220,8 @@
           .openPopup();
 
         const sampleTheaters = [
-          { name: 'Cine Principal Center', lat: userCoords.lat + 0.015, lon: userCoords.lon + 0.01, info: 'Salas 2D, 3D e IMAX' },
-          { name: 'Cineita de Autor & Independiente', lat: userCoords.lat - 0.01, lon: userCoords.lon - 0.012, info: 'Funciones exclusivas' }
+          { name: `Cine Principal ${userCity}`, lat: userCoords.lat + 0.015, lon: userCoords.lon + 0.01, info: 'Salas 2D, 3D e IMAX' },
+          { name: `Cine de Arte ${userCity}`, lat: userCoords.lat - 0.01, lon: userCoords.lon - 0.012, info: 'Funciones exclusivas' }
         ];
 
         sampleTheaters.forEach(theater => {
@@ -265,9 +265,9 @@
       const [currentIndex, setCurrentIndex] = useState(0);
       const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-      const [userCity, setUserCity] = useState('Oberá');
+      const [userCity, setUserCity] = useState('Quilmes');
       const [userCountryCode, setUserCountryCode] = useState('AR');
-      const [userCoords, setUserCoords] = useState({ lat: -27.4855, lon: -55.1167 });
+      const [userCoords, setUserCoords] = useState({ lat: -34.7226, lon: -58.2556 });
       const [matchRadiusKm, setMatchRadiusKm] = useState(1000);
       const [radarFilterType, setRadarFilterType] = useState('all');
 
@@ -364,45 +364,29 @@
         };
       }, []);
 
-      // Detección de ubicación inicial solo si no es admin, o permitiendo override de admin
-      useEffect(() => {
-        const isAdminUser = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
-        if (isAdminUser) return; // El admin tiene control manual absoluto sin pisar por GPS
-
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              const { latitude, longitude } = position.coords;
-              setUserCoords({ lat: latitude, lon: longitude });
-              try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
-                const data = await response.json();
-                const city = data.address.city || data.address.town || data.address.village || data.address.county || 'Oberá';
-                const countryCode = data.address.country_code ? data.address.country_code.toUpperCase() : 'AR';
-                
-                setUserCity(city);
-                if (COUNTRY_CODES.some(c => c.code === countryCode)) {
-                  setUserCountryCode(countryCode);
-                }
-              } catch (e) {
-                setUserCity('Oberá');
-              }
-            },
-            () => { setUserCity('Oberá'); },
-            { timeout: 10000 }
-          );
-        } else {
-          setUserCity('Oberá');
+      // Función para buscar coordenadas automáticamente al cambiar de ciudad (Poder de Admin)
+      const handleCityChangeInput = async (newCityName) => {
+        setUserCity(newCityName);
+        if (!newCityName.trim()) return;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newCityName)}`);
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setUserCoords({
+              lat: parseFloat(data[0].lat),
+              lon: parseFloat(data[0].lon)
+            });
+          }
+        } catch (e) {
+          // Si falla la red mantiene las coordenadas actuales
         }
-      }, [currentUser]);
+      };
 
-      // Cambio de país y ciudad por el Administrador de forma libre
       const handleAdminCountryChange = (newCountryCode) => {
         setUserCountryCode(newCountryCode);
         const foundCountry = COUNTRY_CODES.find(c => c.code === newCountryCode);
         if (foundCountry) {
-          setUserCity(foundCountry.defaultCity);
-          setUserCoords({ lat: foundCountry.lat, lon: foundCountry.lon });
+          handleCityChangeInput(foundCountry.defaultCity);
         }
       };
 
@@ -834,7 +818,7 @@
               interestedIn: authInterestedIn,
               publicBio: authPublicBio || 'Apasionado por el cine y las buenas charlas.',
               datingBio: authDatingBio || 'Buscando conectar para citas y películas.',
-              location: `${userCity || 'Oberá'}, ${getCountryName()}`,
+              location: `${userCity || 'Quilmes'}, ${getCountryName()}`,
               lat: userCoords.lat,
               lon: userCoords.lon,
               distanceKm: 5.0,
@@ -1233,9 +1217,9 @@
                       <input 
                         type="text" 
                         value={userCity} 
-                        onChange={(e) => setUserCity(e.target.value)} 
+                        onChange={(e) => handleCityChangeInput(e.target.value)} 
                         className={`${inputBg} px-2 py-1 rounded-lg text-xs font-bold border border-amber-500/40 w-36`}
-                        title="Escribe cualquier ciudad del mundo (Modo Admin)"
+                        title="Escribe cualquier ciudad del mundo y el mapa se moverá solo"
                       />
                     ) : (
                       <span className="font-bold text-amber-500 capitalize">{userCity || 'Detectando...'}</span>
