@@ -20,6 +20,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
+  <!-- Leaflet CSS & JS para Mapas Interactivos -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
@@ -190,6 +194,58 @@
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return Math.round(R * c * 10) / 10;
     };
+
+    // Componente de Mapa Interactivo con Leaflet
+    function CinemaMapComponent({ userCoords, userCity, isDarkMode, cardBg, textColor }) {
+      useEffect(() => {
+        const mapContainer = document.getElementById('leaflet-cinema-map');
+        if (!mapContainer) return;
+
+        if (mapContainer._leaflet_id) {
+          mapContainer._leaflet_id = null;
+        }
+
+        const map = L.map('leaflet-cinema-map').setView([userCoords.lat, userCoords.lon], 13);
+
+        const tileLayerUrl = isDarkMode 
+          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+        L.tileLayer(tileLayerUrl, {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors & CARTO'
+        }).addTo(map);
+
+        L.marker([userCoords.lat, userCoords.lon])
+          .addTo(map)
+          .bindPopup(`<b>¡Estás aquí!</b><br/>${userCity}`)
+          .openPopup();
+
+        const sampleTheaters = [
+          { name: 'Cine Principal', lat: userCoords.lat + 0.015, lon: userCoords.lon + 0.01, info: 'Salas 2D, 3D e IMAX' },
+          { name: 'Cine de Arte y Autor', lat: userCoords.lat - 0.01, lon: userCoords.lon - 0.012, info: 'Funciones independientes' }
+        ];
+
+        sampleTheaters.forEach(theater => {
+          L.marker([theater.lat, theater.lon])
+            .addTo(map)
+            .bindPopup(`<b>🎬 ${theater.name}</b><br/>${theater.info}`);
+        });
+
+        return () => {
+          map.remove();
+        };
+      }, [userCoords, userCity, isDarkMode]);
+
+      return (
+        <div className={`${cardBg} p-4 rounded-3xl shadow-xl space-y-3`}>
+          <h3 className={`font-black ${textColor} text-sm flex items-center gap-2`}>
+            <span>🗺️ Mapa Interactivo de Cines en <span className="text-amber-500 capitalize">{userCity}</span></span>
+          </h3>
+          <div id="leaflet-cinema-map" className="w-full h-72 rounded-2xl z-10 border border-amber-500/30"></div>
+        </div>
+      );
+    }
 
     function App() {
       const [lang, setLang] = useState(() => getBrowserLang());
@@ -1169,6 +1225,15 @@
                     </select>
                   )}
                 </div>
+
+                {/* Mapa Interactivo Leaflet */}
+                <CinemaMapComponent 
+                  userCoords={userCoords} 
+                  userCity={userCity} 
+                  isDarkMode={isDarkMode} 
+                  cardBg={cardBg} 
+                  textColor={textColor} 
+                />
 
                 <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r ${isDarkMode ? 'from-amber-500/20 via-slate-900 to-slate-900 border-amber-500/30' : 'from-amber-500/30 via-white to-white border-amber-500/40'} border p-8 shadow-2xl`}>
                   <div className="max-w-2xl space-y-4">
