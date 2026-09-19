@@ -198,8 +198,78 @@
       return Math.round(R * c * 10) / 10;
     };
 
-    function CinemaMapComponent({ userCoords, userCity, isDarkMode, cardBg, textColor }) {
+    // Componente de Mapa con Geolocalización Real y Cines Globales en Vivo via OpenStreetMap Overpass API
+    function CinemaMapComponent({ isDarkMode, cardBg, textColor, onLocationDetected }) {
+      const [cityName, setCityName] = useState('Detectando ubicación...');
+      const [loadingLocation, setLoadingLocation] = useState(true);
+      const [theatersCount, setTheatersCount] = useState(0);
+
       useEffect(() => {
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const lat = position.coords.latitude;
+              const lon = position.coords.longitude;
+              if (onLocationDetected) onLocationDetected(lat, lon);
+              await fetchLocationAndTheaters(lat, lon);
+            },
+            async (error) => {
+              const defaultLat = -34.7226;
+              const defaultLon = -58.2556;
+              if (onLocationDetected) onLocationDetected(defaultLat, defaultLon);
+              setCityName('Ubicación predeterminada');
+              await fetchLocationAndTheaters(defaultLat, defaultLon);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+        } else {
+          const defaultLat = -34.7226;
+          const defaultLon = -58.2556;
+          if (onLocationDetected) onLocationDetected(defaultLat, defaultLon);
+          fetchLocationAndTheaters(defaultLat, defaultLon);
+        }
+      }, []);
+
+      const fetchLocationAndTheaters = async (lat, lon) => {
+        setLoadingLocation(true);
+        try {
+          const revRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
+          const revData = await revRes.json();
+          const detectedCity = revData.address?.city || revData.address?.town || revData.address?.village || revData.address?.state || 'Tu ubicación';
+          setCityName(detectedCity);
+
+          const radiusMeters = 20000;
+          const overpassQuery = `[out:json];node(around:${radiusMeters},${lat},${lon})[amenity=cinema];out;way(around:${radiusMeters},${lat},${lon})[amenity=cinema];out center;`;
+          
+          const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
+          const data = await res.json();
+
+          let foundTheaters = [];
+          if (data && data.elements) {
+            foundTheaters = data.elements.map(el => {
+              const tLat = el.lat || (el.center && el.center.lat);
+              const tLon = el.lon || (el.center && el.center.lon);
+              const name = el.tags && el.tags.name ? el.tags.name : 'Cine Local';
+              return {
+                id: el.id,
+                name: name,
+                lat: tLat,
+                lon: tLon,
+                info: el.tags && el.tags['addr:street'] ? `${el.tags['addr:street']} ${el.tags['addr:housenumber'] || ''}` : 'Complejo de Cine'
+              };
+            }).filter(t => t.lat && t.lon);
+          }
+
+          setTheatersCount(foundTheaters.length);
+          initLeafletMap(lat, lon, detectedCity, foundTheaters);
+
+        } catch (err) {
+          setLoadingLocation(false);
+          initLeafletMap(lat, lon, 'Tu ubicación', []);
+        }
+      };
+
+      const initLeafletMap = (lat, lon, city, theaterList) => {
         const mapContainer = document.getElementById('leaflet-cinema-map');
         if (!mapContainer) return;
 
@@ -207,43 +277,42 @@
           mapContainer._leaflet_id = null;
         }
 
-        const map = L.map('leaflet-cinema-map').setView([userCoords.lat, userCoords.lon], 13);
+        const map = L.map('leaflet-cinema-map').setView([lat, lon], 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
           attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        L.marker([userCoords.lat, userCoords.lon])
+        L.marker([lat, lon])
           .addTo(map)
-          .bindPopup(`<b>¡Ubicación Activa!</b><br/>${userCity}`)
+          .bindPopup(`<b>📍 ¡Estás aquí!</b><br/>${city}`)
           .openPopup();
 
-        const sampleTheaters = [
-          { name: `Cine Principal ${userCity}`, lat: userCoords.lat + 0.015, lon: userCoords.lon + 0.01, info: 'Salas 2D, 3D e IMAX' },
-          { name: `Cine de Arte ${userCity}`, lat: userCoords.lat - 0.01, lon: userCoords.lon - 0.012, info: 'Funciones exclusivas' }
-        ];
-
-        sampleTheaters.forEach(theater => {
+        theaterList.forEach(theater => {
           L.marker([theater.lat, theater.lon])
             .addTo(map)
             .bindPopup(`<b>🎬 ${theater.name}</b><br/>${theater.info}`);
         });
 
+        setLoadingLocation(false);
         setTimeout(() => {
           map.invalidateSize();
         }, 250);
-
-        return () => {
-          map.remove();
-        };
-      }, [userCoords, userCity]);
+      };
 
       return (
         <div className={`${cardBg} p-4 rounded-3xl shadow-xl space-y-3`}>
-          <h3 className={`font-black ${textColor} text-sm flex items-center gap-2`}>
-            <span>🗺️ Mapa Interactivo de Cines en <span className="text-amber-500 capitalize">{userCity}</span></span>
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className={`font-black ${textColor} text-sm flex items-center gap-2`}>
+              <span>🗺️ Cines Reales Cerca de Ti en <span className="text-amber-500 capitalize">{cityName}</span></span>
+            </h3>
+            {loadingLocation ? (
+              <span className="text-[10px] text-amber-500 font-bold animate-pulse">🛰️ Obteniendo GPS global...</span>
+            ) : (
+              <span className="text-[10px] text-emerald-400 font-bold">✔ {theatersCount} cines detectados</span>
+            )}
+          </div>
           <div 
             id="leaflet-cinema-map" 
             className={`w-full h-72 rounded-2xl z-10 border border-amber-500/30 ${isDarkMode ? 'map-dark-mode' : ''}`}
@@ -265,7 +334,7 @@
       const [currentIndex, setCurrentIndex] = useState(0);
       const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-      const [userCity, setUserCity] = useState('Quilmes');
+      const [userCity, setUserCity] = useState('Tu Ubicación');
       const [userCountryCode, setUserCountryCode] = useState('AR');
       const [userCoords, setUserCoords] = useState({ lat: -34.7226, lon: -58.2556 });
       const [matchRadiusKm, setMatchRadiusKm] = useState(1000);
@@ -364,29 +433,22 @@
         };
       }, []);
 
-      // Función para buscar coordenadas automáticamente al cambiar de ciudad (Poder de Admin)
-      const handleCityChangeInput = async (newCityName) => {
-        setUserCity(newCityName);
-        if (!newCityName.trim()) return;
+      const handleGpsDetected = async (lat, lon) => {
+        setUserCoords({ lat, lon });
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newCityName)}`);
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
           const data = await res.json();
-          if (data && data.length > 0) {
-            setUserCoords({
-              lat: parseFloat(data[0].lat),
-              lon: parseFloat(data[0].lon)
-            });
-          }
-        } catch (e) {
-          // Si falla la red mantiene las coordenadas actuales
-        }
+          const cityFound = data.address?.city || data.address?.town || data.address?.village || data.address?.state;
+          if (cityFound) setUserCity(cityFound);
+        } catch(e) {}
       };
 
       const handleAdminCountryChange = (newCountryCode) => {
         setUserCountryCode(newCountryCode);
         const foundCountry = COUNTRY_CODES.find(c => c.code === newCountryCode);
         if (foundCountry) {
-          handleCityChangeInput(foundCountry.defaultCity);
+          setUserCoords({ lat: foundCountry.lat, lon: foundCountry.lon });
+          setUserCity(foundCountry.defaultCity);
         }
       };
 
@@ -528,7 +590,7 @@
       };
 
       const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city}') => {
-        const cleanCity = userCity.trim() || 'Oberá';
+        const cleanCity = userCity.trim() || 'tu ubicación';
         const query = customQueryFormat
           .replace('{city}', cleanCity)
           .replace('{country}', '');
@@ -818,7 +880,7 @@
               interestedIn: authInterestedIn,
               publicBio: authPublicBio || 'Apasionado por el cine y las buenas charlas.',
               datingBio: authDatingBio || 'Buscando conectar para citas y películas.',
-              location: `${userCity || 'Quilmes'}, ${getCountryName()}`,
+              location: `${userCity}, ${getCountryName()}`,
               lat: userCoords.lat,
               lon: userCoords.lon,
               distanceKm: 5.0,
@@ -1212,22 +1274,12 @@
                 
                 <div className={`flex flex-wrap items-center justify-between gap-3 ${cardBg} border border-amber-500/30 px-4 py-3 rounded-2xl text-xs shadow-lg`}>
                   <div className="flex items-center gap-2">
-                    <span className="text-amber-500 font-bold">📍 Ciudad Activa:</span>
-                    {isAdmin ? (
-                      <input 
-                        type="text" 
-                        value={userCity} 
-                        onChange={(e) => handleCityChangeInput(e.target.value)} 
-                        className={`${inputBg} px-2 py-1 rounded-lg text-xs font-bold border border-amber-500/40 w-36`}
-                        title="Escribe cualquier ciudad del mundo y el mapa se moverá solo"
-                      />
-                    ) : (
-                      <span className="font-bold text-amber-500 capitalize">{userCity || 'Detectando...'}</span>
-                    )}
+                    <span className="text-amber-500 font-bold">📍 Ubicación GPS:</span>
+                    <span className="font-bold text-amber-500 capitalize">{userCity}</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <span className="text-amber-500 font-bold">🌍 País:</span>
+                    <span className="text-amber-500 font-bold">🌍 País Región:</span>
                     <select 
                       value={userCountryCode} 
                       onChange={(e) => handleAdminCountryChange(e.target.value)}
@@ -1241,11 +1293,10 @@
                 </div>
 
                 <CinemaMapComponent 
-                  userCoords={userCoords} 
-                  userCity={userCity} 
                   isDarkMode={isDarkMode} 
                   cardBg={cardBg} 
                   textColor={textColor} 
+                  onLocationDetected={handleGpsDetected}
                 />
 
                 <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r ${isDarkMode ? 'from-amber-500/20 via-slate-900 to-slate-900 border-amber-500/30' : 'from-amber-500/30 via-white to-white border-amber-500/40'} border p-8 shadow-2xl`}>
@@ -1254,7 +1305,7 @@
                       {t.engineTitle}
                     </span>
                     <h2 className={`text-3xl font-black ${textColor} leading-tight`}>
-                      {t.cinemaRealtime} <span className="text-amber-500 capitalize">{userCity || 'tu ciudad'}</span>
+                      {t.cinemaRealtime} <span className="text-amber-500 capitalize">{userCity}</span>
                     </h2>
                     <p className={`text-sm ${mutedText} leading-relaxed`}>
                       {t.cinemaSubtitle}
@@ -1264,7 +1315,7 @@
                         onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city}')} 
                         className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
                       >
-                        <span>🤖 {t.openCinema} {userCity || 'tu ciudad'}</span>
+                        <span>🤖 {t.openCinema} {userCity}</span>
                         <span>↗</span>
                       </button>
                     </div>
@@ -1274,7 +1325,7 @@
                 <div className="space-y-4">
                   <h3 className={`text-lg font-black ${textColor} flex items-center gap-2`}>
                     <span>⚡ {t.directSearch}</span>
-                    <span className="text-amber-500 capitalize">{userCity || 'tu ciudad'}</span>
+                    <span className="text-amber-500 capitalize">{userCity}</span>
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1474,7 +1525,7 @@
                             {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Identidad Verificada">✔</span>}
                           </h2>
                           <p className="text-xs text-amber-400 font-medium drop-shadow">
-                            📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{computedDist} km</b>
+                            📍 {currentCandidate.location || 'Tu Ubicación'} • 📏 A aprox. <b>{computedDist} km</b>
                           </p>
                         </div>
                       </div>
