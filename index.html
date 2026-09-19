@@ -58,7 +58,6 @@
     .font-brand { font-family: 'Outfit', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    /* Filtro para adaptar mapas de OSM a modo oscuro automáticamente sin API Key */
     .map-dark-mode {
       filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
     }
@@ -67,7 +66,7 @@
 <body class="antialiased selection:bg-amber-500 selection:text-slate-950">
   <div id="root">
     <div class="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
-      ⏳ Sintonizando Plottwisme Dating Cloud Pro...
+      ⏳ Sintonizando Plottwisme Admin Cloud Pro...
     </div>
   </div>
 
@@ -158,17 +157,17 @@
     };
 
     const COUNTRY_CODES = [
-      { code: 'AR', name: 'Argentina 🇦🇷' },
-      { code: 'US', name: 'Estados Unidos 🇺🇸' },
-      { code: 'CA', name: 'Canadá 🇨🇦' },
-      { code: 'ES', name: 'España 🇪🇸' },
-      { code: 'MX', name: 'México 🇲🇽' },
-      { code: 'CL', name: 'Chile 🇨🇱' },
-      { code: 'CO', name: 'Colombia 🇨🇴' },
-      { code: 'PY', name: 'Paraguay 🇵🇾' },
-      { code: 'UY', name: 'Uruguay 🇺🇾' },
-      { code: 'BR', name: 'Brasil 🇧🇷' },
-      { code: 'IT', name: 'Italia 🇮🇹' }
+      { code: 'AR', name: 'Argentina 🇦🇷', defaultCity: 'Buenos Aires', lat: -34.6037, lon: -58.3816 },
+      { code: 'US', name: 'Estados Unidos 🇺🇸', defaultCity: 'New York', lat: 40.7128, lon: -74.0060 },
+      { code: 'CA', name: 'Canadá 🇨🇦', defaultCity: 'Toronto', lat: 43.6532, lon: -79.3832 },
+      { code: 'ES', name: 'España 🇪🇸', defaultCity: 'Madrid', lat: 40.4168, lon: -3.7038 },
+      { code: 'MX', name: 'México 🇲🇽', defaultCity: 'Ciudad de México', lat: 19.4326, lon: -99.1332 },
+      { code: 'CL', name: 'Chile 🇨🇱', defaultCity: 'Santiago', lat: -33.4489, lon: -70.6693 },
+      { code: 'CO', name: 'Colombia 🇨🇴', defaultCity: 'Bogotá', lat: 4.7110, lon: -74.0721 },
+      { code: 'PY', name: 'Paraguay 🇵🇾', defaultCity: 'Asunción', lat: -25.2637, lon: -57.5759 },
+      { code: 'UY', name: 'Uruguay 🇺🇾', defaultCity: 'Montevideo', lat: -34.9011, lon: -56.1645 },
+      { code: 'BR', name: 'Brasil 🇧🇷', defaultCity: 'São Paulo', lat: -23.5505, lon: -46.6333 },
+      { code: 'IT', name: 'Italia 🇮🇹', defaultCity: 'Roma', lat: 41.9028, lon: 12.4964 }
     ];
 
     const SEXUALITIES_OPTIONS = [
@@ -199,7 +198,6 @@
       return Math.round(R * c * 10) / 10;
     };
 
-    // Componente de Mapa Interactivo con OpenStreetMap (Libre y sin API Key)
     function CinemaMapComponent({ userCoords, userCity, isDarkMode, cardBg, textColor }) {
       useEffect(() => {
         const mapContainer = document.getElementById('leaflet-cinema-map');
@@ -211,7 +209,6 @@
 
         const map = L.map('leaflet-cinema-map').setView([userCoords.lat, userCoords.lon], 13);
 
-        // Uso de OpenStreetMap estándar (gratuito y sin restricciones de API Key)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
           attribution: '&copy; OpenStreetMap contributors'
@@ -219,12 +216,12 @@
 
         L.marker([userCoords.lat, userCoords.lon])
           .addTo(map)
-          .bindPopup(`<b>¡Estás aquí!</b><br/>${userCity}`)
+          .bindPopup(`<b>¡Ubicación Activa!</b><br/>${userCity}`)
           .openPopup();
 
         const sampleTheaters = [
-          { name: 'Cine Principal', lat: userCoords.lat + 0.015, lon: userCoords.lon + 0.01, info: 'Salas 2D, 3D e IMAX' },
-          { name: 'Cine de Arte y Autor', lat: userCoords.lat - 0.01, lon: userCoords.lon - 0.012, info: 'Funciones independientes' }
+          { name: 'Cine Principal Center', lat: userCoords.lat + 0.015, lon: userCoords.lon + 0.01, info: 'Salas 2D, 3D e IMAX' },
+          { name: 'Cineita de Autor & Independiente', lat: userCoords.lat - 0.01, lon: userCoords.lon - 0.012, info: 'Funciones exclusivas' }
         ];
 
         sampleTheaters.forEach(theater => {
@@ -271,7 +268,7 @@
       const [userCity, setUserCity] = useState('Oberá');
       const [userCountryCode, setUserCountryCode] = useState('AR');
       const [userCoords, setUserCoords] = useState({ lat: -27.4855, lon: -55.1167 });
-      const [matchRadiusKm, setMatchRadiusKm] = useState(100);
+      const [matchRadiusKm, setMatchRadiusKm] = useState(1000);
       const [radarFilterType, setRadarFilterType] = useState('all');
 
       const [chatsList, setChatsList] = useState([]);
@@ -367,7 +364,11 @@
         };
       }, []);
 
+      // Detección de ubicación inicial solo si no es admin, o permitiendo override de admin
       useEffect(() => {
+        const isAdminUser = currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
+        if (isAdminUser) return; // El admin tiene control manual absoluto sin pisar por GPS
+
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             async (position) => {
@@ -393,7 +394,17 @@
         } else {
           setUserCity('Oberá');
         }
-      }, []);
+      }, [currentUser]);
+
+      // Cambio de país y ciudad por el Administrador de forma libre
+      const handleAdminCountryChange = (newCountryCode) => {
+        setUserCountryCode(newCountryCode);
+        const foundCountry = COUNTRY_CODES.find(c => c.code === newCountryCode);
+        if (foundCountry) {
+          setUserCity(foundCountry.defaultCity);
+          setUserCoords({ lat: foundCountry.lat, lon: foundCountry.lon });
+        }
+      };
 
       useEffect(() => {
         if (!window.db) return;
@@ -1200,7 +1211,6 @@
 
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
             
-            {/* Aviso global para usuarios con 15 días Premium activos */}
             {currentUser?.isPremium && (
               <div className="bg-gradient-to-r from-amber-500/20 via-rose-500/20 border border-amber-500/50 p-4 rounded-2xl flex items-center justify-between shadow-lg mb-6">
                 <div className="flex items-center gap-3">
@@ -1218,23 +1228,34 @@
                 
                 <div className={`flex flex-wrap items-center justify-between gap-3 ${cardBg} border border-amber-500/30 px-4 py-3 rounded-2xl text-xs shadow-lg`}>
                   <div className="flex items-center gap-2">
-                    <span className="text-amber-500 font-bold">📍 Ciudad (Cines):</span>
-                    <span className="font-bold text-amber-500 capitalize">{userCity || 'Detectando...'}</span>
+                    <span className="text-amber-500 font-bold">📍 Ciudad Activa:</span>
+                    {isAdmin ? (
+                      <input 
+                        type="text" 
+                        value={userCity} 
+                        onChange={(e) => setUserCity(e.target.value)} 
+                        className={`${inputBg} px-2 py-1 rounded-lg text-xs font-bold border border-amber-500/40 w-36`}
+                        title="Escribe cualquier ciudad del mundo (Modo Admin)"
+                      />
+                    ) : (
+                      <span className="font-bold text-amber-500 capitalize">{userCity || 'Detectando...'}</span>
+                    )}
                   </div>
-                  {isAdmin && (
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-amber-500 font-bold">🌍 País:</span>
                     <select 
                       value={userCountryCode} 
-                      onChange={(e) => setUserCountryCode(e.target.value)}
+                      onChange={(e) => handleAdminCountryChange(e.target.value)}
                       className={`${isDarkMode ? 'bg-slate-950' : 'bg-slate-100'} text-amber-500 font-bold rounded-lg px-2 py-1 text-xs border border-amber-500/30 focus:outline-none cursor-pointer`}
                     >
                       {COUNTRY_CODES.map(c => (
                         <option key={c.code} value={c.code}>{c.name}</option>
                       ))}
                     </select>
-                  )}
+                  </div>
                 </div>
 
-                {/* Mapa Interactivo con OpenStreetMap libre */}
                 <CinemaMapComponent 
                   userCoords={userCoords} 
                   userCity={userCity} 
