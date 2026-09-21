@@ -237,11 +237,47 @@
       const [currentIndex, setCurrentIndex] = useState(0);
       const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-      const [userCity, setUserCity] = useState('Oberá');
+      const [userCity, setUserCity] = useState('Detectando ubicación...');
       const [userCountryCode, setUserCountryCode] = useState('AR');
-      const [userCoords, setUserCoords] = useState({ lat: -27.4855, lon: -55.1167 });
+      const [userCoords, setUserCoords] = useState(null);
       const [matchRadiusKm, setMatchRadiusKm] = useState(1000);
       const [radarFilterType, setRadarFilterType] = useState('all');
+
+      // Geolocalización automática con geocodificación inversa para mostrar ciudad y país reales
+      useEffect(() => {
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const lat = position.coords.latitude;
+              const lon = position.coords.longitude;
+              setUserCoords({ lat, lon });
+              
+              try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=es`);
+                const data = await response.json();
+                
+                if (data && data.address) {
+                  const city = data.address.city || data.address.town || data.address.village || data.address.state || "Ubicación GPS";
+                  const country = data.address.country || "";
+                  setUserCity(`${city}, ${country}`);
+                } else {
+                  setUserCity(`GPS (${lat.toFixed(2)}, ${lon.toFixed(2)})`);
+                }
+              } catch (err) {
+                setUserCity(`GPS (${lat.toFixed(2)}, ${lon.toFixed(2)})`);
+              }
+            },
+            (error) => {
+              setUserCity('Buenos Aires, Argentina');
+              setUserCoords({ lat: -34.6037, lon: -58.3816 });
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+        } else {
+          setUserCity('Buenos Aires, Argentina');
+          setUserCoords({ lat: -34.6037, lon: -58.3816 });
+        }
+      }, []);
 
       const [chatsList, setChatsList] = useState([]);
       const [activeChat, setActiveChat] = useState(null);
@@ -345,6 +381,7 @@
         const foundCountry = COUNTRY_CODES.find(c => c.code === newCountryCode);
         if (foundCountry) {
           setUserCity(foundCountry.defaultCity);
+          setUserCoords({ lat: foundCountry.lat, lon: foundCountry.lon });
         }
       };
 
@@ -370,9 +407,9 @@
               interestedIn: 'Todos / Cualquiera',
               publicBio: 'Devoto del cine de autor, ciencia ficción y análisis cinematográfico. Creador de Plottwisme.',
               datingBio: 'Buscando citas con cinéfilos apasionados por el buen cine.',
-              location: 'Oberá, Misiones, Argentina',
-              lat: -27.4855,
-              lon: -55.1167,
+              location: 'Argentina',
+              lat: -34.6037,
+              lon: -58.3816,
               distanceKm: 2.5,
               role: 'admin',
               roleLabel: 'Administrador General',
@@ -486,7 +523,7 @@
       };
 
       const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city}') => {
-        const cleanCity = userCity.trim() || 'Oberá';
+        const cleanCity = userCity.trim() || 'Buenos Aires';
         const query = customQueryFormat
           .replace('{city}', cleanCity)
           .replace('{country}', '');
@@ -735,9 +772,9 @@
                 interestedIn: 'Todos / Cualquiera',
                 publicBio: 'Devoto del cine de autor y creador de Plottwisme.',
                 datingBio: 'Buscando citas cinéfilas.',
-                location: 'Oberá, Misiones, Argentina',
-                lat: -27.4855,
-                lon: -55.1167,
+                location: userCity,
+                lat: userCoords?.lat || -34.6037,
+                lon: userCoords?.lon || -58.3816,
                 distanceKm: 2.5,
                 role: 'admin',
                 roleLabel: 'Administrador General',
@@ -776,9 +813,9 @@
               interestedIn: authInterestedIn,
               publicBio: authPublicBio || 'Apasionado por el cine y las buenas charlas.',
               datingBio: authDatingBio || 'Buscando conectar para citas y películas.',
-              location: `${userCity}, ${getCountryName()}`,
-              lat: userCoords.lat,
-              lon: userCoords.lon,
+              location: userCity,
+              lat: userCoords?.lat || -34.6037,
+              lon: userCoords?.lon || -58.3816,
               distanceKm: 5.0,
               role: 'general',
               roleLabel: 'Cinéfilo Premium ⭐ (Regalo 15 Días)',
@@ -812,9 +849,9 @@
                   interestedIn: 'Todos / Cualquiera',
                   publicBio: 'Devoto del cine de autor y creador de Plottwisme.',
                   datingBio: 'Buscando citas cinéfilas.',
-                  location: 'Oberá, Misiones, Argentina',
-                  lat: -27.4855,
-                  lon: -55.1167,
+                  location: userCity,
+                  lat: userCoords?.lat || -34.6037,
+                  lon: userCoords?.lon || -58.3816,
                   distanceKm: 2.5,
                   role: 'admin',
                   roleLabel: 'Administrador General',
@@ -1438,7 +1475,7 @@
                             {currentCandidate.kycVerified && <span className="text-sky-400 text-lg" title="Identidad Verificada">✔</span>}
                           </h2>
                           <p className="text-xs text-amber-400 font-medium drop-shadow">
-                            📍 {currentCandidate.location || 'Oberá'} • 📏 A aprox. <b>{computedDist} km</b>
+                            📍 {currentCandidate.location || 'Ubicación'} • 📏 A aprox. <b>{computedDist} km</b>
                           </p>
                         </div>
                       </div>
