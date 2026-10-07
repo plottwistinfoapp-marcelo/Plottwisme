@@ -54,170 +54,138 @@
     .font-brand { font-family: 'Outfit', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .map-dark-mode {
-      filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-    }
   </style>
 </head>
-<body class="antialiased selection:bg-amber-500 selection:text-slate-950">
+<body class="antialiased selection:bg-amber-500 selection:text-slate-950 bg-slate-950 text-slate-100 min-h-screen">
   <div id="root">
     <div class="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
-      ⏳ Sintonizando Plottwisme Admin Cloud Pro...
+      ⏳ Sintonizando Plottwisme...
     </div>
   </div>
 
   <script type="text/babel">
-    const { useState, useMemo, useEffect } = React;
+    const { useState, useEffect } = React;
 
-    const QUICK_EMOJIS = ['🍿', '🍷', '🎬', '⭐', '❤️', '🔥', '😂', '👏', '🎟️', '🍕', '😎', '🎉'];
-    
-    const CINE_STICKERS = [
-      { id: 'st_1', name: 'Pochoclos Popcorn', url: 'STCK:🍿', subtitle: 'Pochoclos', label: '🍿 Pochoclos' },
-      { id: 'st_2', name: 'Copa de Vino', url: 'STCK:🍷', subtitle: 'Brindis', label: '🍷 Brindis' },
-      { id: 'st_3', name: 'Claqueta de Cine', url: 'STCK:🎬', subtitle: 'Acción', label: '🎬 Acción' },
-      { id: 'st_4', name: 'Butaca de Cine', url: 'STCK:🎟️', subtitle: 'Sala VIP', label: '🎟️ Sala VIP' }
-    ];
+    function App() {
+      const [user, setUser] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [errorMsg, setErrorMsg] = useState('');
 
-    const getBrowserLang = () => {
-      const languages = navigator.languages || [navigator.language || navigator.userLanguage || 'es'];
-      for (let lang of languages) {
-        const l = lang.toLowerCase();
-        if (l.startsWith('es')) return 'es';
-        if (l.startsWith('en')) return 'en';
-        if (l.startsWith('pt')) return 'pt';
-        if (l.startsWith('it')) return 'it';
-        if (l.startsWith('fr')) return 'fr';
-        if (l.startsWith('de')) return 'de';
-        if (l.startsWith('ru')) return 'ru';
-        if (l.startsWith('pl')) return 'pl';
-        if (l.startsWith('nl')) return 'nl';
+      useEffect(() => {
+        // Esperar a que Firebase cargue de manera segura
+        const checkAuthInterval = setInterval(() => {
+          if (window.auth && window.FirebaseFns) {
+            clearInterval(checkAuthInterval);
+            window.FirebaseFns.onAuthStateChanged(window.auth, (currentUser) => {
+              setUser(currentUser);
+              setLoading(false);
+            });
+          }
+        }, 200);
+
+        // Fallback por si demora la red
+        const timer = setTimeout(() => {
+          setLoading(false);
+        }, 3000);
+
+        return () => {
+          clearInterval(checkAuthInterval);
+          clearTimeout(timer);
+        };
+      }, []);
+
+      const handleLogin = async (e) => {
+        e.preventDefault();
+        setErrorMsg('');
+        try {
+          await window.FirebaseFns.signInWithEmailAndPassword(window.auth, email, password);
+        } catch (err) {
+          setErrorMsg("Error al iniciar sesión: " + err.message);
+        }
+      };
+
+      const handleLogout = async () => {
+        try {
+          await window.FirebaseFns.signOut(window.auth);
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      if (loading) {
+        return (
+          <div className="flex items-center justify-center min-h-screen bg-slate-950 text-amber-500 font-bold text-sm">
+            ⏳ Cargando Plottwisme Cloud...
+          </div>
+        );
       }
-      return 'es';
-    };
-
-    const TRANSLATIONS = {
-      es: {
-        loading: "⏳ Cargando Plottwisme...",
-        cinema: "🎬 Cartelera",
-        forums: "💬 Foros",
-        radar: "🎯 Radar Citas",
-        chats: "💬 Chats",
-        critics: "📰 Críticos",
-        profile: "👤 Perfil",
-        admin: "🛡️ Admin",
-        logout: "🚪 Salir",
-        signup: "✨ Crear Cuenta",
-        login: "🔑 Iniciar Sesión",
-        cityPlaceholder: "Detectando ubicación...",
-        engineTitle: "Cartelera Oficial con IA & Google Maps",
-        cinemaRealtime: "Cartelera Inteligente en Tiempo Real para",
-        cinemaSubtitle: "Accede instantáneamente al panel con IA de Google que integra mapas interactivos de Google Maps, horarios, salas y opciones de cines en tu ciudad.",
-        openCinema: "Abrir Cartelera Inteligente de",
-        directSearch: "Búsqueda Avanzada por Categoría en",
-        consultGoogle: "Consultar con IA",
-        activeChats: "Chats Activos",
-        noChats: "Aún no tienes matches. ¡Ve al Radar Citas y haz Match al instante!",
-        sendPlaceholder: "Escribe un mensaje, emoji o sticker...",
-        sendBtn: "Enviar",
-        matchTitle: "¡Es un Match Cinéfilo!",
-        openChatNow: "💬 Abrir Chat Ahora",
-        keepSearching: "Seguir Buscando"
-      },
-      en: {
-        loading: "⏳ Loading Plottwisme...",
-        cinema: "🎬 Now Playing",
-        forums: "💬 Forums",
-        radar: "🎯 Radar Dating",
-        chats: "💬 Chats",
-        critics: "📰 Critics",
-        profile: "👤 Profile",
-        admin: "🛡️ Admin",
-        logout: "🚪 Logout",
-        signup: "✨ Sign Up",
-        login: "🔑 Login",
-        cityPlaceholder: "Detecting location...",
-        engineTitle: "Official AI & Google Maps Cartelera",
-        cinemaRealtime: "Smart Real-Time Showtimes for",
-        cinemaSubtitle: "Instantly access the Google AI panel featuring interactive Google Maps, showtimes, theaters, and screening options in your city.",
-        openCinema: "Open Smart Showtimes for",
-        directSearch: "Advanced Category Search in",
-        consultGoogle: "Check with AI",
-        activeChats: "Active Chats",
-        noChats: "No matches yet. Go to Radar Dating and match instantly!",
-        sendPlaceholder: "Type a message, emoji or sticker...",
-        sendBtn: "Send",
-        matchTitle: "It's a Cinephile Match!",
-        openChatNow: "💬 Open Chat Now",
-        keepSearching: "Keep Searching"
-      }
-    };
-
-    const COUNTRY_CODES = [
-      { code: 'AR', name: 'Argentina 🇦🇷', defaultCity: 'Buenos Aires', lat: -34.6037, lon: -58.3816 },
-      { code: 'US', name: 'Estados Unidos 🇺🇸', defaultCity: 'New York', lat: 40.7128, lon: -74.0060 },
-      { code: 'CA', name: 'Canadá 🇨🇦', defaultCity: 'Toronto', lat: 43.6532, lon: -79.3832 },
-      { code: 'ES', name: 'España 🇪🇸', defaultCity: 'Madrid', lat: 40.4168, lon: -3.7038 },
-      { code: 'MX', name: 'México 🇲🇽', defaultCity: 'Ciudad de México', lat: 19.4326, lon: -99.1332 },
-      { code: 'CL', name: 'Chile 🇨🇱', defaultCity: 'Santiago', lat: -33.4489, lon: -70.6693 },
-      { code: 'CO', name: 'Colombia 🇨🇴', defaultCity: 'Bogotá', lat: 4.7110, lon: -74.0721 },
-      { code: 'PY', name: 'Paraguay 🇵🇾', defaultCity: 'Asunción', lat: -25.2637, lon: -57.5759 },
-      { code: 'UY', name: 'Uruguay 🇺🇾', defaultCity: 'Montevideo', lat: -34.9011, lon: -56.1645 },
-      { code: 'BR', name: 'Brasil 🇧🇷', defaultCity: 'São Paulo', lat: -23.5505, lon: -46.6333 },
-      { code: 'IT', name: 'Italia 🇮🇹', defaultCity: 'Roma', lat: 41.9028, lon: 12.4964 }
-    ];
-
-    const SEXUALITIES_OPTIONS = [
-      'Masculino', 'Femenino', 'No Binario', 'Género Fluido', 'Pansexual', 'Queer', 'Bisexual', 'Homosexual', 'Heterosexual', 'Otro'
-    ];
-
-    const SEEKING_SEXUALITIES_OPTIONS = [
-      'Todos / Cualquiera', 'Masculinos', 'Femeninos', 'No Binarios / Fluidos', 'Pansexuales / Queer', 'Bisexuales', 'Homosexuales', 'Heterosexuales'
-    ];
-
-    const SEARCH_CATEGORIES = [
-      { id: 'all', label: '🎬 Cartelera Completa con IA', queryFormat: 'cartelera de cines y horarios en {city}' },
-      { id: 'today', label: '🍿 Funciones y Horarios Hoy', queryFormat: 'horarios de cine hoy salas y complejos en {city}' },
-      { id: 'theaters', label: '🏛️ Mapas & Cines Cercanos', queryFormat: 'cines cercanos y mapas en {city}' },
-      { id: 'premieres', label: '⭐ Estrenos & Reseñas IA', queryFormat: 'estrenos de cine actuales y criticas en {city}' }
-    ];
-
-    const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
-      if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
-      const R = 6371;
-      const dLat = (lat2 - lat1) * (Math.PI / 180);
-      const dLon = (lon2 - lon1) * (Math.PI / 180);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return Math.round(R * c * 10) / 10;
-    };
-
-    function CinemaMapComponent({ userCity, userCoords, targetCoords, maxAllowedRadius, isDarkMode, cardBg, textColor }) {
-      const distanceToSelected = (userCoords && targetCoords) 
-        ? calculateDistanceKm(userCoords.lat, userCoords.lon, targetCoords.lat, targetCoords.lon)
-        : 0;
-
-      const isWithinLimit = distanceToSelected <= maxAllowedRadius;
-
-      const encodedQuery = encodeURIComponent(`cines en ${userCity}`);
-      const mapSrc = `https://www.google.com/maps?q=${encodedQuery}&output=embed`;
 
       return (
-        <div className={`${cardBg} p-4 rounded-3xl shadow-xl space-y-3`}>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className={`font-black ${textColor} text-sm flex items-center gap-2`}>
-              <span>🗺️ Google Maps - Cines en <span className="text-amber-500 capitalize">{userCity}</span></span>
-            </h3>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] bg-amber-500/20 text-amber-500 border border-amber-500/40 px-2.5 py-1 rounded-lg font-bold">
-                📏 Radio Máx. Plan: <b>{maxAllowedRadius} km</b>
-              </span>
-              <span className="text-[10px] text-emerald-400 font-bold">✔ Google Oficial</span>
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+          <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl font-black font-brand text-amber-500">Plottwisme</h1>
+              <p className="text-slate-400 text-sm">Red Social Cinéfila & Citas</p>
             </div>
-          </div>
 
-          {!isWithinLimit && (
-            <div className="bg-rose-500/20 border border-rose-500/50 p-3 rounded-2xl flex items-center justify-between text-xs text-rose-300">
-              <span>
+            {user ? (
+              <div className="space-y-4 text-center">
+                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                  <p className="text-sm text-slate-300">Sesión iniciada como:</p>
+                  <p className="font-bold text-amber-400 truncate">{user.email}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-2xl transition shadow-lg shadow-rose-600/20"
+                >
+                  🚪 Cerrar Sesión
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleLogin} className="space-y-4">
+                {errorMsg && (
+                  <div className="bg-rose-500/20 border border-rose-500/50 p-3 rounded-2xl text-xs text-rose-300">
+                    {errorMsg}
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Correo electrónico</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-500 text-sm"
+                    placeholder="tucorreo@email.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Contraseña</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-500 text-sm"
+                    placeholder="••••••••"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition shadow-lg shadow-amber-500/20"
+                >
+                  🔑 Iniciar Sesión
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
