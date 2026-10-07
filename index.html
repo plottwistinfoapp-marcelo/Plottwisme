@@ -72,9 +72,9 @@
       const [email, setEmail] = useState('');
       const [password, setPassword] = useState('');
       const [errorMsg, setErrorMsg] = useState('');
+      const [isRegistering, setIsRegistering] = useState(false);
 
       useEffect(() => {
-        // Esperar a que Firebase cargue de manera segura
         const checkAuthInterval = setInterval(() => {
           if (window.auth && window.FirebaseFns) {
             clearInterval(checkAuthInterval);
@@ -85,7 +85,6 @@
           }
         }, 200);
 
-        // Fallback por si demora la red
         const timer = setTimeout(() => {
           setLoading(false);
         }, 3000);
@@ -96,13 +95,17 @@
         };
       }, []);
 
-      const handleLogin = async (e) => {
+      const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorMsg('');
         try {
-          await window.FirebaseFns.signInWithEmailAndPassword(window.auth, email, password);
+          if (isRegistering) {
+            await window.FirebaseFns.createUserWithEmailAndPassword(window.auth, email, password);
+          } else {
+            await window.FirebaseFns.signInWithEmailAndPassword(window.auth, email, password);
+          }
         } catch (err) {
-          setErrorMsg("Error al iniciar sesión: " + err.message);
+          setErrorMsg("Error: " + err.message);
         }
       };
 
@@ -122,6 +125,9 @@
         );
       }
 
+      // Verificamos si el usuario actual es el administrador mediante su correo
+      const isAdmin = user && user.email === 'marbuttice@gmail.com';
+
       return (
         <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
           <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
@@ -132,10 +138,28 @@
 
             {user ? (
               <div className="space-y-4 text-center">
-                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-2">
                   <p className="text-sm text-slate-300">Sesión iniciada como:</p>
                   <p className="font-bold text-amber-400 truncate">{user.email}</p>
+                  
+                  {isAdmin ? (
+                    <span className="inline-block bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-extrabold px-3 py-1 rounded-full">
+                      🛡️ Panel de Administrador Activo
+                    </span>
+                  ) : (
+                    <span className="inline-block bg-slate-700/50 text-slate-300 text-xs px-3 py-1 rounded-full">
+                      👤 Usuario Cinéfilo
+                    </span>
+                  )}
                 </div>
+
+                {isAdmin && (
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-left text-xs text-amber-200 space-y-2">
+                    <p className="font-bold">✨ Controles de Admin:</p>
+                    <p>• Tienes acceso total a la moderación, gestión de la cartelera y herramientas del sistema.</p>
+                  </div>
+                )}
+
                 <button
                   onClick={handleLogout}
                   className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-2xl transition shadow-lg shadow-rose-600/20"
@@ -144,7 +168,7 @@
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {errorMsg && (
                   <div className="bg-rose-500/20 border border-rose-500/50 p-3 rounded-2xl text-xs text-rose-300">
                     {errorMsg}
@@ -174,10 +198,20 @@
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition shadow-lg shadow-amber-500/20"
+                  className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition shadow-lg shadow-amber-500/20 text-sm"
                 >
-                  🔑 Iniciar Sesión
+                  {isRegistering ? "✨ Registrarse" : "🔑 Iniciar Sesión"}
                 </button>
+
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsRegistering(!isRegistering)}
+                    className="text-xs text-slate-400 hover:text-amber-400 underline transition"
+                  >
+                    {isRegistering ? "¿Ya tienes cuenta? Inicia sesión" : "¿No tienes cuenta? Regístrate aquí"}
+                  </button>
+                </div>
               </form>
             )}
           </div>
