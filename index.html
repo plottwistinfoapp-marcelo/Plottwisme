@@ -249,7 +249,6 @@
 
       const [usersList, setUsersList] = useState([]);
       const [currentUser, setCurrentUser] = useState(null);
-      const [forcedAdminTest, setForcedAdminTest] = useState(true);
       
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
@@ -259,7 +258,7 @@
       const [userCountryCode, setUserCountryCode] = useState('AR');
       const [userCoords, setUserCoords] = useState(null);
       const [targetCoords, setTargetCoords] = useState({ lat: -34.6037, lon: -58.3816 });
-      const [matchRadiusKm, setMatchRadiusKm] = useState(1000);
+      const [matchRadiusKm, setMatchRadiusKm] = useState(100);
       const [radarFilterType, setRadarFilterType] = useState('all');
 
       useEffect(() => {
@@ -393,10 +392,9 @@
         };
       }, []);
 
-      const isStrictAdminUser = useMemo(() => {
-        const currentEmail = currentUser?.email?.toLowerCase().trim();
-        return currentEmail === 'marbuttice@gmail.com';
-      }, [currentUser]);
+      const currentEmailClean = currentUser?.email?.toLowerCase().trim();
+      const isAdmin = currentEmailClean === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
+      const isStrictAdminUser = currentEmailClean === 'marbuttice@gmail.com';
 
       const handleCityChangeInput = (newCityName) => {
         if (!isStrictAdminUser) return;
@@ -534,9 +532,7 @@
           setEditTv(currentUser.socialLinks?.tv || '');
           setEditMuteNotifications(currentUser.muteNotifications || false);
           
-          const emailCheck = currentUser.email?.toLowerCase().trim();
-          const isAdminUser = emailCheck === 'marbuttice@gmail.com' || currentUser.role === 'admin';
-          if (isAdminUser) {
+          if (isAdmin) {
             setMatchRadiusKm(1000);
           } else if (currentUser.isPremium) {
             setMatchRadiusKm(500);
@@ -544,10 +540,9 @@
             setMatchRadiusKm(100);
           }
         }
-      }, [currentUser]);
+      }, [currentUser, isAdmin]);
 
-      const isAdminUserComputed = forcedAdminTest || currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
-      const maxAllowedMapRadius = isAdminUserComputed ? 1000 : (currentUser?.isPremium ? 500 : 100);
+      const maxAllowedMapRadius = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 100);
 
       const openGoogleAIElEngine = (customQueryFormat = 'cartelera de cines y horarios en {city}') => {
         const cleanCity = userCity.trim() || 'Buenos Aires';
@@ -971,8 +966,6 @@
 
       const filteredCandidates = useMemo(() => {
         const others = usersList.filter(u => u.email !== currentUser?.email);
-        const emailCheck = currentUser?.email?.toLowerCase().trim();
-        const isAdmin = forcedAdminTest || emailCheck === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
         const maxLimit = isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 100);
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
@@ -997,7 +990,7 @@
 
           return true;
         });
-      }, [usersList, currentUser, matchRadiusKm, radarFilterType, forcedAdminTest]);
+      }, [usersList, currentUser, matchRadiusKm, radarFilterType, isAdmin]);
 
       const currentCandidate = filteredCandidates[currentIndex];
 
@@ -1126,7 +1119,6 @@
       };
 
       const unreadChatsCount = chatsList.length;
-      const isAdmin = isAdminUserComputed;
 
       const themeBg = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900';
       const navBg = isDarkMode ? 'bg-slate-950/95 border-slate-900' : 'bg-white/95 border-slate-200';
@@ -1202,16 +1194,6 @@
               </nav>
 
               <div className="flex items-center gap-2 shrink-0">
-                {currentUser?.email?.toLowerCase().trim() === 'marbuttice@gmail.com' && (
-                  <button 
-                    onClick={() => setForcedAdminTest(!forcedAdminTest)} 
-                    className={`px-2 py-1 rounded-lg text-[10px] font-black border transition-all ${forcedAdminTest ? 'bg-emerald-500 text-slate-950 border-emerald-400' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
-                    title="Interruptor rápido para alternar modo pruebas de admin"
-                  >
-                    {forcedAdminTest ? '⚙️ Test Admin: ON' : '⚙️ Test Admin: OFF'}
-                  </button>
-                )}
-
                 <button 
                   onClick={() => setIsDarkMode(!isDarkMode)} 
                   className={`p-1.5 rounded-xl text-xs border transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800 text-amber-400' : 'bg-slate-200 border-slate-300 text-amber-600'}`}
