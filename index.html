@@ -54,45 +54,161 @@
     .font-brand { font-family: 'Outfit', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .map-dark-mode { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+    .map-dark-mode {
+      filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    }
   </style>
 </head>
 <body class="antialiased selection:bg-amber-500 selection:text-slate-950 bg-slate-950 text-slate-100 min-h-screen">
   <div id="root">
     <div class="flex items-center justify-center min-h-screen text-amber-500 font-bold text-sm">
-      ⏳ Sintonizando Plottwisme...
+      ⏳ Sintonizando Plottwisme Admin Cloud Pro...
     </div>
   </div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useMemo, useEffect } = React;
 
     const QUICK_EMOJIS = ['🍿', '🍷', '🎬', '⭐', '❤️', '🔥', '😂', '👏', '🎟️', '🍕', '😎', '🎉'];
+    
+    const CINE_STICKERS = [
+      { id: 'st_1', name: 'Pochoclos Popcorn', url: 'STCK:🍿', subtitle: 'Pochoclos', label: '🍿 Pochoclos' },
+      { id: 'st_2', name: 'Copa de Vino', url: 'STCK:🍷', subtitle: 'Brindis', label: '🍷 Brindis' },
+      { id: 'st_3', name: 'Claqueta de Cine', url: 'STCK:🎬', subtitle: 'Acción', label: '🎬 Acción' },
+      { id: 'st_4', name: 'Butaca de Cine', url: 'STCK:🎟️', subtitle: 'Sala VIP', label: '🎟️ Sala VIP' }
+    ];
+
+    const getBrowserLang = () => {
+      const languages = navigator.languages || [navigator.language || navigator.userLanguage || 'es'];
+      for (let lang of languages) {
+        const l = lang.toLowerCase();
+        if (l.startsWith('es')) return 'es';
+        if (l.startsWith('en')) return 'en';
+        if (l.startsWith('pt')) return 'pt';
+        if (l.startsWith('it')) return 'it';
+        if (l.startsWith('fr')) return 'fr';
+      }
+      return 'es';
+    };
+
+    const TRANSLATIONS = {
+      es: {
+        loading: "⏳ Cargando Plottwisme...",
+        cinema: "🎬 Cartelera",
+        forums: "💬 Foros",
+        radar: "🎯 Radar Citas",
+        chats: "💬 Chats",
+        critics: "📰 Críticos",
+        profile: "👤 Perfil",
+        admin: "🛡️ Admin",
+        logout: "🚪 Salir",
+        signup: "✨ Crear Cuenta",
+        login: "🔑 Iniciar Sesión",
+        cityPlaceholder: "Detectando ubicación...",
+        engineTitle: "Cartelera Oficial con IA & Google Maps",
+        cinemaRealtime: "Cartelera Inteligente en Tiempo Real para",
+        cinemaSubtitle: "Accede instantáneamente al panel con IA de Google que integra mapas interactivos de Google Maps, horarios, salas y opciones de cines en tu ciudad.",
+        openCinema: "Abrir Cartelera Inteligente de",
+        directSearch: "Búsqueda Avanzada por Categoría en",
+        consultGoogle: "Consultar con IA",
+        activeChats: "Chats Activos",
+        noChats: "Aún no tienes matches. ¡Ve al Radar Citas y haz Match al instante!",
+        sendPlaceholder: "Escribe un mensaje, emoji o sticker...",
+        sendBtn: "Enviar",
+        matchTitle: "¡Es un Match Cinéfilo!",
+        openChatNow: "💬 Abrir Chat Ahora",
+        keepSearching: "Seguir Buscando"
+      },
+      en: {
+        loading: "⏳ Loading Plottwisme...",
+        cinema: "🎬 Now Playing",
+        forums: "💬 Forums",
+        radar: "🎯 Radar Dating",
+        chats: "💬 Chats",
+        critics: "📰 Critics",
+        profile: "👤 Profile",
+        admin: "🛡️ Admin",
+        logout: "🚪 Logout",
+        signup: "✨ Sign Up",
+        login: "🔑 Login",
+        cityPlaceholder: "Detecting location...",
+        engineTitle: "Official AI & Google Maps Cartelera",
+        cinemaRealtime: "Smart Real-Time Showtimes for",
+        cinemaSubtitle: "Instantly access the Google AI panel featuring interactive Google Maps, showtimes, theaters, and screening options in your city.",
+        openCinema: "Open Smart Showtimes for",
+        directSearch: "Advanced Category Search in",
+        consultGoogle: "Check with AI",
+        activeChats: "Active Chats",
+        noChats: "No matches yet. Go to Radar Dating and match instantly!",
+        sendPlaceholder: "Type a message, emoji or sticker...",
+        sendBtn: "Send",
+        matchTitle: "It's a Cinephile Match!",
+        openChatNow: "💬 Open Chat Now",
+        keepSearching: "Keep Searching"
+      }
+    };
 
     const COUNTRY_CODES = [
       { code: 'AR', name: 'Argentina 🇦🇷', defaultCity: 'Buenos Aires', lat: -34.6037, lon: -58.3816 },
       { code: 'US', name: 'Estados Unidos 🇺🇸', defaultCity: 'New York', lat: 40.7128, lon: -74.0060 },
+      { code: 'CA', name: 'Canadá 🇨🇦', defaultCity: 'Toronto', lat: 43.6532, lon: -79.3832 },
       { code: 'ES', name: 'España 🇪🇸', defaultCity: 'Madrid', lat: 40.4168, lon: -3.7038 },
       { code: 'MX', name: 'México 🇲🇽', defaultCity: 'Ciudad de México', lat: 19.4326, lon: -99.1332 },
+      { code: 'CL', name: 'Chile 🇨🇱', defaultCity: 'Santiago', lat: -33.4489, lon: -70.6693 },
       { code: 'CO', name: 'Colombia 🇨🇴', defaultCity: 'Bogotá', lat: 4.7110, lon: -74.0721 }
     ];
 
-    function CinemaMapComponent({ userCity }) {
-      const encodedQuery = encodeURIComponent(`cines en ${userCity || 'Buenos Aires'}`);
+    const SEXUALITIES_OPTIONS = [
+      'Masculino', 'Femenino', 'No Binario', 'Género Fluido', 'Pansexual', 'Queer', 'Bisexual', 'Homosexual', 'Heterosexual', 'Otro'
+    ];
+
+    const SEARCH_CATEGORIES = [
+      { id: 'all', label: '🎬 Cartelera Completa con IA', queryFormat: 'cartelera de cines y horarios en {city}' },
+      { id: 'today', label: '🍿 Funciones y Horarios Hoy', queryFormat: 'horarios de cine hoy salas y complejos en {city}' },
+      { id: 'theaters', label: '🏛️ Mapas & Cines Cercanos', queryFormat: 'cines cercanos y mapas en {city}' },
+      { id: 'premieres', label: '⭐ Estrenos & Reseñas IA', queryFormat: 'estrenos de cine actuales y criticas en {city}' }
+    ];
+
+    const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
+      const R = 6371;
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLon = (lon2 - lon1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return Math.round(R * c * 10) / 10;
+    };
+
+    function CinemaMapComponent({ userCity, userCoords, targetCoords, maxAllowedRadius, isDarkMode, cardBg, textColor }) {
+      const distanceToSelected = (userCoords && targetCoords) 
+        ? calculateDistanceKm(userCoords.lat, userCoords.lon, targetCoords.lat, targetCoords.lon)
+        : 0;
+
+      const isWithinLimit = distanceToSelected <= maxAllowedRadius;
+      const encodedQuery = encodeURIComponent(`cines en ${userCity}`);
       const mapSrc = `https://www.google.com/maps?q=${encodedQuery}&output=embed`;
 
       return (
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-3xl shadow-xl space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-black text-slate-100 text-sm flex items-center gap-2">
-              <span>🗺️ Google Maps - Cines en <span className="text-amber-500 capitalize">{userCity || 'Buenos Aires'}</span></span>
+        <div className={`${cardBg} p-4 rounded-3xl shadow-xl space-y-3 border border-slate-800`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className={`font-black ${textColor} text-sm flex items-center gap-2`}>
+              <span>🗺️ Google Maps - Cines en <span className="text-amber-500 capitalize">{userCity}</span></span>
             </h3>
             <span className="text-[10px] bg-amber-500/20 text-amber-500 border border-amber-500/40 px-2.5 py-1 rounded-lg font-bold">
-              ✔ Oficial
+              ✔ Google Oficial
             </span>
           </div>
-          <div className="w-full h-64 rounded-2xl overflow-hidden border border-slate-800">
-            <iframe title="Google Maps Cines" src={mapSrc} className="w-full h-full border-0 map-dark-mode" loading="lazy"></iframe>
+
+          <div className="w-full h-72 rounded-2xl overflow-hidden border border-slate-800 relative shadow-inner">
+            <iframe
+              title="Google Maps Cines"
+              src={mapSrc}
+              className={`w-full h-full border-0 ${isDarkMode ? 'map-dark-mode' : ''}`}
+              loading="lazy"
+            ></iframe>
           </div>
         </div>
       );
@@ -105,10 +221,14 @@
       const [password, setPassword] = useState('');
       const [errorMsg, setErrorMsg] = useState('');
       const [isRegistering, setIsRegistering] = useState(false);
+      
       const [activeTab, setActiveTab] = useState('cinema');
       const [userCity, setUserCity] = useState('Buenos Aires');
+      const [lang, setLang] = useState('es');
+      const t = TRANSLATIONS[lang] || TRANSLATIONS.es;
 
       useEffect(() => {
+        setLang(getBrowserLang());
         const checkAuthInterval = setInterval(() => {
           if (window.auth && window.FirebaseFns) {
             clearInterval(checkAuthInterval);
@@ -154,14 +274,14 @@
       if (loading) {
         return (
           <div className="flex items-center justify-center min-h-screen bg-slate-950 text-amber-500 font-bold text-sm">
-            ⏳ Cargando Plottwisme Cloud...
+            ⏳ Sintonizando Plottwisme Admin Cloud Pro...
           </div>
         );
       }
 
       const isAdmin = user && user.email === 'marbuttice@gmail.com';
 
-      // Si no ha iniciado sesión, mostramos la pantalla de acceso limpia
+      // Pantalla de autenticación estándar y limpia
       if (!user) {
         return (
           <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
@@ -221,9 +341,9 @@
         );
       }
 
+      // Aplicación completa con todas las secciones de cine, foros, radar y admin
       return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-20">
-          {/* Header de navegación */}
+        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-24">
           <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-black font-brand text-amber-500">Plottwisme</h1>
@@ -237,52 +357,56 @@
               <span className="text-xs text-slate-400 hidden sm:inline">{user.email}</span>
               <button
                 onClick={handleLogout}
-                className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 text-xs font-bold px-3 py-1.5 rounded-xl border border-rose-500/30 transition"
+                className="bg-rose-500/25 hover:bg-rose-500/40 text-rose-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-rose-500/40 transition"
               >
-                Salir
+                {t.logout}
               </button>
             </div>
           </header>
 
-          {/* Menú inferior o pestañas principales */}
           <nav className="bg-slate-900/80 backdrop-blur border-b border-slate-800 px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveTab('cinema')}
               className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${activeTab === 'cinema' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
             >
-              🎬 Cartelera IA
+              {t.cinema}
             </button>
             <button
               onClick={() => setActiveTab('radar')}
               className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${activeTab === 'radar' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
             >
-              🎯 Radar Citas
+              {t.radar}
             </button>
             <button
               onClick={() => setActiveTab('forums')}
               className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${activeTab === 'forums' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
             >
-              💬 Foros Cine
+              {t.forums}
+            </button>
+            <button
+              onClick={() => setActiveTab('chats')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${activeTab === 'chats' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+            >
+              {t.chats}
             </button>
             {isAdmin && (
               <button
                 onClick={() => setActiveTab('admin')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${activeTab === 'admin' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-slate-800 text-amber-400 hover:bg-slate-700'}`}
               >
-                🛡️ Panel Admin Pro
+                {t.admin}
               </button>
             )}
           </nav>
 
-          {/* Contenido dinámico según la pestaña activa */}
           <main className="flex-1 max-w-4xl w-full mx-auto p-4 space-y-6">
             {activeTab === 'cinema' && (
               <div className="space-y-6">
-                <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <h2 className="text-lg font-black text-slate-100">Cartelera Inteligente en Tiempo Real</h2>
-                      <p className="text-xs text-slate-400">Consulta los cines, horarios y estrenos según tu ubicación.</p>
+                      <h2 className="text-lg font-black text-slate-100">{t.cinemaRealtime} <span className="text-amber-500 capitalize">{userCity}</span></h2>
+                      <p className="text-xs text-slate-400">{t.cinemaSubtitle}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <input
@@ -290,49 +414,58 @@
                         value={userCity}
                         onChange={(e) => setUserCity(e.target.value)}
                         className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
-                        placeholder="Tu ciudad..."
+                        placeholder="Ciudad..."
                       />
                     </div>
                   </div>
                 </div>
 
-                <CinemaMapComponent userCity={userCity} />
+                <CinemaMapComponent userCity={userCity} maxAllowedRadius={50} isDarkMode={true} cardBg="bg-slate-900" textColor="text-slate-100" />
               </div>
             )}
 
             {activeTab === 'radar' && (
-              <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl text-center space-y-4">
+              <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl text-center space-y-4 shadow-xl">
                 <h2 className="text-lg font-black text-amber-500">🎯 Radar de Citas Cinéfilas</h2>
-                <p className="text-sm text-slate-300">Conecta con otros amantes del cine que comparten tus mismos gustos en la gran pantalla.</p>
+                <p className="text-sm text-slate-300">Conecta con cinéfilos cercanos en <span className="text-amber-400 font-bold capitalize">{userCity}</span>.</p>
                 <div className="p-8 bg-slate-950 border border-slate-800 rounded-2xl text-slate-400 text-sm">
-                  Buscando cinéfilos cercanos en <span className="text-amber-400 font-bold capitalize">{userCity}</span>... ¡Pronto aparecerán perfiles compatibles!
+                  Buscando perfiles compatibles en el radar... ¡Pronto aparecerán matches!
                 </div>
               </div>
             )}
 
             {activeTab === 'forums' && (
-              <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
-                <h2 className="text-lg font-black text-amber-500">💬 Foros y Debates de Películas</h2>
-                <p className="text-xs text-slate-400">Comparte reseñas, teorías y comentarios sobre tus últimas funciones.</p>
+              <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+                <h2 className="text-lg font-black text-amber-500">💬 Foros de Cine y Debates</h2>
+                <p className="text-xs text-slate-400">Comparte opiniones y hilos de discusión con la comunidad.</p>
                 <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-2">
-                  <p className="text-xs font-bold text-slate-300">🍿 Comunidad Plottwisme</p>
-                  <p className="text-xs text-slate-400">El foro está activo. ¡Crea el primer debate del día!</p>
+                  <p className="text-xs font-bold text-slate-300">🍿 Comunidad Activa</p>
+                  <p className="text-xs text-slate-400">Los debates de la cartelera están listos para comentar.</p>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'chats' && (
+              <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+                <h2 className="text-lg font-black text-amber-500">{t.activeChats}</h2>
+                <div className="p-8 bg-slate-950 border border-slate-800 rounded-2xl text-center text-slate-400 text-sm">
+                  {t.noChats}
                 </div>
               </div>
             )}
 
             {activeTab === 'admin' && isAdmin && (
-              <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
-                <h2 className="text-lg font-black text-amber-500">🛡️ Panel de Control del Administrador</h2>
-                <p className="text-xs text-slate-400">Herramientas globales de gestión y supervisión de la plataforma.</p>
+              <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+                <h2 className="text-lg font-black text-amber-500">🛡️ Panel de Control Admin Pro</h2>
+                <p className="text-xs text-slate-400">Gestión completa de usuarios, base de datos y despliegues en producción.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-1">
-                    <p className="text-xs font-bold text-amber-400">📊 Estado de Base de Datos</p>
-                    <p className="text-[11px] text-slate-400">Firebase Firestore y Auth conectados correctamente.</p>
+                    <p className="text-xs font-bold text-amber-400">📊 Base de Datos</p>
+                    <p className="text-[11px] text-slate-400">Firebase Firestore y Auth operando correctamente.</p>
                   </div>
                   <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-1">
-                    <p className="text-xs font-bold text-emerald-400">⚡ Vercel & IONOS</p>
-                    <p className="text-[11px] text-slate-400">Despliegue operativo en producción.</p>
+                    <p className="text-xs font-bold text-emerald-400">⚡ Estado Vercel</p>
+                    <p className="text-[11px] text-slate-400">Dominio y despliegue sincronizados en producción.</p>
                   </div>
                 </div>
               </div>
