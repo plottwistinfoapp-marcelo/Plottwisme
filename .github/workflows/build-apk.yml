@@ -64,13 +64,11 @@ jobs:
       run: |
         echo "$KEYSTORE_BASE64" | base64 -d > android.keystore
         AAB_FILE=$(find android -name "*.aab" | head -n 1)
-        
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" $AAB_FILE androiddb || \
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass "$KEYSTORE_PASSWORD" $AAB_FILE android || \
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass "$KEYSTORE_PASSWORD" $AAB_FILE my-alias
-        
+
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android.keystore -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" "$AAB_FILE" upload
+
         mkdir -p release-output
-        cp $AAB_FILE release-output/app-release-official-signed.aab
+        cp "$AAB_FILE" release-output/app-release-official-signed.aab
 
     - name: Upload Official Signed AAB Artifact
       uses: actions/upload-artifact@v4
