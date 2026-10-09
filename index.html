@@ -212,7 +212,7 @@
     };
 
     function CinemaMapComponent({ userCity, userCoords, targetCoords, maxAllowedRadius, isDarkMode, cardBg, textColor }) {
-      const center = userCoords || targetCoords || null;
+      const center = targetCoords || userCoords || null;
       const [radius, setRadius] = useState(Math.min(15, maxAllowedRadius));
       const [debRadius, setDebRadius] = useState(radius);
       const [cinemas, setCinemas] = useState([]);
@@ -447,7 +447,17 @@
       const handleCityChangeInput = (newCityName) => {
         if (!isStrictAdminUser) return;
         setUserCity(newCityName);
-        setTargetCoords({ lat: (targetCoords?.lat || -34.6037) + 0.05, lon: (targetCoords?.lon || -58.3816) + 0.05 });
+        clearTimeout(window.__geoTimer);
+        const name = (newCityName || '').trim();
+        if (name.length < 3) return;
+        window.__geoTimer = setTimeout(() => {
+          fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(name), { headers: { 'Accept-Language': 'es' } })
+            .then(r => r.json())
+            .then(res => {
+              if (res && res[0]) setTargetCoords({ lat: parseFloat(res[0].lat), lon: parseFloat(res[0].lon) });
+            })
+            .catch(() => {});
+        }, 900);
       };
 
       const handleAdminCountryChange = (newCountryCode) => {
@@ -2017,4 +2027,3 @@
   </script>
 </body>
 </html>
-
