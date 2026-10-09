@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -217,6 +218,7 @@
       const [debRadius, setDebRadius] = useState(radius);
       const [cinemas, setCinemas] = useState([]);
       const [status, setStatus] = useState('idle');
+      const [retryTick, setRetryTick] = useState(0);
 
       useEffect(() => {
         const t = setTimeout(() => setDebRadius(radius), 600);
@@ -228,9 +230,12 @@
         const ctrl = new AbortController();
         setStatus('loading');
         const r = Math.round(debRadius * 1000);
-        const q = `[out:json][timeout:25];(node["amenity"="cinema"](around:${r},${center.lat},${center.lon});way["amenity"="cinema"](around:${r},${center.lat},${center.lon}););out center tags;`;
-        fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctrl.signal })
+        const q = `[out:json][timeout:40];(node["amenity"="cinema"](around:${r},${center.lat},${center.lon});way["amenity"="cinema"](around:${r},${center.lat},${center.lon}););out center tags;`;
+        const mirrors = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+        const tryMirror = (i) => fetch(mirrors[i], { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctrl.signal })
           .then(res => { if (!res.ok) throw new Error('http ' + res.status); return res.json(); })
+          .catch(err => { if (err.name === 'AbortError' || i + 1 >= mirrors.length) throw err; return tryMirror(i + 1); });
+        tryMirror(0)
           .then(data => {
             const list = (data.elements || []).map(el => {
               const lat = el.lat ?? el.center?.lat; const lon = el.lon ?? el.center?.lon;
@@ -241,7 +246,7 @@
           })
           .catch(err => { if (err.name !== 'AbortError') setStatus('error'); });
         return () => ctrl.abort();
-      }, [center?.lat, center?.lon, debRadius]);
+      }, [center?.lat, center?.lon, debRadius, retryTick]);
 
       const zoom = Math.max(8, Math.min(14, Math.round(15 - Math.log2(Math.max(radius, 1) / 1.2))));
       const mapSrc = center
@@ -268,7 +273,12 @@
           <div className="space-y-2">
             {status === 'loading' && <p className={`text-xs ${textColor}`}>⏳ Buscando cines en {radius} km…</p>}
             {status === 'nocoords' && <p className={`text-xs ${textColor}`}>Activa tu ubicación para ver los cines del radio.</p>}
-            {status === 'error' && <p className="text-xs text-rose-400">No se pudo cargar la lista de cines. Intenta de nuevo en un momento.</p>}
+            {status === 'error' && (
+              <div className="space-y-2">
+                <p className="text-xs text-rose-400">No se pudo cargar la lista de cines. Con radios muy grandes el servicio puede tardar o fallar; prueba un radio menor o reintenta.</p>
+                <button onClick={() => setRetryTick(n => n + 1)} className="text-xs px-3 py-1.5 rounded-xl bg-amber-500 text-black font-bold">🔄 Reintentar</button>
+              </div>
+            )}
             {status === 'ok' && cinemas.length === 0 && <p className={`text-xs ${textColor}`}>No encontramos cines en {debRadius} km. Prueba ampliando el radio.</p>}
             {status === 'ok' && cinemas.length > 0 && <p className={`text-xs font-bold ${textColor}`}>🎬 {cinemas.length} cine{cinemas.length > 1 ? 's' : ''} en {debRadius} km</p>}
             {cinemas.map(c => (
