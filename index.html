@@ -616,7 +616,7 @@
               nextKnown[c.id] = last ? last.id : null;
               if (known && !(c.id in known) && !last && !pendingIds[c.id]) {
                 const st0 = stateRef.current;
-                if (st0.notify) st0.notify('¡Nuevo Match en Plottwisme! 🍿', `Hiciste match con ${c.userName || 'alguien'}. ¡Abre el chat!`);
+                if (st0.notify) st0.notify('¡Nuevo Match en Plottwisme! 🍿', `Hiciste match con ${(st0.peerOf ? st0.peerOf(c).name : c.userName) || 'alguien'}. ¡Abre el chat!`);
                 if (st0.beep) st0.beep();
               }
               if (known && last && known[c.id] !== last.id && last.sender !== currentUser.name) {
@@ -624,7 +624,7 @@
                 const viewing = st.activeTab === 'chats' && st.activeChat && st.activeChat.id === c.id && document.visibilityState === 'visible';
                 if (!viewing) {
                   const body = (last.isSticker || (last.text || '').startsWith('STCK:')) ? 'Sticker cinéfilo 🎬' : (last.text || '');
-                  if (st.notify) st.notify(`Nuevo mensaje de ${c.userName || last.sender} 💬`, body);
+                  if (st.notify) st.notify(`Nuevo mensaje de ${(st.peerOf ? st.peerOf(c).name : c.userName) || last.sender} 💬`, body);
                   if (st.beep) st.beep();
                 }
               }
@@ -1260,10 +1260,19 @@
         if (activeTab === 'chats' && activeChat && activeChat.id === chat.id) return false;
         return readMap[chat.id] !== last.id;
       };
+      const peerOf = (chat) => {
+        const other = (chat.participants || []).find(e => e && currentUser && e.toLowerCase() !== currentUser.email.toLowerCase());
+        const u = other ? usersList.find(x => x.email && x.email.toLowerCase() === other.toLowerCase()) : null;
+        return {
+          name: u ? u.name : (chat.userName || (other ? other.split('@')[0] : 'Chat')),
+          avatar: u ? ((u.photos && u.photos[0]) || u.avatar) : (chat.userAvatar || ''),
+          id: u ? u.id : chat.userId
+        };
+      };
       const unreadChatsCount = chatsList.filter(isChatUnread).length;
 
       stateRef.current = {
-        activeChat, activeTab,
+        activeChat, activeTab, peerOf,
         notify: triggerPushNotification,
         beep: () => {
           try {
@@ -1639,9 +1648,9 @@
                           onClick={() => { setActiveChat(chat); setShowEmojiPicker(false); setShowStickerPicker(false); }}
                           className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all ${activeChat?.id === chat.id ? 'bg-amber-500/20 border border-amber-500/50' : `${isDarkMode ? 'hover:bg-slate-800/60' : 'hover:bg-slate-100'}`}`}
                         >
-                          <img src={chat.userAvatar} alt={chat.userName} className="w-12 h-12 rounded-full object-cover border border-amber-500/30" />
+                          <img src={peerOf(chat).avatar} alt={peerOf(chat).name} className="w-12 h-12 rounded-full object-cover border border-amber-500/30" />
                           <div className="overflow-hidden flex-1">
-                            <h4 className={`${isChatUnread(chat) ? 'font-black' : 'font-bold'} ${textColor} text-sm truncate`}>{chat.userName}{isChatUnread(chat) && <span className="ml-2 inline-block w-2.5 h-2.5 rounded-full bg-rose-500 align-middle"></span>}</h4>
+                            <h4 className={`${isChatUnread(chat) ? 'font-black' : 'font-bold'} ${textColor} text-sm truncate`}>{peerOf(chat).name}{isChatUnread(chat) && <span className="ml-2 inline-block w-2.5 h-2.5 rounded-full bg-rose-500 align-middle"></span>}</h4>
                             <p className={`text-xs ${mutedText} truncate`}>
                               {chat.messages[chat.messages.length - 1]?.isSticker || chat.messages[chat.messages.length - 1]?.text?.startsWith('STCK:') ? '🎬 [Sticker Cinéfilo]' : (chat.messages[chat.messages.length - 1]?.text || 'Match')}
                             </p>
@@ -1657,9 +1666,9 @@
                         <div className={`flex items-center justify-between gap-2 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-3`}>
                           <div className="flex items-center gap-3 min-w-0">
                             <button type="button" onClick={() => { setActiveChat(null); setShowEmojiPicker(false); setShowStickerPicker(false); }} className={`md:hidden shrink-0 ${cardBg} w-9 h-9 rounded-full text-lg font-black ${textColor}`} aria-label="Volver">←</button>
-                            <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                            <img src={peerOf(activeChat).avatar} alt={peerOf(activeChat).name} className="w-10 h-10 rounded-full object-cover shrink-0" />
                             <div className="min-w-0">
-                              <h3 className={`font-bold ${textColor} text-sm truncate`}>{activeChat.userName}</h3>
+                              <h3 className={`font-bold ${textColor} text-sm truncate`}>{peerOf(activeChat).name}</h3>
                               <span className="text-[10px] text-emerald-500 font-bold">🟢 En línea</span>
                             </div>
                           </div>
@@ -2010,7 +2019,7 @@
                 </div>
                 <h3 className="text-2xl font-black text-amber-500">{t.matchTitle}</h3>
                 <div className="flex flex-col gap-2 pt-2">
-                  <button onClick={() => { setShowMatchModal(false); const chat = chatsList.find(c => c.userId === matchedUser.id); if (chat) setActiveChat(chat); setActiveTab('chats'); }} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">{t.openChatNow}</button>
+                  <button onClick={() => { setShowMatchModal(false); const chat = chatsList.find(c => (c.participants || []).includes(matchedUser.email)); if (chat) setActiveChat(chat); setActiveTab('chats'); }} className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase">{t.openChatNow}</button>
                   <button onClick={() => setShowMatchModal(false)} className={`w-full ${subCardBg} ${textColor} font-bold py-2.5 rounded-xl text-xs`}>{t.keepSearching}</button>
                 </div>
               </div>
