@@ -410,6 +410,7 @@
 
       const [authEmail, setAuthEmail] = useState('');
       const [authPassword, setAuthPassword] = useState('');
+      const [showPass, setShowPass] = useState(false);
       const [authName, setAuthName] = useState('');
       const [authBirthdate, setAuthBirthdate] = useState('2000-01-01');
       const [authSex, setAuthSex] = useState('Masculino');
@@ -2176,7 +2177,13 @@
                     </div>
                     <div>
                       <label className={`block mb-1 ${mutedText} font-bold`}>Contraseña:</label>
-                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`} required />
+                      <div className="relative">
+                        <input type={showPass ? 'text' : 'password'} value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} autoCapitalize="none" spellCheck="false" className={`w-full ${inputBg} rounded-xl p-3 pr-12`} required />
+                        <button type="button" onClick={() => setShowPass(v => !v)} aria-label="Mostrar u ocultar contraseña" className="absolute right-3 top-1/2 -translate-y-1/2 text-lg">{showPass ? '🙈' : '👁️'}</button>
+                      </div>
+                      {authPassword.length > 0 && (authPassword.length < 6
+                        ? <p className="text-rose-500 font-bold mt-1">✖ Mínimo 6 caracteres (llevás {authPassword.length})</p>
+                        : <p className="text-emerald-500 font-bold mt-1">✔ Contraseña válida</p>)}
                     </div>
                     <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Registrarme</button>
                   </form>
@@ -2190,7 +2197,10 @@
                     </div>
                     <div>
                       <label className={`${mutedText} font-bold block mb-1`}>Contraseña:</label>
-                      <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`} required />
+                      <div className="relative">
+                        <input type={showPass ? 'text' : 'password'} value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} autoCapitalize="none" spellCheck="false" className={`w-full ${inputBg} rounded-xl p-3 pr-12`} required />
+                        <button type="button" onClick={() => setShowPass(v => !v)} aria-label="Mostrar u ocultar contraseña" className="absolute right-3 top-1/2 -translate-y-1/2 text-lg">{showPass ? '🙈' : '👁️'}</button>
+                      </div>
                     </div>
                     <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Ingresar</button>
                     <button type="button" onClick={handleResetPassword} className="w-full text-amber-500 font-bold py-2 text-xs underline">¿Olvidaste tu contraseña?</button>
