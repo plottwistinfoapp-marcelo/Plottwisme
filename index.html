@@ -24,7 +24,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDHdoWQUZDNjxfvq7Rfl4Hvgpp8z-DoDMo",
@@ -41,7 +41,7 @@
     window.auth = getAuth(app);
     window.FirebaseFns = {
       signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged,
-      collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp
+      collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp
     };
   </script>
 
@@ -483,8 +483,13 @@
           setActiveChat(null);
           return;
         }
-        const { collection, onSnapshot } = window.FirebaseFns;
-        const unsubChats = onSnapshot(collection(window.db, "chats"), (snapshot) => {
+        const { collection, onSnapshot, query, where } = window.FirebaseFns;
+        // Seguridad: pedimos a Firestore SOLO los chats donde participa este usuario
+        const chatsQuery = query(
+          collection(window.db, "chats"),
+          where("participants", "array-contains", currentUser.email)
+        );
+        const unsubChats = onSnapshot(chatsQuery, (snapshot) => {
           let loadedChats = [];
           snapshot.forEach(docSnap => {
             const chatData = docSnap.data();
@@ -499,7 +504,7 @@
             const updated = loadedChats.find(c => c.id === prev.id);
             return updated || null;
           });
-        });
+        }, (err) => { console.error("Error al cargar chats:", err); });
 
         return () => unsubChats();
       }, [currentUser]);
@@ -1942,3 +1947,4 @@
   </script>
 </body>
 </html>
+
