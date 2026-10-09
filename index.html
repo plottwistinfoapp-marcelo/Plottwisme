@@ -1041,12 +1041,45 @@
                 loggedData.verified = true;
               }
               setCurrentUser(loggedData);
+            } else {
+              // La cuenta existe pero su ficha no se guardó: la recreamos con datos básicos
+              const mail = (userCred.user.email || cleanEmail).toLowerCase();
+              const recovered = {
+                id: uid,
+                name: userCred.user.displayName || mail.split('@')[0],
+                email: mail,
+                age: 18,
+                birthdate: '',
+                sex: 'Otro',
+                interestedIn: 'Todos / Cualquiera',
+                publicBio: 'Apasionado por el cine y las buenas charlas.',
+                datingBio: 'Buscando conectar para citas y películas.',
+                location: userCity,
+                lat: userCoords?.lat || -34.6037,
+                lon: userCoords?.lon || -58.3816,
+                distanceKm: 5.0,
+                role: 'general',
+                roleLabel: 'Cinéfilo',
+                isPremium: false,
+                isCritic: false,
+                verified: false,
+                kycVerified: false,
+                muteNotifications: false,
+                photos: [],
+                avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80',
+                socialLinks: {}
+              };
+              await window.FirebaseFns.setDoc(window.FirebaseFns.doc(window.db, "users", uid), recovered);
+              setCurrentUser(recovered);
             }
           }
           setShowAuthModal(false);
           setAuthEmail('');
           setAuthPassword('');
-        } catch (err) {}
+        } catch (err) {
+          console.error('Error de acceso:', err);
+          try { window.alert('No se pudo completar el acceso: ' + (err && (err.code || err.message) || 'error desconocido')); } catch (e) {}
+        }
       };
 
       const handleForgotSubmit = async (e) => {
