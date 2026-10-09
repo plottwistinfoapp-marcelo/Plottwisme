@@ -213,8 +213,10 @@
 
     function CinemaMapComponent({ userCity, userCoords, targetCoords, maxAllowedRadius, isDarkMode, cardBg, textColor }) {
       const center = targetCoords || userCoords || null;
-      const [radius, setRadius] = useState(Math.min(15, maxAllowedRadius));
-      const [debRadius, setDebRadius] = useState(radius);
+      const defaultRadius = Math.min(maxAllowedRadius, 500);
+      const [radius, setRadius] = useState(defaultRadius);
+      const [debRadius, setDebRadius] = useState(defaultRadius);
+      useEffect(() => { setRadius(defaultRadius); setDebRadius(defaultRadius); }, [defaultRadius]);
       const [cinemas, setCinemas] = useState([]);
       const [status, setStatus] = useState('idle');
       const [retryTick, setRetryTick] = useState(0);
