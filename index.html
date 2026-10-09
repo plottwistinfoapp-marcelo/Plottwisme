@@ -241,7 +241,7 @@
             const list = (data.elements || []).map(el => {
               const lat = el.lat ?? el.center?.lat; const lon = el.lon ?? el.center?.lon;
               return { id: el.type + el.id, name: el.tags?.name || 'Cine', website: el.tags?.website || el.tags?.['contact:website'] || '', city: el.tags?.['addr:city'] || '', lat, lon, dist: calculateDistanceKm(center.lat, center.lon, lat, lon) };
-            }).filter(c => c.lat && c.lon && c.dist <= debRadius).sort((a, b) => a.dist - b.dist).slice(0, 30);
+            }).filter(c => c.lat && c.lon && c.dist <= debRadius).sort((a, b) => a.dist - b.dist).filter((c, i, arr) => arr.findIndex(x => x.name === c.name && x.dist === c.dist) === i).slice(0, 30);
             setCinemas(list);
             setStatus('ok');
           })
@@ -1302,14 +1302,6 @@
                   cardBg={cardBg} 
                   textColor={textColor} 
                 />
-
-                <button
-                  onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city}')}
-                  className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center justify-center gap-3"
-                >
-                  <span>🎬 Ver cartelera completa en Google · {userCity}</span>
-                  <span>↗</span>
-                </button>
               </div>
             )}
 
