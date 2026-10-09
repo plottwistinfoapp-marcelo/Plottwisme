@@ -23,7 +23,7 @@
   <!-- Firebase SDKs con integridad y verificación automática de Cloud Storage -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -40,7 +40,7 @@
     window.db = getFirestore(app);
     window.auth = getAuth(app);
     window.FirebaseFns = {
-      signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged,
+      signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail,
       collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp
     };
   </script>
@@ -909,6 +909,20 @@
               roleLabel: nextPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
             });
           } catch (err) {}
+        }
+      };
+
+      const handleResetPassword = async () => {
+        const em = authEmail.toLowerCase().trim();
+        if (!em) { window.alert('Escribí tu correo arriba y volvé a tocar "¿Olvidaste tu contraseña?".'); return; }
+        try {
+          await window.FirebaseFns.sendPasswordResetEmail(window.auth, em);
+          window.alert('Listo. Si ' + em + ' tiene una cuenta, te llegó un correo para crear una contraseña nueva. Revisá también Spam.');
+        } catch (err) {
+          const c = err && err.code;
+          if (c === 'auth/invalid-email') window.alert('El correo no es válido.');
+          else if (c === 'auth/too-many-requests') window.alert('Demasiados intentos. Probá de nuevo en unos minutos.');
+          else window.alert('No se pudo enviar el correo: ' + (c || err.message));
         }
       };
 
@@ -2178,6 +2192,7 @@
                       <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`} required />
                     </div>
                     <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">Ingresar</button>
+                    <button type="button" onClick={handleResetPassword} className="w-full text-amber-500 font-bold py-2 text-xs underline">¿Olvidaste tu contraseña?</button>
                   </form>
                 )}
               </div>
