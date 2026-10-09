@@ -3891,10 +3891,13 @@
                 )}
               </nav>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <select value={lang} onChange={(e) => setLang(e.target.value)} aria-label={tr('Idioma')} title={tr('Idioma')} className={`p-1.5 rounded-xl text-xs border max-w-[5.5rem] ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-amber-300 text-slate-800'}`}>
-                  {LANGS.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
-                </select>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="relative shrink-0">
+                  <div className={`px-2 py-1.5 rounded-xl text-[11px] font-bold border pointer-events-none ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-amber-300 text-slate-800'}`}>🌐 {lang.toUpperCase()}</div>
+                  <select value={lang} onChange={(e) => setLang(e.target.value)} aria-label={tr('Idioma')} title={tr('Idioma')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    {LANGS.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+                  </select>
+                </div>
                 <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1.5 rounded-xl text-xs border ${isDarkMode ? 'bg-slate-900 border-slate-800 text-amber-400' : 'bg-slate-200 border-slate-300 text-amber-600'}`}>
                   {isDarkMode ? '☀️' : '🌙'}
                 </button>
@@ -4713,3 +4716,4 @@
   </script>
 </body>
 </html>
+
