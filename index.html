@@ -629,9 +629,7 @@
               userId: candidate.id,
               userName: candidate.name,
               userAvatar: candidate.photos?.[0] || candidate.avatar,
-              messages: [
-                { id: 'm_init', sender: candidate.name, text: `¡Hola ${currentUser.name}! Match para Cita 🍿🍷`, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
-              ]
+              messages: []
             };
             await window.FirebaseFns.setDoc(chatRef, newChat);
             triggerPushNotification("¡Nuevo Match en Plottwisme! 🍿", `Hiciste match con ${candidate.name}. ¡Abre el chat!`);
@@ -1947,4 +1945,3 @@
   </script>
 </body>
 </html>
-
