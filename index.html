@@ -304,7 +304,7 @@
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <a href={`https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lon}`} target="_blank" rel="noopener noreferrer" className="text-xs px-3 py-1.5 rounded-xl bg-amber-500 text-black font-bold">Cómo llegar</a>
-                  <a href={`https://www.google.com/search?q=${encodeURIComponent('horarios cartelera cine ' + c.name + ' ' + (c.city || (c.dist <= 20 ? userCity : '')))}`} target="_blank" rel="noopener noreferrer" className="text-xs px-3 py-1.5 rounded-xl border border-amber-500/50 text-amber-500 font-bold">Ver horarios</a>
+                  <a href={c.city ? `https://www.google.com/search?q=${encodeURIComponent('horarios cartelera cine ' + c.name + ' ' + c.city)}` : `https://www.google.com/maps/search/${encodeURIComponent(c.name)}/@${c.lat},${c.lon},16z`} target="_blank" rel="noopener noreferrer" className="text-xs px-3 py-1.5 rounded-xl border border-amber-500/50 text-amber-500 font-bold">Ver horarios</a>
                   {safeUrl(c.website) && <a href={safeUrl(c.website)} target="_blank" rel="noopener noreferrer" className="text-xs px-3 py-1.5 rounded-xl border border-amber-500/50 text-amber-500 font-bold">Sitio web</a>}
                 </div>
               </div>
