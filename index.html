@@ -1301,51 +1301,13 @@
                   textColor={textColor} 
                 />
 
-                <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r ${isDarkMode ? 'from-amber-500/20 via-slate-900 to-slate-900 border-amber-500/30' : 'from-amber-500/30 via-white to-white border-amber-500/40'} border p-8 shadow-2xl`}>
-                  <div className="max-w-2xl space-y-4">
-                    <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-3 py-1 rounded-md uppercase tracking-wider">
-                      {t.engineTitle}
-                    </span>
-                    <h2 className={`text-3xl font-black ${textColor} leading-tight`}>
-                      {t.cinemaRealtime} <span className="text-amber-500 capitalize">{userCity}</span>
-                    </h2>
-                    <p className={`text-sm ${mutedText} leading-relaxed`}>{t.cinemaSubtitle}</p>
-                    <div className="pt-2">
-                      <button 
-                        onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city}')} 
-                        className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center gap-3 hover:scale-105"
-                      >
-                        <span>🤖 {t.openCinema} {userCity}</span>
-                        <span>↗</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className={`text-lg font-black ${textColor} leading-snug`}>
-                    ⚡ {t.directSearch} <span className="text-amber-500 capitalize">{userCity}</span>
-                  </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {SEARCH_CATEGORIES.map(cat => (
-                      <div 
-                        key={cat.id} 
-                        onClick={() => openGoogleAIElEngine(cat.queryFormat)}
-                        className={`${cardBg} hover:border-amber-500/60 p-5 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 shadow-lg group flex flex-col justify-between space-y-4`}
-                      >
-                        <div>
-                          <h4 className={`font-bold ${textColor} group-hover:text-amber-500 transition-colors text-sm`}>{cat.label}</h4>
-                          <p className={`text-xs ${mutedText} mt-1`}>Con IA & Mapas Google.</p>
-                        </div>
-                        <div className={`text-xs font-bold text-amber-500 flex items-center justify-between pt-2 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
-                          <span>{t.consultGoogle}</span>
-                          <span>↗</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <button
+                  onClick={() => openGoogleAIElEngine('cartelera de cines y horarios en {city}')}
+                  className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/20 flex items-center justify-center gap-3"
+                >
+                  <span>🎬 Ver cartelera completa en Google · {userCity}</span>
+                  <span>↗</span>
+                </button>
               </div>
             )}
 
