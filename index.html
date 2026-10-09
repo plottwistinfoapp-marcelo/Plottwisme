@@ -47,10 +47,20 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      line-height: 1.6;
+    }
+    /* Tipografía más legible: se agrandan los textos más chicos */
+    .text-\[9px\], .text-\[10px\] { font-size: 0.75rem !important; line-height: 1.1rem !important; }
+    .text-\[11px\] { font-size: 0.8125rem !important; line-height: 1.2rem !important; }
+    .text-xs { font-size: 0.875rem !important; line-height: 1.35rem !important; }
+    .text-sm { font-size: 1rem !important; line-height: 1.5rem !important; }
     .font-brand { font-family: 'Outfit', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -72,11 +82,35 @@
     const QUICK_EMOJIS = ['🍿', '🍷', '🎬', '⭐', '❤️', '🔥', '😂', '👏', '🎟️', '🍕', '😎', '🎉'];
     
     const CINE_STICKERS = [
-      { id: 'st_1', name: 'Pochoclos Popcorn', url: 'STCK:🍿', subtitle: 'Pochoclos', label: '🍿 Pochoclos' },
-      { id: 'st_2', name: 'Copa de Vino', url: 'STCK:🍷', subtitle: 'Brindis', label: '🍷 Brindis' },
-      { id: 'st_3', name: 'Claqueta de Cine', url: 'STCK:🎬', subtitle: 'Acción', label: '🎬 Acción' },
-      { id: 'st_4', name: 'Butaca de Cine', url: 'STCK:🎟️', subtitle: 'Sala VIP', label: '🎟️ Sala VIP' }
+      { id: 'st_1', emoji: '🍿', caption: 'Pochoclos', grad: 'from-amber-400 to-orange-500', url: 'STCK:🍿|Pochoclos' },
+      { id: 'st_2', emoji: '🍷', caption: '¡Brindemos!', grad: 'from-rose-500 to-purple-700', url: 'STCK:🍷|¡Brindemos!' },
+      { id: 'st_3', emoji: '🎬', caption: '¡Acción!', grad: 'from-slate-600 to-slate-900', url: 'STCK:🎬|¡Acción!' },
+      { id: 'st_4', emoji: '🎟️', caption: 'Sala VIP', grad: 'from-yellow-500 to-amber-700', url: 'STCK:🎟️|Sala VIP' },
+      { id: 'st_5', emoji: '🌀', caption: '¡Plot twist!', grad: 'from-fuchsia-500 to-indigo-600', url: 'STCK:🌀|¡Plot twist!' },
+      { id: 'st_6', emoji: '😱', caption: '¡No me spoilees!', grad: 'from-sky-500 to-blue-700', url: 'STCK:😱|¡No me spoilees!' },
+      { id: 'st_7', emoji: '🤯', caption: 'Final increíble', grad: 'from-orange-500 to-red-600', url: 'STCK:🤯|Final increíble' },
+      { id: 'st_8', emoji: '😭', caption: 'Lloré en la peli', grad: 'from-cyan-500 to-blue-600', url: 'STCK:😭|Lloré en la peli' },
+      { id: 'st_9', emoji: '❤️', caption: 'Match de cine', grad: 'from-pink-500 to-rose-600', url: 'STCK:❤️|Match de cine' },
+      { id: 'st_10', emoji: '🌙', caption: 'Maratón nocturna', grad: 'from-indigo-600 to-slate-900', url: 'STCK:🌙|Maratón nocturna' },
+      { id: 'st_11', emoji: '🎭', caption: 'Drama total', grad: 'from-purple-500 to-pink-600', url: 'STCK:🎭|Drama total' },
+      { id: 'st_12', emoji: '😂', caption: 'Comedia pura', grad: 'from-yellow-400 to-orange-500', url: 'STCK:😂|Comedia pura' },
+      { id: 'st_13', emoji: '👻', caption: 'Noche de terror', grad: 'from-slate-500 to-violet-800', url: 'STCK:👻|Noche de terror' },
+      { id: 'st_14', emoji: '🚀', caption: 'Ciencia ficción', grad: 'from-blue-500 to-violet-700', url: 'STCK:🚀|Ciencia ficción' },
+      { id: 'st_15', emoji: '🏆', caption: '¡Mejor película!', grad: 'from-yellow-400 to-amber-600', url: 'STCK:🏆|¡Mejor película!' },
+      { id: 'st_16', emoji: '🎞️', caption: 'Cine de autor', grad: 'from-stone-500 to-stone-800', url: 'STCK:🎞️|Cine de autor' }
     ];
+
+    // Un sticker se guarda como 'STCK:emoji|texto'. Los viejos ('STCK:emoji') siguen funcionando.
+    const parseSticker = (text) => {
+      const raw = (text || '').replace('STCK:', '');
+      const [emoji, caption] = raw.split('|');
+      const found = CINE_STICKERS.find(st => st.emoji === emoji);
+      return {
+        emoji: emoji,
+        caption: caption || found?.caption || '',
+        grad: found?.grad || 'from-amber-400 to-orange-500'
+      };
+    };
 
     const getBrowserLang = () => {
       const languages = navigator.languages || [navigator.language || navigator.userLanguage || 'es'];
@@ -1094,7 +1128,7 @@
       const cardBg = isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-md';
       const subCardBg = isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200';
       const textColor = isDarkMode ? 'text-slate-100' : 'text-slate-900';
-      const mutedText = isDarkMode ? 'text-slate-400' : 'text-slate-600';
+      const mutedText = isDarkMode ? 'text-slate-300' : 'text-slate-700';
       const inputBg = isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-white border-slate-300 text-slate-900';
 
       return (
@@ -1510,14 +1544,14 @@
                           {(activeChat.messages || []).map(msg => {
                             const isMe = msg.sender === currentUser?.name;
                             const isStickerMsg = msg.isSticker || msg.text?.startsWith('STCK:');
-                            const stickerEmoji = isStickerMsg ? msg.text.replace('STCK:', '') : null;
+                            const sk = isStickerMsg ? parseSticker(msg.text) : null;
 
                             return (
                               <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                                 {isStickerMsg ? (
-                                  <div className={`p-4 rounded-3xl ${cardBg} border-2 border-amber-500/60 shadow-xl flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-amber-500/20 via-slate-900 to-rose-500/20 min-w-[90px] select-none`}>
-                                    <span className="text-5xl filter drop-shadow-md">{stickerEmoji}</span>
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 mt-1">Sticker 🎬</span>
+                                  <div className={`px-6 py-4 rounded-3xl border border-white/20 shadow-xl flex flex-col items-center justify-center gap-2 bg-gradient-to-br ${sk.grad} min-w-[130px] max-w-[75%] select-none`}>
+                                    <span className="text-7xl leading-none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,.35))' }}>{sk.emoji}</span>
+                                    {sk.caption && <span className="text-sm font-extrabold text-white text-center leading-tight" style={{ textShadow: '0 1px 3px rgba(0,0,0,.6)' }}>{sk.caption}</span>}
                                   </div>
                                 ) : (
                                   <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words ${isMe ? 'bg-amber-500 text-slate-950 font-medium rounded-br-md' : `${cardBg} ${textColor} rounded-bl-md`}`}>
@@ -1540,16 +1574,16 @@
                         )}
 
                         {showStickerPicker && (
-                          <div className={`absolute bottom-20 left-4 right-4 ${cardBg} border border-amber-500/40 p-4 rounded-2xl shadow-2xl z-20`}>
+                          <div className={`absolute bottom-20 left-3 right-3 ${cardBg} border border-amber-500/40 p-4 rounded-2xl shadow-2xl z-20 max-h-[55%] overflow-y-auto`}>
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-xs font-bold text-amber-500">🍿 Stickers Cinéfilos Exclusivos</span>
+                              <span className="text-sm font-bold text-amber-500">🍿 Stickers cinéfilos</span>
                               <button onClick={() => setShowStickerPicker(false)} className={`${mutedText} text-xs font-bold`}>✕ Cerrar</button>
                             </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                               {CINE_STICKERS.map(st => (
-                                <div key={st.id} onClick={() => handleSendMessage(null, st.url, true)} className={`${subCardBg} hover:border-amber-500 p-3 rounded-2xl cursor-pointer text-center space-y-1 transition-all hover:scale-105 flex flex-col items-center justify-center border border-amber-500/20`}>
-                                  <span className="text-3xl">{st.url.replace('STCK:', '')}</span>
-                                  <p className={`text-[10px] font-bold ${textColor} truncate`}>{st.subtitle}</p>
+                                <div key={st.id} onClick={() => handleSendMessage(null, st.url, true)} className={`bg-gradient-to-br ${st.grad} border border-white/20 p-2 rounded-2xl cursor-pointer text-center transition-all active:scale-95 hover:scale-105 flex flex-col items-center justify-center gap-1 min-h-[88px]`}>
+                                  <span className="text-4xl leading-none">{st.emoji}</span>
+                                  <p className="text-[11px] font-bold text-white leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,.6)' }}>{st.caption}</p>
                                 </div>
                               ))}
                             </div>
