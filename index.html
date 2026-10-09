@@ -509,6 +509,12 @@
         return () => unsubChats();
       }, [currentUser]);
 
+      // Al abrir un chat o llegar un mensaje nuevo, bajar hasta el último mensaje
+      useEffect(() => {
+        const end = document.getElementById('chat-end');
+        if (end) end.scrollIntoView({ block: 'nearest' });
+      }, [activeChat?.id, activeChat?.messages?.length]);
+
       useEffect(() => {
         if (currentUser) {
           setEditPublicBio(currentUser.publicBio || currentUser.bio || '');
@@ -1169,7 +1175,7 @@
 
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
             
-            {currentUser?.isPremium && (
+            {currentUser?.isPremium && activeTab !== 'chats' && (
               <div className="bg-gradient-to-r from-amber-500/20 via-rose-500/20 border border-amber-500/50 p-4 rounded-2xl flex items-center justify-between shadow-lg mb-6">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">⭐</span>
@@ -1456,11 +1462,11 @@
             )}
 
             {activeTab === 'chats' && (
-              <div className="max-w-4xl mx-auto space-y-6">
-                <h2 className={`text-2xl font-black ${textColor}`}>💬 Chats & Matches</h2>
+              <div className="max-w-4xl mx-auto space-y-4">
+                <h2 className={`text-2xl font-black ${textColor} ${activeChat ? 'hidden md:block' : ''}`}>💬 Chats & Matches</h2>
 
-                <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${cardBg} rounded-3xl p-4 min-h-[450px]`}>
-                  <div className={`border-r ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pr-3 space-y-2`}>
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 ${cardBg} rounded-3xl p-2 md:p-4 md:min-h-[560px]`}>
+                  <div className={`${activeChat ? 'hidden md:block' : 'block'} md:border-r ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} md:pr-3 space-y-2 p-2 md:p-0`}>
                     <h3 className="text-xs font-bold text-amber-500 uppercase px-2">{t.activeChats}</h3>
                     {chatsList.length === 0 ? (
                       <p className={`text-xs ${mutedText} p-2`}>{t.noChats}</p>
@@ -1473,8 +1479,8 @@
                         >
                           <img src={chat.userAvatar} alt={chat.userName} className="w-12 h-12 rounded-full object-cover border border-amber-500/30" />
                           <div className="overflow-hidden flex-1">
-                            <h4 className={`font-bold ${textColor} text-xs truncate`}>{chat.userName}</h4>
-                            <p className={`text-[10px] ${mutedText} truncate`}>
+                            <h4 className={`font-bold ${textColor} text-sm truncate`}>{chat.userName}</h4>
+                            <p className={`text-xs ${mutedText} truncate`}>
                               {chat.messages[chat.messages.length - 1]?.isSticker || chat.messages[chat.messages.length - 1]?.text?.startsWith('STCK:') ? '🎬 [Sticker Cinéfilo]' : (chat.messages[chat.messages.length - 1]?.text || 'Match')}
                             </p>
                           </div>
@@ -1483,23 +1489,24 @@
                     )}
                   </div>
 
-                  <div className={`md:col-span-2 flex flex-col justify-between ${subCardBg} rounded-2xl border p-4 relative`}>
+                  <div className={`md:col-span-2 ${activeChat ? 'flex' : 'hidden md:flex'} flex-col justify-between ${subCardBg} rounded-2xl border p-3 md:p-4 relative h-[calc(100dvh-150px)] md:h-[540px]`}>
                     {activeChat ? (
                       <>
-                        <div className={`flex items-center justify-between border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-3`}>
-                          <div className="flex items-center gap-3">
-                            <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover" />
-                            <div>
-                              <h3 className={`font-bold ${textColor} text-sm`}>{activeChat.userName}</h3>
-                              <span className="text-[10px] text-emerald-500 font-bold">🟢 Online Cloud Sync</span>
+                        <div className={`flex items-center justify-between gap-2 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-3`}>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <button type="button" onClick={() => { setActiveChat(null); setShowEmojiPicker(false); setShowStickerPicker(false); }} className={`md:hidden shrink-0 ${cardBg} w-9 h-9 rounded-full text-lg font-black ${textColor}`} aria-label="Volver">←</button>
+                            <img src={activeChat.userAvatar} alt={activeChat.userName} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                            <div className="min-w-0">
+                              <h3 className={`font-bold ${textColor} text-sm truncate`}>{activeChat.userName}</h3>
+                              <span className="text-[10px] text-emerald-500 font-bold">🟢 En línea</span>
                             </div>
                           </div>
-                          <button onClick={() => handleDeleteChat(activeChat.id)} className="bg-rose-500/25 hover:bg-rose-500/40 text-rose-400 border border-rose-500/40 text-[10px] font-bold px-3 py-1.5 rounded-xl transition-all shadow">
-                            🗑️ Borrar Chat
+                          <button onClick={() => { if (window.confirm('¿Borrar este chat?')) handleDeleteChat(activeChat.id); }} className="shrink-0 bg-rose-500/25 hover:bg-rose-500/40 text-rose-400 border border-rose-500/40 text-[10px] font-bold px-3 py-1.5 rounded-xl transition-all shadow" aria-label="Borrar chat">
+                            🗑️<span className="hidden sm:inline"> Borrar Chat</span>
                           </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto space-y-3 py-4 max-h-[260px] px-1">
+                        <div className="flex-1 overflow-y-auto space-y-3 py-4 px-1">
                           {(activeChat.messages || []).map(msg => {
                             const isMe = msg.sender === currentUser?.name;
                             const isStickerMsg = msg.isSticker || msg.text?.startsWith('STCK:');
@@ -1513,14 +1520,15 @@
                                     <span className="text-[9px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 mt-1">Sticker 🎬</span>
                                   </div>
                                 ) : (
-                                  <div className={`max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-amber-500 text-slate-950 font-medium' : `${cardBg}${textColor}`}`}>
+                                  <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words ${isMe ? 'bg-amber-500 text-slate-950 font-medium rounded-br-md' : `${cardBg} ${textColor} rounded-bl-md`}`}>
                                     {msg.text}
                                   </div>
                                 )}
-                                <span className="text-[9px] text-slate-400 mt-1 px-1">{msg.time}</span>
+                                <span className="text-[10px] text-slate-400 mt-1 px-1">{msg.time}</span>
                               </div>
                             );
                           })}
+                          <div id="chat-end"></div>
                         </div>
 
                         {showEmojiPicker && (
@@ -1549,18 +1557,18 @@
                         )}
 
                         <form onSubmit={(e) => handleSendMessage(e)} className={`flex items-center gap-2 pt-3 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
-                          <button type="button" onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false); }} className={`${cardBg} px-3 py-2.5 rounded-xl text-base`}>😀</button>
-                          <button type="button" onClick={() => { setShowStickerPicker(!showStickerPicker); setShowEmojiPicker(false); }} className={`${cardBg} px-3 py-2.5 rounded-xl text-xs font-bold text-amber-500`}>🍿 Stickers</button>
+                          <button type="button" onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false); }} className={`shrink-0 ${cardBg} w-10 h-10 rounded-xl text-base`} aria-label="Emojis">😀</button>
+                          <button type="button" onClick={() => { setShowStickerPicker(!showStickerPicker); setShowEmojiPicker(false); }} className={`shrink-0 ${cardBg} h-10 px-3 rounded-xl text-xs font-bold text-amber-500`} aria-label="Stickers">🍿<span className="hidden sm:inline"> Stickers</span></button>
 
-                          <input 
-                            type="text" 
-                            value={newMessageText} 
-                            onChange={(e) => setNewMessageText(e.target.value)} 
-                            placeholder={t.sendPlaceholder} 
-                            className={`flex-1 ${inputBg} rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500`} 
+                          <input
+                            type="text"
+                            value={newMessageText}
+                            onChange={(e) => setNewMessageText(e.target.value)}
+                            placeholder={t.sendPlaceholder}
+                            className={`flex-1 min-w-0 ${inputBg} rounded-xl px-3 h-10 text-sm focus:outline-none focus:border-amber-500`}
                           />
-                          <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider">
-                            {t.sendBtn}
+                          <button type="submit" className="shrink-0 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black w-10 h-10 sm:w-auto sm:px-4 rounded-xl text-base sm:text-xs uppercase tracking-wider" aria-label="Enviar">
+                            <span className="sm:hidden">➤</span><span className="hidden sm:inline">{t.sendBtn}</span>
                           </button>
                         </form>
                       </>
