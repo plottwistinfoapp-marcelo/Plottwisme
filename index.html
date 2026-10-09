@@ -213,7 +213,7 @@
 
     function CinemaMapComponent({ userCity, userCoords, targetCoords, maxAllowedRadius, isDarkMode, cardBg, textColor }) {
       const center = targetCoords || userCoords || null;
-      const defaultRadius = Math.min(maxAllowedRadius, 500);
+      const defaultRadius = Math.min(maxAllowedRadius, 100);
       const [radius, setRadius] = useState(defaultRadius);
       const [debRadius, setDebRadius] = useState(defaultRadius);
       useEffect(() => { setRadius(defaultRadius); setDebRadius(defaultRadius); }, [defaultRadius]);
@@ -233,19 +233,33 @@
         const r = Math.round(debRadius * 1000);
         const q = `[out:json][timeout:40];(node["amenity"="cinema"](around:${r},${center.lat},${center.lon});way["amenity"="cinema"](around:${r},${center.lat},${center.lon}););out center tags;`;
         const mirrors = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
-        const tryMirror = (i) => fetch(mirrors[i], { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctrl.signal })
-          .then(res => { if (!res.ok) throw new Error('http ' + res.status); return res.json(); })
-          .catch(err => { if (err.name === 'AbortError' || i + 1 >= mirrors.length) throw err; return tryMirror(i + 1); });
-        tryMirror(0)
+        const cacheKey = 'cines_' + center.lat.toFixed(2) + '_' + center.lon.toFixed(2) + '_' + Math.round(debRadius);
+        const buildList = (elements) => (elements || []).map(el => {
+          const lat = el.lat ?? el.center?.lat; const lon = el.lon ?? el.center?.lon;
+          return { id: el.type + el.id, name: el.tags?.name || 'Cine', website: el.tags?.website || el.tags?.['contact:website'] || '', city: el.tags?.['addr:city'] || '', lat, lon, dist: calculateDistanceKm(center.lat, center.lon, lat, lon) };
+        }).filter(c => c.lat && c.lon && c.dist <= debRadius).sort((a, b) => a.dist - b.dist).filter((c, i, arr) => arr.findIndex(x => x.name === c.name && x.dist === c.dist) === i).slice(0, 30);
+
+        let cached = null;
+        try { cached = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch (e) {}
+        if (cached && Array.isArray(cached.elements)) {
+          setCinemas(buildList(cached.elements));
+          setStatus('ok');
+          if (Date.now() - cached.t < 12 * 3600 * 1000 && retryTick === 0) return;
+        }
+
+        const one = (url) => fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctrl.signal })
+          .then(res => { if (!res.ok) throw new Error('http ' + res.status); return res.json(); });
+        const raceAny = (promises) => new Promise((resolve, reject) => {
+          let failed = 0;
+          promises.forEach(pr => pr.then(resolve, () => { failed++; if (failed === promises.length) reject(new Error('all failed')); }));
+        });
+        raceAny(mirrors.map(one))
           .then(data => {
-            const list = (data.elements || []).map(el => {
-              const lat = el.lat ?? el.center?.lat; const lon = el.lon ?? el.center?.lon;
-              return { id: el.type + el.id, name: el.tags?.name || 'Cine', website: el.tags?.website || el.tags?.['contact:website'] || '', city: el.tags?.['addr:city'] || '', lat, lon, dist: calculateDistanceKm(center.lat, center.lon, lat, lon) };
-            }).filter(c => c.lat && c.lon && c.dist <= debRadius).sort((a, b) => a.dist - b.dist).filter((c, i, arr) => arr.findIndex(x => x.name === c.name && x.dist === c.dist) === i).slice(0, 30);
-            setCinemas(list);
+            try { localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), elements: data.elements || [] })); } catch (e) {}
+            setCinemas(buildList(data.elements));
             setStatus('ok');
           })
-          .catch(err => { if (err.name !== 'AbortError') setStatus('error'); });
+          .catch(() => { if (!ctrl.signal.aborted && !cached) setStatus('error'); });
         return () => ctrl.abort();
       }, [center?.lat, center?.lon, debRadius, retryTick]);
 
