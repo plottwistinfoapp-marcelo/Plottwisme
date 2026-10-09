@@ -373,6 +373,9 @@
 
       const [chatsList, setChatsList] = useState([]);
       const [activeChat, setActiveChat] = useState(null);
+      const stateRef = React.useRef({});
+      const knownLastMsgs = React.useRef(null);
+      const [readMap, setReadMap] = useState({});
       const [newMessageText, setNewMessageText] = useState('');
       const [showEmojiPicker, setShowEmojiPicker] = useState(false);
       const [showStickerPicker, setShowStickerPicker] = useState(false);
@@ -581,8 +584,11 @@
         if (!window.db || !currentUser) {
           setChatsList([]);
           setActiveChat(null);
+          knownLastMsgs.current = null;
           return;
         }
+        knownLastMsgs.current = null;
+        try { setReadMap(JSON.parse(localStorage.getItem('chatRead_' + currentUser.email) || '{}')); } catch (e) { setReadMap({}); }
         const { collection, onSnapshot, query, where } = window.FirebaseFns;
         // Seguridad: pedimos a Firestore SOLO los chats donde participa este usuario
         const chatsQuery = query(
@@ -598,6 +604,26 @@
             }
           });
           setChatsList(loadedChats);
+
+          // Aviso de mensajes nuevos de otras personas
+          try {
+            const known = knownLastMsgs.current;
+            const nextKnown = {};
+            loadedChats.forEach(c => {
+              const last = (c.messages || [])[(c.messages || []).length - 1];
+              nextKnown[c.id] = last ? last.id : null;
+              if (known && last && known[c.id] !== last.id && last.sender !== currentUser.name) {
+                const st = stateRef.current;
+                const viewing = st.activeTab === 'chats' && st.activeChat && st.activeChat.id === c.id && document.visibilityState === 'visible';
+                if (!viewing) {
+                  const body = (last.isSticker || (last.text || '').startsWith('STCK:')) ? 'Sticker cinéfilo 🎬' : (last.text || '');
+                  if (st.notify) st.notify(`Nuevo mensaje de ${c.userName || last.sender} 💬`, body);
+                  if (st.beep) st.beep();
+                }
+              }
+            });
+            knownLastMsgs.current = nextKnown;
+          } catch (e) {}
 
           setActiveChat(prev => {
             if (!prev) return null;
@@ -766,7 +792,6 @@
           if (customText === null) setNewMessageText('');
           setShowEmojiPicker(false);
           setShowStickerPicker(false);
-          triggerPushNotification(`Nuevo mensaje de ${currentUser.name} 💬`, isSticker ? 'Sticker cinéfilo 🎬' : textToSend);
         } catch (err) {}
       };
 
@@ -1187,7 +1212,51 @@
         } catch(err) {}
       };
 
-      const unreadChatsCount = chatsList.length;
+      const lastMsgOf = (chat) => (chat.messages || [])[(chat.messages || []).length - 1];
+      const isChatUnread = (chat) => {
+        const last = lastMsgOf(chat);
+        if (!last || !currentUser) return false;
+        if (last.sender === currentUser.name) return false;
+        if (activeTab === 'chats' && activeChat && activeChat.id === chat.id) return false;
+        return readMap[chat.id] !== last.id;
+      };
+      const unreadChatsCount = chatsList.filter(isChatUnread).length;
+
+      stateRef.current = {
+        activeChat, activeTab,
+        notify: triggerPushNotification,
+        beep: () => {
+          try {
+            if (currentUser?.muteNotifications) return;
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return;
+            const ctx = new Ctx();
+            const o = ctx.createOscillator(); const g = ctx.createGain();
+            o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.08;
+            o.connect(g); g.connect(ctx.destination);
+            o.start(); o.stop(ctx.currentTime + 0.18);
+            setTimeout(() => { try { ctx.close(); } catch (e) {} }, 400);
+          } catch (e) {}
+        }
+      };
+
+      // Marcar como leído el chat abierto
+      useEffect(() => {
+        if (activeTab !== 'chats' || !activeChat || !currentUser) return;
+        const last = lastMsgOf(activeChat);
+        if (!last) return;
+        setReadMap(prev => {
+          if (prev[activeChat.id] === last.id) return prev;
+          const next = { ...prev, [activeChat.id]: last.id };
+          try { localStorage.setItem('chatRead_' + currentUser.email, JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
+      }, [activeTab, activeChat?.id, activeChat?.messages?.length]);
+
+      // Número de mensajes sin leer en el título de la pestaña
+      useEffect(() => {
+        document.title = (unreadChatsCount > 0 ? `(${unreadChatsCount}) ` : '') + 'Plottwisme - Red Social Cinéfila & Citas';
+      }, [unreadChatsCount]);
 
       const themeBg = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900';
       const navBg = isDarkMode ? 'bg-slate-950/95 border-slate-900' : 'bg-white/95 border-slate-200';
@@ -1532,7 +1601,7 @@
                         >
                           <img src={chat.userAvatar} alt={chat.userName} className="w-12 h-12 rounded-full object-cover border border-amber-500/30" />
                           <div className="overflow-hidden flex-1">
-                            <h4 className={`font-bold ${textColor} text-sm truncate`}>{chat.userName}</h4>
+                            <h4 className={`${isChatUnread(chat) ? 'font-black' : 'font-bold'} ${textColor} text-sm truncate`}>{chat.userName}{isChatUnread(chat) && <span className="ml-2 inline-block w-2.5 h-2.5 rounded-full bg-rose-500 align-middle"></span>}</h4>
                             <p className={`text-xs ${mutedText} truncate`}>
                               {chat.messages[chat.messages.length - 1]?.isSticker || chat.messages[chat.messages.length - 1]?.text?.startsWith('STCK:') ? '🎬 [Sticker Cinéfilo]' : (chat.messages[chat.messages.length - 1]?.text || 'Match')}
                             </p>
