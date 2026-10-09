@@ -64,6 +64,15 @@
     .font-brand { font-family: 'Outfit', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Modo claro: naranjas más oscuros para que se lean sobre fondo claro */
+    .light-theme .text-amber-500, .light-theme .text-amber-400 { color: #b45309; }
+    .light-theme .text-rose-500 { color: #be123c; }
+    .light-theme .text-sky-400 { color: #0369a1; }
+    .light-theme .bg-gradient-to-t .text-amber-400 { color: #fbbf24; }
+    .light-theme .bg-gradient-to-t .text-sky-400 { color: #38bdf8; }
+    .light-theme .premium-banner { background: linear-gradient(90deg, #fff3d1, #ffe2a0) !important; border-color: #d97706 !important; }
+    .light-theme .premium-banner .text-amber-500 { color: #92400e; }
+    .light-theme .border-slate-200 { border-color: #f1e4c9; }
     .map-dark-mode {
       filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
     }
@@ -325,6 +334,8 @@
       
       const [activeTab, setActiveTab] = useState('cinema');
       const [currentIndex, setCurrentIndex] = useState(0);
+      const [profileEditing, setProfileEditing] = useState(false);
+      const [profileSavedMsg, setProfileSavedMsg] = useState('');
       const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
       const [userCity, setUserCity] = useState('Detectando ubicación...');
@@ -1158,8 +1169,22 @@
             socialLinks: { radio: editRadio, tv: editTv },
             muteNotifications: editMuteNotifications
           });
-          setCurrentUser(prev => ({ ...prev, muteNotifications: editMuteNotifications, photos: editPhotos, avatar: primaryAvatar }));
-        } catch(err) {}
+          setCurrentUser(prev => ({ ...prev, muteNotifications: editMuteNotifications, photos: editPhotos, avatar: primaryAvatar, publicBio: editPublicBio, datingBio: editDatingBio, sex: editSex, interestedIn: editInterestedIn }));
+          setProfileEditing(false);
+          setProfileSavedMsg('✔ Perfil guardado');
+          setTimeout(() => setProfileSavedMsg(''), 3500);
+        } catch(err) {
+          try { window.alert('No se pudo guardar el perfil: ' + (err && (err.code || err.message) || 'error')); } catch (e) {}
+        }
+      };
+
+      const shareApp = async () => {
+        const url = window.location.origin;
+        const text = '¡Sumate a Plottwisme, la red social cinéfila! 🎬🍿';
+        try {
+          if (navigator.share) { await navigator.share({ title: 'Plottwisme', text, url }); return; }
+        } catch (e) { return; }
+        try { await navigator.clipboard.writeText(text + ' ' + url); window.alert('Enlace copiado. ¡Compartilo con tus amigos!'); } catch (e) { window.prompt('Copiá este enlace:', url); }
       };
 
       const handlePublishReview = async (e) => {
@@ -1306,16 +1331,16 @@
         document.title = (unreadChatsCount > 0 ? `(${unreadChatsCount}) ` : '') + 'Plottwisme - Red Social Cinéfila & Citas';
       }, [unreadChatsCount]);
 
-      const themeBg = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900';
-      const navBg = isDarkMode ? 'bg-slate-950/95 border-slate-900' : 'bg-white/95 border-slate-200';
-      const cardBg = isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-md';
-      const subCardBg = isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200';
+      const themeBg = isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-[#fbf6ec] text-slate-900';
+      const navBg = isDarkMode ? 'bg-slate-950/95 border-slate-900' : 'bg-[#fffdf8]/95 border-amber-100';
+      const cardBg = isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-amber-100 shadow-md';
+      const subCardBg = isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-amber-50/70 border-amber-200/70';
       const textColor = isDarkMode ? 'text-slate-100' : 'text-slate-900';
       const mutedText = isDarkMode ? 'text-slate-300' : 'text-slate-700';
-      const inputBg = isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-white border-slate-300 text-slate-900';
+      const inputBg = isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-white border-amber-300/70 text-slate-900';
 
       return (
-        <div className={`flex flex-col min-h-screen ${themeBg} transition-colors duration-300`}>
+        <div className={`flex flex-col min-h-screen ${themeBg} ${isDarkMode ? '' : 'light-theme'} transition-colors duration-300`}>
           
           {!isAppInstalled && (
             <div className="bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 px-4 py-2 text-xs font-black flex items-center justify-between shadow-md z-50 sticky top-0">
@@ -1393,7 +1418,7 @@
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
             
             {currentUser?.isPremium && activeTab !== 'chats' && (
-              <div className="bg-gradient-to-r from-amber-500/20 via-rose-500/20 border border-amber-500/50 p-4 rounded-2xl flex items-center justify-between shadow-lg mb-6">
+              <div className="premium-banner bg-gradient-to-r from-amber-500/20 via-rose-500/20 border border-amber-500/50 p-4 rounded-2xl flex items-center justify-between shadow-lg mb-6">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">⭐</span>
                   <div>
@@ -1616,16 +1641,33 @@
                     </div>
                   );
                 })() : (
-                  <div className={`text-center py-20 space-y-4 max-w-md ${cardBg} p-8 rounded-3xl shadow-xl`}>
-                    <div className="text-4xl">🎟️</div>
-                    <h3 className={`text-xl font-bold ${textColor}`}>No hay más perfiles con estos filtros.</h3>
-                    <p className={`text-xs ${mutedText}`}>¿Deseas reiniciar la búsqueda o cambiar la distancia máxima del radar?</p>
-                    <button 
-                      onClick={() => setCurrentIndex(0)} 
-                      className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider shadow-md transition-transform hover:scale-105"
-                    >
-                      🔄 Reiniciar Radar y Volver a Ver Perfiles
-                    </button>
+                  <div className={`text-center py-14 space-y-4 max-w-md ${cardBg} p-8 rounded-3xl shadow-xl`}>
+                    <div className="text-4xl">{filteredCandidates.length === 0 ? '🍿' : '🎟️'}</div>
+                    {filteredCandidates.length === 0 ? (
+                      <>
+                        <h3 className={`text-xl font-bold ${textColor}`}>Lo sentimos, todavía no hay usuarios en tu zona.</h3>
+                        <p className={`text-sm ${mutedText}`}>Cada día se suman más cinéfilos. Probá ampliar el radio o volvé más tarde.</p>
+                        {matchRadiusKm < maxAllowedMapRadius && (
+                          <button onClick={() => setMatchRadiusKm(maxAllowedMapRadius)} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider shadow-md">
+                            📡 Ampliar radio a {maxAllowedMapRadius} km
+                          </button>
+                        )}
+                        <button onClick={shareApp} className={`w-full ${subCardBg} border ${textColor} font-black py-3 rounded-xl text-xs uppercase tracking-wider`}>
+                          📲 Invitar amigos cinéfilos
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className={`text-xl font-bold ${textColor}`}>Ya viste todos los perfiles cercanos.</h3>
+                        <p className={`text-sm ${mutedText}`}>Volvé más tarde para ver nuevos cinéfilos, o repasá los perfiles otra vez.</p>
+                        <button onClick={() => setCurrentIndex(0)} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider shadow-md">
+                          🔄 Volver a ver perfiles
+                        </button>
+                        <button onClick={shareApp} className={`w-full ${subCardBg} border ${textColor} font-black py-3 rounded-xl text-xs uppercase tracking-wider`}>
+                          📲 Invitar amigos cinéfilos
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -1860,6 +1902,43 @@
                   </div>
                 </div>
 
+                {profileSavedMsg && (
+                  <div className="bg-emerald-500/15 border border-emerald-500/50 text-emerald-500 font-black text-sm rounded-2xl px-4 py-3 text-center">{profileSavedMsg}</div>
+                )}
+
+                {!profileEditing && (
+                  <div className={`${cardBg} rounded-3xl p-6 space-y-5 shadow-xl`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h2 className={`text-xl font-black ${textColor} flex items-center gap-2`}>
+                          {currentUser.name} {currentUser.kycVerified && <span className="text-sky-400 text-sm">✔</span>}
+                        </h2>
+                        <p className="text-xs text-amber-500">{currentUser.roleLabel}</p>
+                        <p className={`text-xs ${mutedText} mt-1`}>{currentUser.sex || '—'} • Busca: {currentUser.interestedIn || 'Todos / Cualquiera'}</p>
+                      </div>
+                      <button type="button" onClick={() => { setProfileEditing(true); setProfileSavedMsg(''); }} className="shrink-0 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow">✏️ Editar perfil</button>
+                    </div>
+                    {(currentUser.photos || []).length > 0 && (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {(currentUser.photos || []).map((photo, idx) => (
+                          <div key={idx} className="aspect-square rounded-2xl overflow-hidden border border-amber-500/30">
+                            <img src={photo} alt="Foto" className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-xs font-bold text-amber-500 mb-1">Biografía pública</p>
+                      <p className={`text-sm ${textColor}`}>{currentUser.publicBio || currentUser.bio || 'Sin biografía todavía.'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-rose-500 mb-1">Biografía de citas</p>
+                      <p className={`text-sm ${textColor}`}>{currentUser.datingBio || 'Sin biografía de citas todavía.'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {profileEditing && (
                 <form onSubmit={handleSaveProfile} className={`${cardBg} rounded-3xl p-6 space-y-5 shadow-xl`}>
                   <div className={`flex justify-between items-center border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-4`}>
                     <div>
@@ -1912,9 +1991,13 @@
                       <textarea rows="2" value={editDatingBio} onChange={(e) => setEditDatingBio(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`} />
                     </div>
 
-                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase shadow-lg">Guardar Perfil</button>
+                    <div className="flex gap-3">
+                      <button type="button" onClick={() => { setProfileEditing(false); setEditPhotos(currentUser.photos || []); setEditPublicBio(currentUser.publicBio || currentUser.bio || ''); setEditDatingBio(currentUser.datingBio || currentUser.bio || ''); }} className={`flex-1 ${subCardBg} border ${textColor} font-black py-3 rounded-xl uppercase`}>Cancelar</button>
+                      <button type="submit" className="flex-[2] bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase shadow-lg">Guardar Perfil</button>
+                    </div>
                   </div>
                 </form>
+                )}
               </div>
             )}
 
