@@ -597,10 +597,12 @@
         );
         const unsubChats = onSnapshot(chatsQuery, (snapshot) => {
           let loadedChats = [];
+          const pendingIds = {};
           snapshot.forEach(docSnap => {
             const chatData = docSnap.data();
             if (chatData.participants && chatData.participants.includes(currentUser.email)) {
               loadedChats.push({ id: docSnap.id, ...chatData });
+              if (docSnap.metadata && docSnap.metadata.hasPendingWrites) pendingIds[docSnap.id] = true;
             }
           });
           setChatsList(loadedChats);
@@ -612,6 +614,11 @@
             loadedChats.forEach(c => {
               const last = (c.messages || [])[(c.messages || []).length - 1];
               nextKnown[c.id] = last ? last.id : null;
+              if (known && !(c.id in known) && !last && !pendingIds[c.id]) {
+                const st0 = stateRef.current;
+                if (st0.notify) st0.notify('¡Nuevo Match en Plottwisme! 🍿', `Hiciste match con ${c.userName || 'alguien'}. ¡Abre el chat!`);
+                if (st0.beep) st0.beep();
+              }
               if (known && last && known[c.id] !== last.id && last.sender !== currentUser.name) {
                 const st = stateRef.current;
                 const viewing = st.activeTab === 'chats' && st.activeChat && st.activeChat.id === c.id && document.visibilityState === 'visible';
