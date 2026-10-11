@@ -434,6 +434,34 @@
 "ติดตั้งเลย",
 "立即安裝"
 ],
+"¡Te regalaron Premium!": [
+"You were gifted Premium!",
+"Você ganhou Premium de presente!",
+"Premium offert pour toi !",
+"Ti hanno regalato Premium!",
+"Premium wurde dir geschenkt!",
+"Вам подарили Premium!",
+"आपको Premium उपहार में मिला है!",
+"Premium을 선물로 받았어요!",
+"Premiumがプレゼントされました！",
+"你获赠了 Premium！",
+"คุณได้รับ Premium เป็นของขวัญ!",
+"你獲贈了 Premium！"
+],
+"Por ahora Premium se otorga por invitación. El pago dentro de la app estará disponible pronto.": [
+"For now, Premium is granted by invitation. In-app payment will be available soon.",
+"Por enquanto, o Premium é concedido por convite. O pagamento no app estará disponível em breve.",
+"Pour l’instant, Premium est offert sur invitation. Le paiement dans l’app sera bientôt disponible.",
+"Per ora Premium viene concesso su invito. Il pagamento nell’app sarà presto disponibile.",
+"Vorerst wird Premium per Einladung vergeben. Die Zahlung in der App folgt bald.",
+"Пока Premium выдаётся по приглашению. Оплата в приложении скоро появится.",
+"फ़िलहाल Premium आमंत्रण पर दिया जाता है। ऐप में भुगतान जल्द उपलब्ध होगा।",
+"현재 Premium은 초대로 제공됩니다. 앱 내 결제는 곧 지원됩니다.",
+"現在、Premiumは招待制です。アプリ内決済は近日対応予定です。",
+"目前 Premium 仅通过邀请开通，应用内支付即将上线。",
+"ตอนนี้ Premium มอบให้ตามคำเชิญ การชำระเงินในแอปจะมาเร็ว ๆ นี้",
+"目前 Premium 僅透過邀請開通，應用程式內付款即將上線。"
+],
 "¡Beneficio Activo: 15 Días de Premium!": [
 "Active Benefit: 15 Days of Premium!",
 "Benefício ativo: 15 dias de Premium!",
@@ -4079,6 +4107,8 @@
           try {
             await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", userId), {
               isPremium: nextPrem,
+              premiumGift: nextPrem,
+              bonusSeen: false,
               roleLabel: nextPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
             });
           } catch (err) {}
@@ -4329,11 +4359,30 @@
         setCurrentPhotoIndex(0);
       }, [currentIndex]);
 
+      // Cartel "Te regalaron Premium": solo para Premium otorgado por el admin, se muestra una sola vez (se guarda en la cuenta)
+      const [bonusDismissed, setBonusDismissed] = useState(false);
+      const dismissBonus = () => {
+        setBonusDismissed(true);
+        // También se guarda en la cuenta, para que no vuelva a salir en otro dispositivo
+        if (currentUser?.id && !currentUser.bonusSeen) {
+          setCurrentUser(prev => prev ? { ...prev, bonusSeen: true } : prev);
+          try { window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id), { bonusSeen: true }).catch(() => {}); } catch (e) {}
+        }
+      };
+      useEffect(() => {
+        if (!currentUser?.isPremium || bonusDismissed) return;
+        const t = setTimeout(dismissBonus, 10000);
+        return () => clearTimeout(t);
+      }, [currentUser?.isPremium, bonusDismissed]);
+
       const handleUpgradePlan = async (isPrem) => {
         if (!currentUser) { setShowAuthModal(true); return; }
+        // Hasta tener pago real, Premium solo lo otorga el administrador (desde el Panel Admin)
+        if (isPrem && !isAdmin) { window.alert(tr('Por ahora Premium se otorga por invitación. El pago dentro de la app estará disponible pronto.')); return; }
         try {
           await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id), {
             isPremium: isPrem,
+            ...(isPrem ? {} : { premiumGift: false }),
             roleLabel: isPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
           });
           setCurrentUser(prev => ({ ...prev, isPremium: isPrem }));
@@ -4628,15 +4677,16 @@
 
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
             
-            {currentUser?.isPremium && activeTab !== 'chats' && (
+            {currentUser?.isPremium && currentUser?.premiumGift && !currentUser?.bonusSeen && !isAdmin && !bonusDismissed && activeTab !== 'chats' && (
               <div className="premium-banner bg-gradient-to-r from-amber-500/20 via-rose-500/20 border border-amber-500/50 p-4 rounded-2xl flex items-center justify-between shadow-lg mb-6">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">⭐</span>
                   <div>
-                    <h4 className="font-black text-amber-500 text-sm">{tr('¡Beneficio Activo: 15 Días de Premium!')}</h4>
+                    <h4 className="font-black text-amber-500 text-sm">{tr('¡Te regalaron Premium!')}</h4>
                     <p className={`text-xs ${mutedText}`}>{tr('Funciones avanzadas y radar extendido con Cloud Storage seguro.')}</p>
                   </div>
                 </div>
+                <button onClick={dismissBonus} aria-label="✕" className={`ml-2 shrink-0 w-9 h-9 rounded-full font-black text-lg ${mutedText} hover:text-amber-500`}>✕</button>
               </div>
             )}
 
@@ -5429,4 +5479,3 @@
   </script>
 </body>
 </html>
-
