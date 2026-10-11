@@ -4435,11 +4435,26 @@
         const likedBy = topic.likedBy || [];
         const alreadyLiked = likedBy.includes(currentUser.email);
         const newLikedBy = alreadyLiked ? likedBy.filter(e => e !== currentUser.email) : [...likedBy, currentUser.email];
-        const newLikes = alreadyLiked ? (topic.likes || 1) - 1 : (topic.likes || 0) + 1;
+        const newLikes = alreadyLiked ? Math.max((topic.likes || 1) - 1, 0) : (topic.likes || 0) + 1;
+        // Se actualiza al instante la pantalla abierta (antes quedaba con la copia vieja y parecía que no funcionaba)
+        if (activeTopic && activeTopic.id === topic.id) setActiveTopic({ ...activeTopic, likes: newLikes, likedBy: newLikedBy });
         try {
           await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "forums", topic.id), { likes: newLikes, likedBy: newLikedBy });
-        } catch(e) {}
+        } catch(e) {
+          console.error('like error', e);
+          if (activeTopic && activeTopic.id === topic.id) setActiveTopic({ ...activeTopic, likes: topic.likes || 0, likedBy });
+          alert(tr('No se pudo guardar el Me gusta. Intentá de nuevo.') + (e && e.code ? ' (' + e.code + ')' : ''));
+        }
       };
+
+      // Mantiene el tema abierto sincronizado con los datos en vivo (likes y respuestas de otros usuarios)
+      useEffect(() => {
+        if (!activeTopic) return;
+        const fresh = forumTopics.find(t => t.id === activeTopic.id);
+        if (fresh && (fresh.likes !== activeTopic.likes || (fresh.likedBy || []).length !== (activeTopic.likedBy || []).length || (fresh.comments || []).length !== (activeTopic.comments || []).length)) {
+          setActiveTopic(fresh);
+        }
+      }, [forumTopics]);
 
       const handleAddComment = async (e, customText = null) => {
         if (e) e.preventDefault();
