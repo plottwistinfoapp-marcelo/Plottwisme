@@ -3808,6 +3808,8 @@
       const [forumTopics, setForumTopics] = useState([]);
       const [activeTopic, setActiveTopic] = useState(null);
       const [editingTopic, setEditingTopic] = useState(false);
+      const [editingCommentId, setEditingCommentId] = useState(null);
+      const [editCommentText, setEditCommentText] = useState('');
       const [editTopicTitle, setEditTopicTitle] = useState('');
       const [editTopicContent, setEditTopicContent] = useState('');
       const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
@@ -4690,7 +4692,7 @@
         }
       };
 
-      useEffect(() => { setEditingTopic(false); }, [activeTopic?.id]);
+      useEffect(() => { setEditingTopic(false); setEditingCommentId(null); }, [activeTopic?.id]);
       const myUid = () => window.auth?.currentUser?.uid || '';
       const canManageTopic = (t) => !!currentUser && !!t && (isAdmin || (!!t.authorUid && t.authorUid === myUid()));
       const canManageComment = (c) => !!currentUser && !!c && (isAdmin || (!!c.authorUid && c.authorUid === myUid()));
@@ -4723,6 +4725,18 @@
         } catch (e) {
           console.error('delete topic error', e);
           window.alert(tr('No se pudo borrar. Intentá de nuevo.') + (e && e.code ? ' (' + e.code + ')' : ''));
+        }
+      };
+      const handleSaveCommentEdit = async () => {
+        if (!activeTopic || !editingCommentId || !editCommentText.trim()) return;
+        const updated = (activeTopic.comments || []).map(x => x.id === editingCommentId ? { ...x, text: editCommentText.trim(), edited: true } : x);
+        try {
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "forums", activeTopic.id), { comments: updated });
+          setActiveTopic({ ...activeTopic, comments: updated });
+          setEditingCommentId(null);
+        } catch (e) {
+          console.error('edit comment error', e);
+          window.alert(tr('No se pudo guardar. Intentá de nuevo.') + (e && e.code ? ' (' + e.code + ')' : ''));
         }
       };
       const handleDeleteComment = async (c) => {
@@ -5049,12 +5063,25 @@
                             <span className={`font-bold ${textColor}`}>{c.author}</span>
                             <span className="flex items-center gap-3">
                               {fmtDate(c.date)}
-                              {canManageComment(c) && (
-                                <button type="button" onClick={() => handleDeleteComment(c)} aria-label="🗑️" className="text-rose-500 text-base px-1">🗑️</button>
+                              {canManageComment(c) && editingCommentId !== c.id && (
+                                <>
+                                  <button type="button" onClick={() => { setEditingCommentId(c.id); setEditCommentText(c.text || ''); }} aria-label="✏️" className="text-amber-500 text-base px-1">✏️</button>
+                                  <button type="button" onClick={() => handleDeleteComment(c)} aria-label="🗑️" className="text-rose-500 text-base px-1">🗑️</button>
+                                </>
                               )}
                             </span>
                           </div>
-                          <p className={`text-xs ${mutedText} leading-relaxed`}>{c.text}</p>
+                          {editingCommentId === c.id ? (
+                            <div className="space-y-2">
+                              <textarea rows="3" value={editCommentText} onChange={(e) => setEditCommentText(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 text-sm focus:outline-none`} />
+                              <div className="flex gap-2">
+                                <button type="button" onClick={handleSaveCommentEdit} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-sm">{tr('Guardar')}</button>
+                                <button type="button" onClick={() => setEditingCommentId(null)} className={`${subCardBg} border ${textColor} font-bold px-4 py-2 rounded-xl text-sm`}>{tr('Cancelar')}</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className={`text-xs ${mutedText} leading-relaxed`}>{c.text}{c.edited && <span className="ml-1 opacity-70">{tr('(editado)')}</span>}</p>
+                          )}
                         </div>
                       ))}
 
