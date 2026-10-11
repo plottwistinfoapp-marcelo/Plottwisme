@@ -3251,6 +3251,23 @@
     // Antes de publicar en producción: poner TEST_PHASE_RADAR = false.
     const TEST_PHASE_RADAR = true;
     const RADAR_TEST_KM = 20000;
+    // Íconos de línea para la barra de navegación (mismo trazo, toman el color del texto)
+    const NavIcon = ({ id, active }) => {
+      const paths = {
+        cinema: <><rect x="3" y="4" width="18" height="16" rx="2.5" /><path d="M7.5 4v16M16.5 4v16M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21" /></>,
+        forums: <><path d="M7.9 20A9 9 0 1 0 4 16.1L2.5 21.5Z" /><path d="M8 12h.01M12 12h.01M16 12h.01" /></>,
+        radar: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.2" fill="currentColor" /></>,
+        chats: <><path d="M21.5 2.5 10.5 13.5" /><path d="M21.5 2.5 15 21.5l-4.5-8-8-4.5 19-6.5Z" /></>,
+        critics: <><path d="M4 21.5h15a2.5 2.5 0 0 0 2.5-2.5V4.5A2 2 0 0 0 19.5 2.5H8a2 2 0 0 0-2 2V19a2.5 2.5 0 0 1-2 2.5Zm0 0A2.5 2.5 0 0 1 1.5 19v-8.5A1.5 1.5 0 0 1 3 9h3" /><path d="M10 7h8M10 11h8M10 15h5" /></>,
+        profile: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
+        admin: <><path d="M12 2.8 4.5 5.8v5.9c0 4.6 3.1 8.5 7.5 9.5 4.4-1 7.5-4.9 7.5-9.5V5.8L12 2.8Z" /><path d="m9 12 2.2 2.2L15.5 10" /></>
+      };
+      return (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          {paths[id] || null}
+        </svg>
+      );
+    };
     // ¿Este mensaje lo escribí yo? (sigue funcionando aunque cambie mi nombre)
     const isMyMsgFor = (u, m) => !!u && !!m && (m.senderEmail ? m.senderEmail === u.email : (m.sender === u.name || (u.previousNames || []).includes(m.sender)));
     const fmtDist = (km) => {
@@ -4924,9 +4941,9 @@
 
           <header className={`sticky ${!isAppInstalled ? 'top-8' : 'top-0'} z-40 ${navBg} backdrop-blur-md border-b px-3 py-2 transition-colors`}>
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }}>
+              <div className="flex items-center gap-2 cursor-pointer min-w-0 flex-1 sm:flex-none" onClick={() => { setActiveTab('cinema'); setActiveTopic(null); }}>
                 <span className="block w-11 h-11 shrink-0 rounded-xl overflow-hidden shadow-md shadow-amber-500/20 bg-slate-950"><img src="icon-512x512.png" alt="Plottwistme" width="44" height="44" className="w-full h-full object-cover" style={{ transform: 'scale(1.16)' }} /></span>
-                <h1 className="text-base font-black font-brand text-amber-500 hidden sm:block">
+                <h1 className={`${textScale === 0 ? '' : 'hidden sm:block'} text-base font-black font-brand tracking-tight min-w-0 truncate bg-gradient-to-r from-amber-400 to-rose-500 bg-clip-text text-transparent`}>
                   Plottwistme
                   {currentUser?.kycVerified && <span className="text-xs text-sky-400 ml-1">✔</span>}
                 </h1>
@@ -5703,8 +5720,8 @@
                     return (
                       <button key={id} type="button" onClick={() => { setActiveTab(id); setActiveTopic(null); }} aria-current={active ? 'page' : undefined} className={`relative flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 px-0.5 py-2 ${active ? 'text-amber-500 font-black' : `${mutedText} font-bold`}`}>
                         {active && <span className="absolute top-0 inset-x-3 h-0.5 rounded-full bg-amber-500" />}
-                        <span className="text-xl leading-none">{icon}</span>
-                        <span className="w-full text-center" style={{ fontSize: '0.7rem', lineHeight: '0.9rem', minHeight: '1.8rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', overflowWrap: 'anywhere' }}>{text}</span>
+                        <NavIcon id={id} active={active} />
+                        <span className="w-full text-center" style={{ fontSize: Math.max(...text.split(/[\s-]+/).map(w => w.length)) > 8 ? '10.5px' : '11.5px', lineHeight: '13px', minHeight: '26px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{text}</span>
                         {id === 'chats' && unreadChatsCount > 0 && (
                           <span className="absolute top-1 right-1 bg-rose-600 text-white font-black w-4 h-4 rounded-full flex items-center justify-center animate-pulse" style={{ fontSize: '0.6rem' }}>{unreadChatsCount}</span>
                         )}
@@ -5880,3 +5897,4 @@
   </script>
 </body>
 </html>
+
