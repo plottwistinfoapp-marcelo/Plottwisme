@@ -23,7 +23,7 @@
   <!-- Firebase SDKs con integridad y verificación automática de Cloud Storage -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -41,7 +41,7 @@
     window.auth = getAuth(app);
     window.auth.useDeviceLanguage();
     window.FirebaseFns = {
-      signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail,
+      signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, deleteUser, EmailAuthProvider, reauthenticateWithCredential,
       collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp
     };
   </script>
@@ -433,6 +433,188 @@
 "立即安装",
 "ติดตั้งเลย",
 "立即安裝"
+],
+"✏️ Editar": [
+"✏️ Edit",
+"✏️ Editar",
+"✏️ Modifier",
+"✏️ Modifica",
+"✏️ Bearbeiten",
+"✏️ Изменить",
+"✏️ संपादित करें",
+"✏️ 수정",
+"✏️ 編集",
+"✏️ 编辑",
+"✏️ แก้ไข",
+"✏️ 編輯"
+],
+"🗑️ Borrar": [
+"🗑️ Delete",
+"🗑️ Apagar",
+"🗑️ Supprimer",
+"🗑️ Elimina",
+"🗑️ Löschen",
+"🗑️ Удалить",
+"🗑️ हटाएँ",
+"🗑️ 삭제",
+"🗑️ 削除",
+"🗑️ 删除",
+"🗑️ ลบ",
+"🗑️ 刪除"
+],
+"Guardar": [
+"Save",
+"Salvar",
+"Enregistrer",
+"Salva",
+"Speichern",
+"Сохранить",
+"सहेजें",
+"저장",
+"保存",
+"保存",
+"บันทึก",
+"儲存"
+],
+"¿Borrar este tema? No se puede deshacer.": [
+"Delete this topic? This can't be undone.",
+"Apagar este tópico? Não é possível desfazer.",
+"Supprimer ce sujet ? Cette action est irréversible.",
+"Eliminare questo argomento? Non si può annullare.",
+"Dieses Thema löschen? Das lässt sich nicht rückgängig machen.",
+"Удалить эту тему? Это нельзя отменить.",
+"यह विषय हटाएँ? इसे वापस नहीं किया जा सकता।",
+"이 주제를 삭제할까요? 되돌릴 수 없어요.",
+"このトピックを削除しますか？元に戻せません。",
+"要删除这个话题吗？此操作无法撤销。",
+"ลบหัวข้อนี้ใช่ไหม? ย้อนกลับไม่ได้",
+"要刪除這個話題嗎？此操作無法復原。"
+],
+"¿Borrar esta respuesta?": [
+"Delete this reply?",
+"Apagar esta resposta?",
+"Supprimer cette réponse ?",
+"Eliminare questa risposta?",
+"Diese Antwort löschen?",
+"Удалить этот ответ?",
+"यह जवाब हटाएँ?",
+"이 답글을 삭제할까요?",
+"この返信を削除しますか？",
+"要删除这条回复吗？",
+"ลบการตอบกลับนี้ใช่ไหม?",
+"要刪除這則回覆嗎？"
+],
+"(editado)": [
+"(edited)",
+"(editado)",
+"(modifié)",
+"(modificato)",
+"(bearbeitet)",
+"(изменено)",
+"(संपादित)",
+"(수정됨)",
+"（編集済み）",
+"（已编辑）",
+"(แก้ไขแล้ว)",
+"（已編輯）"
+],
+"No se pudo guardar. Intentá de nuevo.": [
+"Couldn't save. Please try again.",
+"Não foi possível salvar. Tente de novo.",
+"Échec de l’enregistrement. Réessaie.",
+"Impossibile salvare. Riprova.",
+"Speichern fehlgeschlagen. Versuche es erneut.",
+"Не удалось сохранить. Попробуйте снова.",
+"सहेजा नहीं जा सका। फिर कोशिश करें।",
+"저장하지 못했어요. 다시 시도해 주세요.",
+"保存できませんでした。もう一度お試しください。",
+"保存失败，请重试。",
+"บันทึกไม่สำเร็จ ลองอีกครั้ง",
+"儲存失敗，請再試一次。"
+],
+"No se pudo borrar. Intentá de nuevo.": [
+"Couldn't delete. Please try again.",
+"Não foi possível apagar. Tente de novo.",
+"Échec de la suppression. Réessaie.",
+"Impossibile eliminare. Riprova.",
+"Löschen fehlgeschlagen. Versuche es erneut.",
+"Не удалось удалить. Попробуйте снова.",
+"हटाया नहीं जा सका। फिर कोशिश करें।",
+"삭제하지 못했어요. 다시 시도해 주세요.",
+"削除できませんでした。もう一度お試しください。",
+"删除失败，请重试。",
+"ลบไม่สำเร็จ ลองอีกครั้ง",
+"刪除失敗，請再試一次。"
+],
+"🗑️ Eliminar mi cuenta": [
+"🗑️ Delete my account",
+"🗑️ Excluir minha conta",
+"🗑️ Supprimer mon compte",
+"🗑️ Elimina il mio account",
+"🗑️ Mein Konto löschen",
+"🗑️ Удалить мой аккаунт",
+"🗑️ मेरा खाता हटाएँ",
+"🗑️ 내 계정 삭제",
+"🗑️ アカウントを削除",
+"🗑️ 删除我的账号",
+"🗑️ ลบบัญชีของฉัน",
+"🗑️ 刪除我的帳號"
+],
+"Se borrarán tu perfil y tu acceso. No se puede deshacer. Escribí tu contraseña para confirmar.": [
+"Your profile and access will be deleted. This can't be undone. Enter your password to confirm.",
+"Seu perfil e seu acesso serão apagados. Não é possível desfazer. Digite sua senha para confirmar.",
+"Ton profil et ton accès seront supprimés. C’est irréversible. Saisis ton mot de passe pour confirmer.",
+"Il tuo profilo e il tuo accesso verranno eliminati. Non si può annullare. Inserisci la password per confermare.",
+"Dein Profil und dein Zugang werden gelöscht. Das lässt sich nicht rückgängig machen. Gib zur Bestätigung dein Passwort ein.",
+"Ваш профиль и доступ будут удалены. Это нельзя отменить. Введите пароль для подтверждения.",
+"आपकी प्रोफ़ाइल और एक्सेस हटा दिए जाएँगे। इसे वापस नहीं किया जा सकता। पुष्टि के लिए अपना पासवर्ड लिखें।",
+"프로필과 접근 권한이 삭제됩니다. 되돌릴 수 없어요. 확인하려면 비밀번호를 입력하세요.",
+"プロフィールとアクセス権が削除されます。元に戻せません。確認のためパスワードを入力してください。",
+"你的资料和登录权限将被删除，此操作无法撤销。请输入密码确认。",
+"โปรไฟล์และการเข้าถึงของคุณจะถูกลบ ย้อนกลับไม่ได้ ใส่รหัสผ่านเพื่อยืนยัน",
+"你的資料與登入權限將被刪除，此操作無法復原。請輸入密碼確認。"
+],
+"Tu contraseña": [
+"Your password",
+"Sua senha",
+"Ton mot de passe",
+"La tua password",
+"Dein Passwort",
+"Ваш пароль",
+"आपका पासवर्ड",
+"비밀번호",
+"パスワード",
+"你的密码",
+"รหัสผ่านของคุณ",
+"你的密碼"
+],
+"Eliminar definitivamente": [
+"Delete permanently",
+"Excluir definitivamente",
+"Supprimer définitivement",
+"Elimina definitivamente",
+"Endgültig löschen",
+"Удалить навсегда",
+"हमेशा के लिए हटाएँ",
+"영구 삭제",
+"完全に削除",
+"永久删除",
+"ลบถาวร",
+"永久刪除"
+],
+"Tu cuenta fue eliminada.": [
+"Your account was deleted.",
+"Sua conta foi excluída.",
+"Ton compte a été supprimé.",
+"Il tuo account è stato eliminato.",
+"Dein Konto wurde gelöscht.",
+"Ваш аккаунт удалён.",
+"आपका खाता हटा दिया गया है।",
+"계정이 삭제되었어요.",
+"アカウントを削除しました。",
+"你的账号已删除。",
+"ลบบัญชีของคุณแล้ว",
+"你的帳號已刪除。"
 ],
 "¡Te regalaron Premium!": [
 "You were gifted Premium!",
@@ -3625,6 +3807,13 @@
       const [reviewsList, setReviewsList] = useState([]);
       const [forumTopics, setForumTopics] = useState([]);
       const [activeTopic, setActiveTopic] = useState(null);
+      const [editingTopic, setEditingTopic] = useState(false);
+      const [editTopicTitle, setEditTopicTitle] = useState('');
+      const [editTopicContent, setEditTopicContent] = useState('');
+      const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+      const [deleteAccountPass, setDeleteAccountPass] = useState('');
+      const [deleteAccountBusy, setDeleteAccountBusy] = useState(false);
+      const [deleteAccountErr, setDeleteAccountErr] = useState('');
       const [showNewTopicModal, setShowNewTopicModal] = useState(false);
 
       const [newTopicTitle, setNewTopicTitle] = useState('');
@@ -4111,6 +4300,7 @@
             await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", userId), {
               isPremium: nextPrem,
               premiumGift: nextPrem,
+              premiumExpiresAt: null,
               bonusSeen: false,
               roleLabel: nextPrem ? 'Cinéfilo Premium ⭐' : 'Cinéfilo Estándar'
             });
@@ -4467,6 +4657,7 @@
           title: newTopicTitle,
           category: newTopicCategory,
           author: currentUser.name,
+          authorUid: window.auth?.currentUser?.uid || '',
           date: new Date().toISOString().split('T')[0],
           repliesCount: 0,
           content: newTopicContent,
@@ -4499,6 +4690,82 @@
         }
       };
 
+      useEffect(() => { setEditingTopic(false); }, [activeTopic?.id]);
+      const myUid = () => window.auth?.currentUser?.uid || '';
+      const canManageTopic = (t) => !!currentUser && !!t && (isAdmin || (!!t.authorUid && t.authorUid === myUid()));
+      const canManageComment = (c) => !!currentUser && !!c && (isAdmin || (!!c.authorUid && c.authorUid === myUid()));
+
+      const startEditTopic = () => {
+        if (!activeTopic) return;
+        setEditTopicTitle(activeTopic.title || '');
+        setEditTopicContent(activeTopic.content || '');
+        setEditingTopic(true);
+      };
+      const handleSaveTopicEdit = async () => {
+        if (!activeTopic || !editTopicTitle.trim() || !editTopicContent.trim()) return;
+        const patch = { title: editTopicTitle.trim(), content: editTopicContent.trim(), edited: true };
+        try {
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "forums", activeTopic.id), patch);
+          setActiveTopic({ ...activeTopic, ...patch });
+          setEditingTopic(false);
+        } catch (e) {
+          console.error('edit topic error', e);
+          window.alert(tr('No se pudo guardar. Intentá de nuevo.') + (e && e.code ? ' (' + e.code + ')' : ''));
+        }
+      };
+      const handleDeleteTopic = async () => {
+        if (!activeTopic) return;
+        if (!window.confirm(tr('¿Borrar este tema? No se puede deshacer.'))) return;
+        try {
+          await window.FirebaseFns.deleteDoc(window.FirebaseFns.doc(window.db, "forums", activeTopic.id));
+          setEditingTopic(false);
+          setActiveTopic(null);
+        } catch (e) {
+          console.error('delete topic error', e);
+          window.alert(tr('No se pudo borrar. Intentá de nuevo.') + (e && e.code ? ' (' + e.code + ')' : ''));
+        }
+      };
+      const handleDeleteComment = async (c) => {
+        if (!activeTopic || !c) return;
+        if (!window.confirm(tr('¿Borrar esta respuesta?'))) return;
+        const updated = (activeTopic.comments || []).filter(x => x.id !== c.id);
+        try {
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "forums", activeTopic.id), { comments: updated, repliesCount: updated.length });
+          setActiveTopic({ ...activeTopic, comments: updated, repliesCount: updated.length });
+        } catch (e) {
+          console.error('delete comment error', e);
+          window.alert(tr('No se pudo borrar. Intentá de nuevo.') + (e && e.code ? ' (' + e.code + ')' : ''));
+        }
+      };
+
+      const handleDeleteAccount = async () => {
+        const u = window.auth?.currentUser;
+        if (!currentUser || isAdmin || !u || !deleteAccountPass) return;
+        setDeleteAccountBusy(true);
+        setDeleteAccountErr('');
+        try {
+          const cred = window.FirebaseFns.EmailAuthProvider.credential(u.email, deleteAccountPass);
+          await window.FirebaseFns.reauthenticateWithCredential(u, cred);
+        } catch (e) {
+          setDeleteAccountErr(tr('Correo o contraseña incorrectos.'));
+          setDeleteAccountBusy(false);
+          return;
+        }
+        try {
+          await window.FirebaseFns.deleteDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id));
+          await window.FirebaseFns.deleteUser(u);
+          setDeleteAccountOpen(false);
+          setDeleteAccountPass('');
+          setCurrentUser(null);
+          setActiveTab('cinema');
+          window.alert(tr('Tu cuenta fue eliminada.'));
+        } catch (e) {
+          console.error('delete account error', e);
+          setDeleteAccountErr(tr('No se pudo borrar. Intentá de nuevo.') + (e && e.code ? ' (' + e.code + ')' : ''));
+        }
+        setDeleteAccountBusy(false);
+      };
+
       // Mantiene el tema abierto sincronizado con los datos en vivo (likes y respuestas de otros usuarios)
       useEffect(() => {
         if (!activeTopic) return;
@@ -4515,6 +4782,7 @@
         const comment = {
           id: 'c_' + Date.now(),
           author: currentUser.name,
+          authorUid: window.auth?.currentUser?.uid || '',
           date: new Date().toISOString().split('T')[0],
           text: textToAdd
         };
@@ -4680,12 +4948,12 @@
 
           <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
             
-            {currentUser?.isPremium && currentUser?.premiumGift && !currentUser?.bonusSeen && !isAdmin && !bonusDismissed && activeTab !== 'chats' && (
+            {currentUser?.isPremium && (currentUser?.premiumGift || currentUser?.premiumExpiresAt) && !currentUser?.bonusSeen && !isAdmin && !bonusDismissed && activeTab !== 'chats' && (
               <div className="premium-banner bg-gradient-to-r from-amber-500/20 via-rose-500/20 border border-amber-500/50 p-4 rounded-2xl flex items-center justify-between shadow-lg mb-6">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">⭐</span>
                   <div>
-                    <h4 className="font-black text-amber-500 text-sm">{tr('¡Te regalaron Premium!')}</h4>
+                    <h4 className="font-black text-amber-500 text-sm">{currentUser?.premiumGift ? tr('¡Te regalaron Premium!') : tr('¡Beneficio Activo: 15 Días de Premium!')}</h4>
                     <p className={`text-xs ${mutedText}`}>{tr('Funciones avanzadas y radar extendido con Cloud Storage seguro.')}</p>
                   </div>
                 </div>
@@ -4740,13 +5008,35 @@
                         </span>
                         <span className={`text-xs ${mutedText}`}>{tr('Por')} <b>{activeTopic.author}</b> • {fmtDate(activeTopic.date)}</span>
                       </div>
-                      <h2 className={`text-2xl font-black ${textColor}`}>{activeTopic.title}</h2>
-                      <p className={`text-sm ${mutedText} leading-relaxed whitespace-pre-line`}>{activeTopic.content}</p>
+                      {editingTopic ? (
+                        <div className="space-y-3">
+                          <input type="text" value={editTopicTitle} onChange={(e) => setEditTopicTitle(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 text-base font-bold focus:outline-none`} />
+                          <textarea rows="5" value={editTopicContent} onChange={(e) => setEditTopicContent(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 text-sm focus:outline-none`} />
+                          <div className="flex gap-2">
+                            <button type="button" onClick={handleSaveTopicEdit} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2.5 rounded-xl text-sm">{tr('Guardar')}</button>
+                            <button type="button" onClick={() => setEditingTopic(false)} className={`${subCardBg} border ${textColor} font-bold px-4 py-2.5 rounded-xl text-sm`}>{tr('Cancelar')}</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <h2 className={`text-2xl font-black ${textColor}`}>{activeTopic.title}</h2>
+                          <p className={`text-sm ${mutedText} leading-relaxed whitespace-pre-line`}>{activeTopic.content}</p>
+                          {activeTopic.edited && <p className={`text-xs ${mutedText}`}>{tr('(editado)')}</p>}
+                        </>
+                      )}
                       
                       <div className="flex items-center gap-4 pt-2">
                         <button onClick={() => handleLikeTopic(activeTopic)} className={`flex items-center gap-1.5 ${subCardBg} px-3 py-1.5 rounded-xl border text-xs font-bold text-amber-500`}>
                           <span>🍿</span> <span>{tr('{n} Me gusta', { n: activeTopic.likes || 0 })}</span>
                         </button>
+                        {canManageTopic(activeTopic) && !editingTopic && (
+                          <>
+                            {(isAdmin ? true : !!activeTopic.authorUid) && (
+                              <button type="button" onClick={startEditTopic} className={`${subCardBg} px-3 py-1.5 rounded-xl border text-xs font-bold ${textColor}`}>{tr('✏️ Editar')}</button>
+                            )}
+                            <button type="button" onClick={handleDeleteTopic} className="bg-rose-500/15 text-rose-500 px-3 py-1.5 rounded-xl border border-rose-500/40 text-xs font-bold">{tr('🗑️ Borrar')}</button>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -4757,7 +5047,12 @@
                         <div key={c.id} className={`${cardBg} p-4 rounded-2xl space-y-2`}>
                           <div className={`flex justify-between items-center text-xs ${mutedText}`}>
                             <span className={`font-bold ${textColor}`}>{c.author}</span>
-                            <span>{fmtDate(c.date)}</span>
+                            <span className="flex items-center gap-3">
+                              {fmtDate(c.date)}
+                              {canManageComment(c) && (
+                                <button type="button" onClick={() => handleDeleteComment(c)} aria-label="🗑️" className="text-rose-500 text-base px-1">🗑️</button>
+                              )}
+                            </span>
                           </div>
                           <p className={`text-xs ${mutedText} leading-relaxed`}>{c.text}</p>
                         </div>
@@ -5165,6 +5460,24 @@
                     </div>
                   </div>
                 </div>
+
+                {!isAdmin && (
+                  <div className={`${cardBg} border border-rose-500/30 rounded-3xl p-6 space-y-3 shadow-xl`}>
+                    {!deleteAccountOpen ? (
+                      <button type="button" onClick={() => { setDeleteAccountOpen(true); setDeleteAccountErr(''); setDeleteAccountPass(''); }} className="w-full bg-rose-500/15 text-rose-500 border border-rose-500/40 font-bold py-3 rounded-xl text-sm">{tr('🗑️ Eliminar mi cuenta')}</button>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className={`text-sm ${textColor}`}>{tr('Se borrarán tu perfil y tu acceso. No se puede deshacer. Escribí tu contraseña para confirmar.')}</p>
+                        <input type="password" autoComplete="current-password" value={deleteAccountPass} onChange={(e) => setDeleteAccountPass(e.target.value)} placeholder={tr('Tu contraseña')} className={`w-full ${inputBg} rounded-xl p-3 text-sm focus:outline-none`} />
+                        {deleteAccountErr && <p className="text-sm text-rose-500 font-bold">{deleteAccountErr}</p>}
+                        <div className="flex gap-2">
+                          <button type="button" disabled={deleteAccountBusy || !deleteAccountPass} onClick={handleDeleteAccount} className="flex-1 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white font-black py-3 rounded-xl text-sm">{tr('Eliminar definitivamente')}</button>
+                          <button type="button" onClick={() => { setDeleteAccountOpen(false); setDeleteAccountPass(''); setDeleteAccountErr(''); }} className={`${subCardBg} border ${textColor} font-bold px-4 py-3 rounded-xl text-sm`}>{tr('Cancelar')}</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {profileSavedMsg && (
                   <div className="bg-emerald-500/15 border border-emerald-500/50 text-emerald-500 font-black text-sm rounded-2xl px-4 py-3 text-center">{profileSavedMsg}</div>
