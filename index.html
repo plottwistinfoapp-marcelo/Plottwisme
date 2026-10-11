@@ -616,6 +616,20 @@
 "ลบบัญชีของคุณแล้ว",
 "你的帳號已刪除。"
 ],
+"El nombre debe tener entre 2 y 40 letras.": [
+"The name must be between 2 and 40 characters.",
+"O nome deve ter entre 2 e 40 caracteres.",
+"Le nom doit contenir entre 2 et 40 caractères.",
+"Il nome deve avere tra 2 e 40 caratteri.",
+"Der Name muss zwischen 2 und 40 Zeichen lang sein.",
+"Имя должно содержать от 2 до 40 символов.",
+"नाम 2 से 40 अक्षरों के बीच होना चाहिए।",
+"이름은 2자에서 40자 사이여야 해요.",
+"名前は2〜40文字で入力してください。",
+"姓名需为 2 到 40 个字符。",
+"ชื่อต้องมีความยาว 2–40 ตัวอักษร",
+"姓名需為 2 到 40 個字元。"
+],
 "¡Te regalaron Premium!": [
 "You were gifted Premium!",
 "Você ganhou Premium de presente!",
@@ -3237,6 +3251,8 @@
     // Antes de publicar en producción: poner TEST_PHASE_RADAR = false.
     const TEST_PHASE_RADAR = true;
     const RADAR_TEST_KM = 20000;
+    // ¿Este mensaje lo escribí yo? (sigue funcionando aunque cambie mi nombre)
+    const isMyMsgFor = (u, m) => !!u && !!m && (m.senderEmail ? m.senderEmail === u.email : (m.sender === u.name || (u.previousNames || []).includes(m.sender)));
     const fmtDist = (km) => {
       const n = Number(km);
       if (!isFinite(n)) return String(km);
@@ -3828,6 +3844,7 @@
       const [newReviewText, setNewReviewText] = useState('');
 
       const [editPublicBio, setEditPublicBio] = useState('');
+      const [editName, setEditName] = useState('');
       const [editDatingBio, setEditDatingBio] = useState('');
       const [editSex, setEditSex] = useState('Masculino');
       const [editInterestedIn, setEditInterestedIn] = useState('Todos / Cualquiera');
@@ -4022,7 +4039,7 @@
                 if (st0.notify) st0.notify(tr('¡Nuevo Match en Plottwistme! 🍿'), tr('Hiciste match con {name}. ¡Abre el chat!', { name: (st0.peerOf ? st0.peerOf(c).name : c.userName) || tr('alguien') }));
                 if (st0.beep) st0.beep();
               }
-              if (known && last && known[c.id] !== last.id && last.sender !== currentUser.name) {
+              if (known && last && known[c.id] !== last.id && !isMyMsgFor(currentUser, last)) {
                 const st = stateRef.current;
                 const viewing = st.activeTab === 'chats' && st.activeChat && st.activeChat.id === c.id && document.visibilityState === 'visible';
                 if (!viewing) {
@@ -4054,6 +4071,7 @@
       useEffect(() => {
         if (currentUser) {
           setEditPublicBio(currentUser.publicBio || currentUser.bio || '');
+          setEditName(currentUser.name || '');
           setEditDatingBio(currentUser.datingBio || currentUser.bio || '');
           setEditSex(currentUser.sex || 'Masculino');
           setEditInterestedIn(currentUser.interestedIn || 'Todos / Cualquiera');
@@ -4191,6 +4209,7 @@
         const newMsg = {
           id: 'msg_' + Date.now(),
           sender: currentUser.name,
+          senderEmail: currentUser.email,
           text: textToSend,
           isSticker: isSticker,
           time: timeStr
@@ -4589,8 +4608,13 @@
         e.preventDefault();
         if (!currentUser) return;
         const primaryAvatar = editPhotos.length > 0 ? editPhotos[0] : 'https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=500&auto=format&fit=crop&q=80';
+        const newName = (editName || '').trim().replace(/\s+/g, ' ');
+        if (newName.length < 2 || newName.length > 40) { window.alert(tr('El nombre debe tener entre 2 y 40 letras.')); return; }
+        const nameChanged = newName !== currentUser.name;
+        const nameFields = nameChanged ? { name: newName, previousNames: Array.from(new Set([...(currentUser.previousNames || []), currentUser.name])).slice(-10) } : {};
         try {
           await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id), {
+            ...nameFields,
             publicBio: editPublicBio,
             datingBio: editDatingBio,
             sex: editSex,
@@ -4600,7 +4624,7 @@
             socialLinks: { radio: editRadio, tv: editTv },
             muteNotifications: editMuteNotifications
           });
-          setCurrentUser(prev => ({ ...prev, muteNotifications: editMuteNotifications, photos: editPhotos, avatar: primaryAvatar, publicBio: editPublicBio, datingBio: editDatingBio, sex: editSex, interestedIn: editInterestedIn }));
+          setCurrentUser(prev => ({ ...prev, ...nameFields, muteNotifications: editMuteNotifications, photos: editPhotos, avatar: primaryAvatar, publicBio: editPublicBio, datingBio: editDatingBio, sex: editSex, interestedIn: editInterestedIn }));
           setProfileEditing(false);
           setProfileSavedMsg(tr('✔ Perfil guardado'));
           setTimeout(() => setProfileSavedMsg(''), 3500);
@@ -4816,7 +4840,7 @@
       const isChatUnread = (chat) => {
         const last = lastMsgOf(chat);
         if (!last || !currentUser) return false;
-        if (last.sender === currentUser.name) return false;
+        if (isMyMsgFor(currentUser, last)) return false;
         if (activeTab === 'chats' && activeChat && activeChat.id === chat.id) return false;
         return readMap[chat.id] !== last.id;
       };
@@ -5306,7 +5330,7 @@
 
                         <div className="flex-1 overflow-y-auto space-y-3 py-4 px-1">
                           {(activeChat.messages || []).map(msg => {
-                            const isMe = msg.sender === currentUser?.name;
+                            const isMe = isMyMsgFor(currentUser, msg);
                             const isStickerMsg = msg.isSticker || msg.text?.startsWith('STCK:');
                             const sk = isStickerMsg ? parseSticker(msg.text) : null;
 
@@ -5554,6 +5578,10 @@
                   </div>
 
                   <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="font-bold text-amber-500 block mb-2">{tr('Nombre Completo:')}</label>
+                      <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} minLength={2} maxLength={40} autoComplete="name" className={`w-full ${inputBg} rounded-xl p-3 text-sm focus:outline-none`} />
+                    </div>
                     <div>
                       <label className="font-bold text-amber-500 block mb-2">{tr('Mis Fotos Reales ({n} / {m}):', { n: editPhotos.length, m: currentUser?.isPremium ? '10' : '3' })}</label>
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
