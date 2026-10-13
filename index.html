@@ -5590,7 +5590,7 @@
                           </>
                         )}
 
-                        <div className="absolute top-5 left-4 flex gap-2">
+                        <div className="absolute top-5 left-4 right-4 flex flex-wrap gap-2 z-10">
                           <span className="bg-rose-600/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white shadow">{tr(currentCandidate.sex || 'Perfil')} • {tr('Busca:')} {tr(currentCandidate.interestedIn || 'Cualquiera')}</span>
                           {currentCandidate.kycVerified && (
                             <span className="bg-sky-500 text-slate-950 px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 shadow">{tr('✔ Verificado')}</span>
@@ -6262,4 +6262,3 @@
   </script>
 </body>
 </html>
-
