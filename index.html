@@ -1120,6 +1120,20 @@
 "กลับมาดูคนรักหนังคนใหม่ภายหลัง หรือดูโปรไฟล์ซ้ำอีกครั้ง",
 "稍後再來看看新的影迷，或重新瀏覽檔案。"
 ],
+"🔄 Reiniciar radar": [
+"🔄 Reset radar",
+"🔄 Reiniciar radar",
+"🔄 Réinitialiser le radar",
+"🔄 Reimposta radar",
+"🔄 Radar zurücksetzen",
+"🔄 Сбросить радар",
+"🔄 रडार रीसेट करें",
+"🔄 레이더 초기화",
+"🔄 レーダーをリセット",
+"🔄 重置雷达",
+"🔄 รีเซ็ตเรดาร์",
+"🔄 重置雷達"
+],
 "🔄 Volver a ver perfiles": [
 "🔄 See profiles again",
 "🔄 Ver perfis de novo",
@@ -4567,7 +4581,7 @@
 
         return others.filter(u => {
           if (!currentUser?.lat || !currentUser?.lon || !u.lat || !u.lon) {
-            return isAdmin;
+            return isAdmin || TEST_PHASE_RADAR;
           }
           const dist = calculateDistanceKm(currentUser.lat, currentUser.lon, u.lat, u.lon);
           if (!isAdmin && (dist > effectiveRadius || dist > (TEST_PHASE_RADAR ? RADAR_TEST_KM : 1000))) return false;
@@ -5279,6 +5293,9 @@
                             {tr('📡 Ampliar radio a {d}', { d: fmtDist(maxRadarRadius) })}
                           </button>
                         )}
+                        <button onClick={() => { setRadarFilterType('all'); setMatchRadiusKm(maxRadarRadius); setCurrentIndex(0); }} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider shadow-md">
+                          {tr('🔄 Reiniciar radar')}
+                        </button>
                         <button onClick={shareApp} className={`w-full ${subCardBg} border ${textColor} font-black py-3 rounded-xl text-xs uppercase tracking-wider`}>
                           {tr('📲 Invitar amigos cinéfilos')}
                         </button>
@@ -5897,4 +5914,3 @@
   </script>
 </body>
 </html>
-
