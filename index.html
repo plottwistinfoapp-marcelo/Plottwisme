@@ -4885,8 +4885,19 @@
         setActiveTab('cinema');
       };
 
+      // Perfiles descartados con ✖ ("no me interesa"): no vuelven a aparecer hasta reiniciar el radar
+      const hiddenKey = 'plot_hidden_' + (currentUser?.email || '');
+      const [hiddenIds, setHiddenIds] = useState([]);
+      useEffect(() => {
+        try { setHiddenIds(JSON.parse(localStorage.getItem(hiddenKey) || '[]')); } catch (e) { setHiddenIds([]); }
+      }, [hiddenKey]);
+      const saveHidden = (list) => {
+        setHiddenIds(list);
+        try { localStorage.setItem(hiddenKey, JSON.stringify(list)); } catch (e) {}
+      };
+
       const filteredCandidates = useMemo(() => {
-        const others = usersList.filter(u => u.email !== currentUser?.email);
+        const others = usersList.filter(u => u.email !== currentUser?.email && !hiddenIds.includes(u.id));
         const maxLimit = TEST_PHASE_RADAR ? RADAR_TEST_KM : (isAdmin ? 1000 : (currentUser?.isPremium ? 500 : 100));
         const effectiveRadius = Math.min(matchRadiusKm, maxLimit);
 
@@ -4907,13 +4918,13 @@
           }
           return true;
         });
-      }, [usersList, currentUser, matchRadiusKm, radarFilterType, isAdmin]);
+      }, [usersList, currentUser, matchRadiusKm, radarFilterType, isAdmin, hiddenIds]);
 
       const currentCandidate = filteredCandidates[currentIndex];
 
       useEffect(() => {
         setCurrentPhotoIndex(0);
-      }, [currentIndex]);
+      }, [currentIndex, currentCandidate?.id]);
 
       // Cartel "Te regalaron Premium": solo para Premium otorgado por el admin, se muestra una sola vez (se guarda en la cuenta)
       const [bonusDismissed, setBonusDismissed] = useState(false);
@@ -5556,7 +5567,13 @@
                   return (
                     <div className={`w-full max-w-md ${cardBg} rounded-3xl overflow-hidden shadow-2xl`}>
                       <div className="relative h-96 w-full bg-slate-900 select-none">
-                        <img src={activePhoto} alt={currentCandidate.name} className="w-full h-full object-cover transition-opacity duration-300" />
+                        <img src={activePhoto} alt={currentCandidate.name} className="w-full h-full object-cover transition-opacity duration-300"
+                          onClick={(e) => {
+                            if (candidatePhotos.length < 2) return;
+                            const r = e.currentTarget.getBoundingClientRect();
+                            const left = (e.clientX - r.left) < r.width / 2;
+                            setCurrentPhotoIndex(prev => left ? (prev > 0 ? prev - 1 : candidatePhotos.length - 1) : (prev < candidatePhotos.length - 1 ? prev + 1 : 0));
+                          }} />
                         
                         {candidatePhotos.length > 1 && (
                           <div className="absolute top-3 left-3 right-3 flex gap-1 z-10">
@@ -5600,8 +5617,9 @@
                           <p className={`text-xs italic ${textColor}`}>"{tr(currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.')}"</p>
                         </div>
                         
-                        <div className="flex justify-center gap-6 pt-2">
-                          <button onClick={() => setCurrentIndex(prev => prev + 1)} className={`w-14 h-14 rounded-full ${subCardBg} text-rose-500 flex items-center justify-center text-xl font-bold shadow transition-all hover:scale-105`}>✖</button>
+                        <div className="flex justify-center items-center gap-4 pt-2">
+                          <button onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))} disabled={currentIndex === 0} aria-label={tr('Volver')} title={tr('Volver')} className={`w-11 h-11 rounded-full ${subCardBg} ${mutedText} flex items-center justify-center text-lg font-bold shadow transition-all hover:scale-105 disabled:opacity-30`}>↩</button>
+                          <button onClick={() => saveHidden([...hiddenIds, currentCandidate.id])} aria-label="✖" className={`w-14 h-14 rounded-full ${subCardBg} text-rose-500 flex items-center justify-center text-xl font-bold shadow transition-all hover:scale-105`}>✖</button>
                           <button onClick={() => { handleMatchUser(currentCandidate); setCurrentIndex(prev => prev + 1); }} className="w-16 h-16 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20 hover:scale-110 transition-all">🍿</button>
                         </div>
                       </div>
@@ -5619,7 +5637,7 @@
                             {tr('📡 Ampliar radio a {d}', { d: fmtDist(maxRadarRadius) })}
                           </button>
                         )}
-                        <button onClick={() => { setRadarFilterType('all'); setMatchRadiusKm(maxRadarRadius); setCurrentIndex(0); }} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider shadow-md">
+                        <button onClick={() => { setRadarFilterType('all'); setMatchRadiusKm(maxRadarRadius); saveHidden([]); setCurrentIndex(0); }} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider shadow-md">
                           {tr('🔄 Reiniciar radar')}
                         </button>
                         <button onClick={shareApp} className={`w-full ${subCardBg} border ${textColor} font-black py-3 rounded-xl text-xs uppercase tracking-wider`}>
@@ -6244,3 +6262,4 @@
   </script>
 </body>
 </html>
+
