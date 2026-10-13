@@ -3500,6 +3500,111 @@
 "⭐ พรีเมียมถึง {d}",
 "⭐ 高級會員至 {d}",
 "⭐ Premium bitiş: {d}"
+],
+"🌟 Soy crítico o periodista de cine (pedir insignia)": [
+"🌟 I'm a film critic or journalist (request badge)",
+"🌟 Sou crítico ou jornalista de cinema (pedir selo)",
+"🌟 Je suis critique ou journaliste de cinéma (demander le badge)",
+"🌟 Sono critico o giornalista di cinema (richiedi il badge)",
+"🌟 Ich bin Filmkritiker oder Journalist (Abzeichen beantragen)",
+"🌟 Я кинокритик или журналист (запросить значок)",
+"🌟 मैं फ़िल्म समीक्षक या पत्रकार हूँ (बैज माँगें)",
+"🌟 저는 영화 평론가/기자입니다 (배지 신청)",
+"🌟 映画評論家・ジャーナリストです（バッジを申請）",
+"🌟 我是影评人或电影记者（申请徽章）",
+"🌟 ฉันเป็นนักวิจารณ์หรือนักข่าวภาพยนตร์ (ขอตรา)",
+"🌟 我是影評人或電影記者（申請徽章）",
+"🌟 Film eleştirmeniyim veya gazeteciyim (rozet iste)"
+],
+"🌟 Solicitar insignia de Crítico": [
+"🌟 Request Critic badge",
+"🌟 Pedir selo de Crítico",
+"🌟 Demander le badge Critique",
+"🌟 Richiedi il badge Critico",
+"🌟 Kritiker-Abzeichen beantragen",
+"🌟 Запросить значок Критика",
+"🌟 समीक्षक बैज माँगें",
+"🌟 평론가 배지 신청",
+"🌟 批評家バッジを申請",
+"🌟 申请影评人徽章",
+"🌟 ขอตรานักวิจารณ์",
+"🌟 申請影評人徽章",
+"🌟 Eleştirmen rozeti iste"
+],
+"⏳ Solicitud enviada. La revisaremos pronto.": [
+"⏳ Request sent. We'll review it soon.",
+"⏳ Pedido enviado. Vamos analisar em breve.",
+"⏳ Demande envoyée. Nous l'examinerons bientôt.",
+"⏳ Richiesta inviata. La esamineremo presto.",
+"⏳ Anfrage gesendet. Wir prüfen sie bald.",
+"⏳ Запрос отправлен. Скоро рассмотрим.",
+"⏳ अनुरोध भेजा गया। हम जल्द ही इसकी समीक्षा करेंगे।",
+"⏳ 요청을 보냈습니다. 곧 검토하겠습니다.",
+"⏳ 申請を送信しました。まもなく確認します。",
+"⏳ 申请已发送，我们会尽快审核。",
+"⏳ ส่งคำขอแล้ว เราจะตรวจสอบเร็วๆ นี้",
+"⏳ 申請已送出，我們會盡快審核。",
+"⏳ İstek gönderildi. Yakında inceleyeceğiz."
+],
+"🌟 Pidió ser crítico": [
+"🌟 Requested Critic badge",
+"🌟 Pediu ser crítico",
+"🌟 A demandé le badge Critique",
+"🌟 Ha chiesto il badge Critico",
+"🌟 Hat Kritiker-Abzeichen beantragt",
+"🌟 Запросил(а) значок Критика",
+"🌟 समीक्षक बैज माँगा",
+"🌟 평론가 배지 요청함",
+"🌟 批評家バッジを申請中",
+"🌟 已申请影评人徽章",
+"🌟 ขอตรานักวิจารณ์",
+"🌟 已申請影評人徽章",
+"🌟 Eleştirmen rozeti istedi"
+],
+"🔗 Tus medios y redes:": [
+"🔗 Your media and social links:",
+"🔗 Seus meios e redes:",
+"🔗 Vos médias et réseaux :",
+"🔗 I tuoi media e social:",
+"🔗 Deine Medien und Netzwerke:",
+"🔗 Ваши СМИ и соцсети:",
+"🔗 आपके मीडिया और सोशल लिंक:",
+"🔗 내 매체 및 SNS:",
+"🔗 あなたのメディアとSNS：",
+"🔗 你的媒体和社交账号：",
+"🔗 สื่อและโซเชียลของคุณ:",
+"🔗 你的媒體與社群帳號：",
+"🔗 Medya ve sosyal hesapların:"
+],
+"Nombre o enlace": [
+"Name or link",
+"Nome ou link",
+"Nom ou lien",
+"Nome o link",
+"Name oder Link",
+"Название или ссылка",
+"नाम या लिंक",
+"이름 또는 링크",
+"名前またはリンク",
+"名称或链接",
+"ชื่อหรือลิงก์",
+"名稱或連結",
+"Ad veya bağlantı"
+],
+"@usuario o enlace": [
+"@user or link",
+"@usuário ou link",
+"@utilisateur ou lien",
+"@utente o link",
+"@Nutzer oder Link",
+"@имя или ссылка",
+"@यूज़र या लिंक",
+"@사용자 또는 링크",
+"@ユーザー名またはリンク",
+"@用户名或链接",
+"@ผู้ใช้หรือลิงก์",
+"@用戶名或連結",
+"@kullanıcı veya bağlantı"
 ]
 };
     const LANG_INDEX = { en: 0, pt: 1, fr: 2, it: 3, de: 4, ru: 5, hi: 6, ko: 7, ja: 8, zh: 9, th: 10, zt: 11, tr: 12 };
@@ -3547,6 +3652,44 @@
     // Antes de publicar en producción: poner TEST_PHASE_RADAR = false.
     const TEST_PHASE_RADAR = true;
     const RADAR_TEST_KM = 20000;
+    // Medios y redes de los críticos (solo se muestran enlaces http/https seguros)
+    const SOCIAL_FIELDS = [
+      { k: 'radio', icon: '📻', label: 'Radio', ph: 'Nombre o enlace' },
+      { k: 'tv', icon: '📺', label: 'TV', ph: 'Nombre o enlace' },
+      { k: 'instagram', icon: '📸', label: 'Instagram', base: 'https://instagram.com/', ph: '@usuario o enlace' },
+      { k: 'youtube', icon: '▶️', label: 'YouTube', base: 'https://youtube.com/@', ph: '@usuario o enlace' },
+      { k: 'x', icon: '𝕏', label: 'X', base: 'https://x.com/', ph: '@usuario o enlace' },
+      { k: 'tiktok', icon: '🎵', label: 'TikTok', base: 'https://tiktok.com/@', ph: '@usuario o enlace' },
+      { k: 'web', icon: '🌐', label: 'Web / Blog', ph: 'Nombre o enlace' }
+    ];
+    const toSafeUrl = (v, base) => {
+      const t = String(v || '').trim();
+      if (!t) return '';
+      if (/^@/.test(t) && base) { const h = t.slice(1).replace(/[^\w.\-]/g, ''); return h ? base + h : ''; }
+      if (/^https?:\/\//i.test(t)) return t.slice(0, 300);
+      if (/^[a-z][a-z0-9+.\-]*:/i.test(t) || /\s/.test(t)) return '';
+      if (!/\./.test(t)) { const h = t.replace(/[^\w.\-]/g, ''); return base && h ? base + h : ''; }
+      return 'https://' + t.slice(0, 300);
+    };
+    const SocialChips = ({ links, subCardBg, textColor }) => {
+      const items = SOCIAL_FIELDS.map(f => {
+        const raw = String((links || {})[f.k] || '').trim();
+        if (!raw) return null;
+        const url = toSafeUrl(raw, f.base);
+        if (url) return { f, url, text: f.label };
+        // radio/tv/web pueden ser solo un nombre (sin enlace)
+        if (!f.base) return { f, url: '', text: f.label + ': ' + raw.slice(0, 60) };
+        return null;
+      }).filter(Boolean);
+      if (items.length === 0) return null;
+      return (
+        <div className="flex flex-wrap gap-2">
+          {items.map(({ f, url, text }) => url
+            ? <a key={f.k} href={url} target="_blank" rel="noopener noreferrer nofollow" className={`${subCardBg} border ${textColor} px-3 py-1.5 rounded-full text-xs font-bold`}>{f.icon} {text}</a>
+            : <span key={f.k} className={`${subCardBg} border ${textColor} px-3 py-1.5 rounded-full text-xs font-bold`}>{f.icon} {text}</span>)}
+        </div>
+      );
+    };
     // Íconos de línea para la barra de navegación (mismo trazo, toman el color del texto)
     const NavIcon = ({ id, active }) => {
       const paths = {
@@ -4184,6 +4327,7 @@
       const [editPhotos, setEditPhotos] = useState([]);
       const [editRadio, setEditRadio] = useState('');
       const [editTv, setEditTv] = useState('');
+      const [editSocial, setEditSocial] = useState({});
       const [editMuteNotifications, setEditMuteNotifications] = useState(false);
 
       const calculateAge = (birthdateStr) => {
@@ -4411,6 +4555,7 @@
           setEditPhotos(currentUser.photos || (currentUser.avatar ? [currentUser.avatar] : []));
           setEditRadio(currentUser.socialLinks?.radio || '');
           setEditTv(currentUser.socialLinks?.tv || '');
+          setEditSocial({ ...(currentUser.socialLinks || {}) });
           setEditMuteNotifications(currentUser.muteNotifications || false);
           
           if (TEST_PHASE_RADAR) {
@@ -4644,6 +4789,14 @@
             });
           } catch (err) {}
         }
+      };
+
+      const handleRequestCritic = async () => {
+        if (!currentUser?.id || currentUser.isCritic || currentUser.criticRequested) return;
+        try {
+          await window.FirebaseFns.updateDoc(window.FirebaseFns.doc(window.db, "users", currentUser.id), { criticRequested: true });
+          setCurrentUser(prev => ({ ...prev, criticRequested: true }));
+        } catch (err) { try { window.alert(tr('No se pudo guardar. Intentá de nuevo.')); } catch (e) {} }
       };
 
       const handleToggleFounder = async (userId) => {
@@ -4986,10 +5139,10 @@
             interestedIn: editInterestedIn,
             photos: editPhotos,
             avatar: primaryAvatar,
-            socialLinks: { radio: editRadio, tv: editTv },
+            ...(currentUser.isCritic ? { socialLinks: Object.fromEntries(SOCIAL_FIELDS.map(f => [f.k, String(editSocial[f.k] || '').trim().slice(0, 200)])) } : {}),
             muteNotifications: editMuteNotifications
           });
-          setCurrentUser(prev => ({ ...prev, ...nameFields, muteNotifications: editMuteNotifications, photos: editPhotos, avatar: primaryAvatar, publicBio: editPublicBio, datingBio: editDatingBio, sex: editSex, interestedIn: editInterestedIn }));
+          setCurrentUser(prev => ({ ...prev, ...nameFields, ...(prev.isCritic ? { socialLinks: Object.fromEntries(SOCIAL_FIELDS.map(f => [f.k, String(editSocial[f.k] || '').trim().slice(0, 200)])) } : {}), muteNotifications: editMuteNotifications, photos: editPhotos, avatar: primaryAvatar, publicBio: editPublicBio, datingBio: editDatingBio, sex: editSex, interestedIn: editInterestedIn }));
           setProfileEditing(false);
           setProfileSavedMsg(tr('✔ Perfil guardado'));
           setTimeout(() => setProfileSavedMsg(''), 3500);
@@ -5595,6 +5748,9 @@
                           {currentCandidate.kycVerified && (
                             <span className="bg-sky-500 text-slate-950 px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 shadow">{tr('✔ Verificado')}</span>
                           )}
+                          {currentCandidate.isCritic && (
+                            <span className="bg-amber-500 text-slate-950 px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 shadow">{tr('🌟 Crítico')}</span>
+                          )}
                           {currentCandidate.isFounder && (
                             <span className="bg-emerald-500 text-slate-950 px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 shadow">{tr('🏅 Tester fundador')}</span>
                           )}
@@ -5616,6 +5772,7 @@
                           <p className="text-[10px] uppercase font-bold text-rose-500 mb-1">{tr('💬 Descripción para Citas:')}</p>
                           <p className={`text-xs italic ${textColor}`}>"{tr(currentCandidate.datingBio || currentCandidate.bio || 'Amante del buen cine y buscando conectar.')}"</p>
                         </div>
+                        {currentCandidate.isCritic && <SocialChips links={currentCandidate.socialLinks} subCardBg={subCardBg} textColor={textColor} />}
                         
                         <div className="flex justify-center items-center gap-4 pt-2">
                           <button onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))} disabled={currentIndex === 0} aria-label={tr('Volver')} title={tr('Volver')} className={`w-11 h-11 rounded-full ${subCardBg} ${mutedText} flex items-center justify-center text-lg font-bold shadow transition-all hover:scale-105 disabled:opacity-30`}>↩</button>
@@ -5942,6 +6099,17 @@
                       <p className="text-xs font-bold text-rose-500 mb-1">{tr('Biografía de citas')}</p>
                       <p className={`text-sm ${textColor}`}>{tr(currentUser.datingBio || 'Sin biografía de citas todavía.')}</p>
                     </div>
+                    {currentUser.isCritic && (
+                      <div>
+                        <p className="text-xs font-bold text-amber-500 mb-2">{tr('🔗 Tus medios y redes:')}</p>
+                        <SocialChips links={currentUser.socialLinks} subCardBg={subCardBg} textColor={textColor} />
+                      </div>
+                    )}
+                    {!currentUser.isCritic && !isAdmin && (
+                      currentUser.criticRequested
+                        ? <p className={`text-xs ${mutedText} font-bold`}>{tr('⏳ Solicitud enviada. La revisaremos pronto.')}</p>
+                        : <button type="button" onClick={handleRequestCritic} className={`${subCardBg} border ${textColor} font-bold px-4 py-2 rounded-xl text-xs`}>{tr('🌟 Solicitar insignia de Crítico')}</button>
+                    )}
                   </div>
                 )}
 
@@ -6002,6 +6170,18 @@
                       <textarea rows="2" value={editDatingBio} onChange={(e) => setEditDatingBio(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3`} />
                     </div>
 
+                    {currentUser.isCritic && (
+                      <div className="space-y-2">
+                        <label className="block mb-1 text-amber-500 font-bold">{tr('🔗 Tus medios y redes:')}</label>
+                        {SOCIAL_FIELDS.map(f => (
+                          <div key={f.k} className="flex items-center gap-2">
+                            <span className="w-24 shrink-0 font-bold">{f.icon} {f.label}</span>
+                            <input type="text" maxLength={200} value={editSocial[f.k] || ''} onChange={(e) => setEditSocial(prev => ({ ...prev, [f.k]: e.target.value }))} placeholder={tr(f.ph)} autoCapitalize="none" spellCheck="false" className={`flex-1 min-w-0 ${inputBg} rounded-xl p-2.5`} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="flex gap-3">
                       <button type="button" onClick={() => { setProfileEditing(false); setEditPhotos(currentUser.photos || []); setEditPublicBio(currentUser.publicBio || currentUser.bio || ''); setEditDatingBio(currentUser.datingBio || currentUser.bio || ''); }} className={`flex-1 ${subCardBg} border ${textColor} font-black py-3 rounded-xl uppercase`}>{tr('Cancelar')}</button>
                       <button type="submit" className="flex-[2] bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl uppercase shadow-lg">{tr('Guardar Perfil')}</button>
@@ -6036,6 +6216,8 @@
                               {u.name} {u.kycVerified && <span className="text-sky-400 text-xs">✔</span>} {u.isCritic && '🌟'} {u.isPremium && '⭐'} {u.isFounder && '🏅'}
                             </p>
                             <p className="text-xs text-amber-500">{tr(u.roleLabel)}</p>
+                            {u.criticRequested && !u.isCritic && <p className="text-[11px] text-amber-400 font-black">{tr('🌟 Pidió ser crítico')}</p>}
+                            {u.isCritic && <SocialChips links={u.socialLinks} subCardBg={subCardBg} textColor={textColor} />}
                             <p className={`text-[10px] ${mutedText} break-all`}>{u.email}</p>
                           </div>
                         </div>
@@ -6213,6 +6395,10 @@
                         ? <p className="text-rose-500 font-bold mt-1">{tr('✖ Mínimo 6 caracteres (llevás {n})', { n: authPassword.length })}</p>
                         : <p className="text-emerald-500 font-bold mt-1">{tr('✔ Contraseña válida')}</p>)}
                     </div>
+                    <label className={`flex items-start gap-2 ${mutedText} font-bold cursor-pointer`}>
+                      <input type="checkbox" checked={authWantCritic} onChange={(e) => setAuthWantCritic(e.target.checked)} className="mt-0.5 w-4 h-4 accent-amber-500" />
+                      <span>{tr('🌟 Soy crítico o periodista de cine (pedir insignia)')}</span>
+                    </label>
                     <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl uppercase">{tr('Registrarme')}</button>
                     <button type="button" onClick={() => setAuthMode('login')} className="w-full text-amber-500 font-bold py-2 text-xs underline">{tr('¿Ya tenés cuenta? Iniciar sesión')}</button>
                   </form>
@@ -6262,3 +6448,4 @@
   </script>
 </body>
 </html>
+
