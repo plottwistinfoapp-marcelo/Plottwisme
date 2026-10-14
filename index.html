@@ -11,6 +11,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Plottwistme" />
   
+  <meta name="description" content="Plottwistme: la red social para cinéfilos. Debatí películas, seguí a críticos y conectá con gente que ama el cine." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Plottwistme" />
+  <meta property="og:title" content="Plottwistme - Red social cinéfila" />
+  <meta property="og:description" content="Debatí películas, seguí a críticos y conectá con gente que ama el cine. 🎬🍿" />
+  <meta property="og:image" content="https://plottwisme.vercel.app/icon-512x512.png" />
+  <meta property="og:url" content="https://plottwisme.vercel.app/" />
+  <meta name="twitter:card" content="summary" />
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="icon-512x512.png">
   <link rel="apple-touch-icon" href="icon-512x512.png">
@@ -1415,6 +1423,21 @@
 "ลบ",
 "刪除",
 "Sil"
+],
+"Compartir": [
+"Share",
+"Compartilhar",
+"Partager",
+"Condividi",
+"Teilen",
+"Поделиться",
+"साझा करें",
+"공유",
+"共有",
+"分享",
+"แชร์",
+"分享",
+"Paylaş"
 ],
 "Cine de Autor": [
 "Art-house Cinema",
@@ -5655,6 +5678,16 @@
         try { await navigator.clipboard.writeText(text + ' ' + url); window.alert(tr('Enlace copiado. ¡Compartilo con tus amigos!')); } catch (e) { window.prompt(tr('Copiá este enlace:'), url); }
       };
 
+      const shareContent = async (title, body, author) => {
+        const url = window.location.origin;
+        const snippet = String(body || '').replace(/\s+/g, ' ').trim().slice(0, 140);
+        const text = (title ? title + ': ' : '') + '“' + snippet + '” — ' + author + ' · Plottwistme 🎬🍿';
+        try {
+          if (navigator.share) { await navigator.share({ title: 'Plottwistme', text, url }); return; }
+        } catch (e) { return; }
+        try { await navigator.clipboard.writeText(text + ' ' + url); window.alert(tr('Enlace copiado. ¡Compartilo con tus amigos!')); } catch (e) { window.prompt(tr('Copiá este enlace:'), text + ' ' + url); }
+      };
+
       const handlePublishReview = async (e) => {
         e.preventDefault();
         if (!currentUser?.isCritic) return;
@@ -6250,6 +6283,7 @@
                               </div>
                               <div className="flex items-center gap-3">
                                 {isAdmin && (po.reportedBy || []).length > 0 && <span className="text-rose-500 font-bold">⚠ {tr('Reportes:')} {(po.reportedBy || []).length}</span>}
+                                <button type="button" onClick={() => shareContent(po.movie ? '🎬 ' + po.movie : '', po.text, po.author)} className="hover:text-amber-500">📤 {tr('Compartir')}</button>
                                 {currentUser && po.authorUid !== (window.auth?.currentUser?.uid || '-') && <button type="button" onClick={() => handleReportPost(po)} className="hover:text-rose-500">🚩 {tr('Reportar')}</button>}
                                 {currentUser && (isAdmin || (po.authorUid && po.authorUid === window.auth?.currentUser?.uid)) && <button type="button" onClick={() => handleDeletePost(po)} className="hover:text-rose-500">🗑️ {tr('Borrar')}</button>}
                               </div>
@@ -6300,6 +6334,7 @@
                                   <span>🍿</span> <span>{topic.likes || 0}</span>
                                 </button>
                                 <span className="text-amber-500 font-bold cursor-pointer" onClick={() => setActiveTopic(topic)}>💬 {topic.repliesCount || 0}</span>
+                                <button type="button" onClick={() => shareContent(topic.title, topic.content, topic.author)} className="hover:text-amber-500 font-bold">📤</button>
                               </div>
                             </div>
                           </div>
