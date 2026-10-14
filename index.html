@@ -936,6 +936,141 @@
 "目前還沒有話題，快來發起第一個吧！",
 "Henüz tartışma yok. İlkini sen başlat!"
 ],
+"Título del debate": [
+"Discussion title",
+"Título do debate",
+"Titre du débat",
+"Titolo della discussione",
+"Titel der Diskussion",
+"Название обсуждения",
+"चर्चा का शीर्षक",
+"토론 제목",
+"話題のタイトル",
+"话题标题",
+"หัวข้อกระทู้",
+"話題標題",
+"Tartışma başlığı"
+],
+"Categoría": [
+"Category",
+"Categoria",
+"Catégorie",
+"Categoria",
+"Kategorie",
+"Категория",
+"श्रेणी",
+"카테고리",
+"カテゴリー",
+"分类",
+"หมวดหมู่",
+"分類",
+"Kategori"
+],
+"¿Qué querés debatir?": [
+"What do you want to discuss?",
+"O que você quer debater?",
+"De quoi voulez-vous débattre ?",
+"Di cosa vuoi discutere?",
+"Worüber möchtest du diskutieren?",
+"Что вы хотите обсудить?",
+"आप किस पर चर्चा करना चाहते हैं?",
+"어떤 이야기를 나누고 싶으세요?",
+"何について話したいですか？",
+"你想讨论什么？",
+"อยากคุยเรื่องอะไร?",
+"你想討論什麼？",
+"Neyi tartışmak istiyorsun?"
+],
+"Publicar Debate": [
+"Post Discussion",
+"Publicar debate",
+"Publier le débat",
+"Pubblica discussione",
+"Diskussion veröffentlichen",
+"Опубликовать",
+"चर्चा प्रकाशित करें",
+"토론 게시",
+"話題を投稿",
+"发布话题",
+"โพสต์กระทู้",
+"發佈話題",
+"Tartışmayı Yayınla"
+],
+"Cine Clásico": [
+"Classic Cinema",
+"Cinema clássico",
+"Cinéma classique",
+"Cinema classico",
+"Klassisches Kino",
+"Классическое кино",
+"क्लासिक सिनेमा",
+"클래식 영화",
+"クラシック映画",
+"经典电影",
+"ภาพยนตร์คลาสสิก",
+"經典電影",
+"Klasik Sinema"
+],
+"Series": [
+"TV Series",
+"Séries",
+"Séries",
+"Serie TV",
+"Serien",
+"Сериалы",
+"सीरीज़",
+"시리즈",
+"シリーズ",
+"剧集",
+"ซีรีส์",
+"影集",
+"Diziler"
+],
+"Terror y Suspenso": [
+"Horror & Thriller",
+"Terror e suspense",
+"Horreur et suspense",
+"Horror e thriller",
+"Horror & Thriller",
+"Ужасы и триллеры",
+"हॉरर और थ्रिलर",
+"공포·스릴러",
+"ホラー＆スリラー",
+"恐怖与悬疑",
+"สยองขวัญและระทึกขวัญ",
+"恐怖與懸疑",
+"Korku ve Gerilim"
+],
+"Ciencia Ficción": [
+"Sci-Fi",
+"Ficção científica",
+"Science-fiction",
+"Fantascienza",
+"Science-Fiction",
+"Фантастика",
+"साइंस फिक्शन",
+"SF",
+"SF",
+"科幻",
+"ไซไฟ",
+"科幻",
+"Bilim Kurgu"
+],
+"Debate General": [
+"General Discussion",
+"Debate geral",
+"Discussion générale",
+"Discussione generale",
+"Allgemeine Diskussion",
+"Общее обсуждение",
+"सामान्य चर्चा",
+"자유 토론",
+"一般的な話題",
+"综合讨论",
+"พูดคุยทั่วไป",
+"綜合討論",
+"Genel Tartışma"
+],
 "Cine de Autor": [
 "Art-house Cinema",
 "Cinema de autor",
@@ -6334,6 +6469,35 @@
             </div>
           )}
 
+          {showNewTopicModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+              <form onSubmit={handleCreateTopic} className={`${cardBg} border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto`}>
+                <div className={`flex justify-between items-center border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-3`}>
+                  <h3 className={`text-lg font-black ${textColor}`}>{tr('✍️ Nuevo Debate')}</h3>
+                  <button type="button" onClick={() => setShowNewTopicModal(false)} className={`${mutedText} font-bold text-lg`}>✕</button>
+                </div>
+                <div className="space-y-1">
+                  <label className={`text-xs font-bold ${mutedText}`}>{tr('Categoría')}</label>
+                  <select value={newTopicCategory} onChange={(e) => setNewTopicCategory(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 text-sm focus:outline-none`}>
+                    {["Cine de Autor", "Cine Clásico", "Series", "Terror y Suspenso", "Ciencia Ficción", "Debate General"].map(c => <option key={c} value={c}>{tr(c)}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className={`text-xs font-bold ${mutedText}`}>{tr('Título del debate')}</label>
+                  <input type="text" required maxLength={120} value={newTopicTitle} onChange={(e) => setNewTopicTitle(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 text-sm font-bold focus:outline-none`} />
+                </div>
+                <div className="space-y-1">
+                  <label className={`text-xs font-bold ${mutedText}`}>{tr('¿Qué querés debatir?')}</label>
+                  <textarea rows="5" required maxLength={3000} value={newTopicContent} onChange={(e) => setNewTopicContent(e.target.value)} className={`w-full ${inputBg} rounded-xl p-3 text-sm focus:outline-none`} />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl text-sm">{tr('Publicar Debate')}</button>
+                  <button type="button" onClick={() => setShowNewTopicModal(false)} className={`${subCardBg} border ${textColor} font-bold px-4 py-3 rounded-xl text-sm`}>{tr('Cancelar')}</button>
+                </div>
+              </form>
+            </div>
+          )}
+
           {showAuthModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className={`${cardBg} border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto`}>
@@ -6448,4 +6612,3 @@
   </script>
 </body>
 </html>
-
