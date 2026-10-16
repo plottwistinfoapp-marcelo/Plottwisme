@@ -1439,6 +1439,21 @@
 "分享",
 "Paylaş"
 ],
+"Tocá Atrás otra vez para salir": [
+"Press Back again to exit",
+"Toque em Voltar de novo para sair",
+"Appuyez encore sur Retour pour quitter",
+"Premi di nuovo Indietro per uscire",
+"Erneut Zurück drücken zum Beenden",
+"Нажмите «Назад» ещё раз, чтобы выйти",
+"बाहर निकलने के लिए फिर से बैक दबाएँ",
+"한 번 더 누르면 종료됩니다",
+"もう一度戻るを押すと終了します",
+"再按一次返回键退出",
+"กดย้อนกลับอีกครั้งเพื่อออก",
+"再按一次返回鍵退出",
+"Çıkmak için tekrar Geri'ye bas"
+],
 "Cine de Autor": [
 "Art-house Cinema",
 "Cinema de autor",
@@ -4877,6 +4892,37 @@
 
       const currentEmailClean = currentUser?.email?.toLowerCase().trim();
       const isAdmin = currentEmailClean === 'marbuttice@gmail.com' || currentUser?.role === 'admin';
+
+      // Botón Atrás de Android: vuelve a la pantalla anterior en vez de cerrar la app
+      const [exitHint, setExitHint] = useState(false);
+      const backStateRef = React.useRef({});
+      backStateRef.current = { showNewTopicModal, showAuthModal, showMatchModal, showKycModal, showInstallGuideModal, deleteAccountOpen, showEmojiPicker, showStickerPicker, editingTopic, profileEditing, activeTopic, activeChat, activeTab };
+      const ensureBackGuard = () => { try { if (!(window.history.state && window.history.state.ptGuard)) window.history.pushState({ ptGuard: true }, ''); } catch (e) {} };
+      useEffect(() => {
+        ensureBackGuard();
+        const onPop = () => {
+          const st = backStateRef.current;
+          let handled = true;
+          if (st.showNewTopicModal) setShowNewTopicModal(false);
+          else if (st.showAuthModal) setShowAuthModal(false);
+          else if (st.showMatchModal) setShowMatchModal(false);
+          else if (st.showKycModal) setShowKycModal(false);
+          else if (st.showInstallGuideModal) setShowInstallGuideModal(false);
+          else if (st.deleteAccountOpen) setDeleteAccountOpen(false);
+          else if (st.showEmojiPicker || st.showStickerPicker) { setShowEmojiPicker(false); setShowStickerPicker(false); }
+          else if (st.editingTopic) setEditingTopic(false);
+          else if (st.profileEditing) setProfileEditing(false);
+          else if (st.activeTopic) setActiveTopic(null);
+          else if (st.activeChat) setActiveChat(null);
+          else if (st.activeTab !== 'cinema') setActiveTab('cinema');
+          else handled = false;
+          if (handled) { ensureBackGuard(); setExitHint(false); }
+          else { setExitHint(true); setTimeout(() => setExitHint(false), 2500); }
+        };
+        window.addEventListener('popstate', onPop);
+        return () => window.removeEventListener('popstate', onPop);
+      }, []);
+      useEffect(() => { ensureBackGuard(); }, [activeTab, activeTopic, activeChat, showNewTopicModal, showAuthModal, showMatchModal, showKycModal, showInstallGuideModal, deleteAccountOpen, editingTopic, profileEditing]);
       const isStrictAdminUser = currentEmailClean === 'marbuttice@gmail.com';
 
       const handleCityChangeInput = (newCityName) => {
@@ -6993,6 +7039,12 @@
             </div>
           )}
 
+          {exitHint && (
+            <div className="fixed bottom-24 inset-x-0 z-[60] flex justify-center pointer-events-none px-4">
+              <span className="bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg">{tr('Tocá Atrás otra vez para salir')}</span>
+            </div>
+          )}
+
           {showNewTopicModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
               <form onSubmit={handleCreateTopic} className={`${cardBg} border border-amber-500/40 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto`}>
@@ -7141,4 +7193,3 @@
   </script>
 </body>
 </html>
-
