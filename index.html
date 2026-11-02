@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Plottwistme - Red Social Cinéfila & Citas</title>
   
   <meta name="theme-color" content="#020617" />
@@ -70,6 +70,10 @@
     .text-xs { font-size: 0.9375rem !important; line-height: 1.4rem !important; }
     .text-sm { font-size: 1.0625rem !important; line-height: 1.55rem !important; }
     html { -webkit-text-size-adjust: 100%; }
+    /* iPhone (app agregada a inicio): dejar libre la zona de la hora/batería */
+    body { padding-top: env(safe-area-inset-top); }
+    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top); background: #020617; z-index: 9999; pointer-events: none; }
+    .sticky.top-0 { top: env(safe-area-inset-top); }
     .font-brand { font-family: 'Outfit', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
