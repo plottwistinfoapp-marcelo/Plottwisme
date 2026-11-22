@@ -1,8 +1,7 @@
 {
-  "functions": {
-    "api/cines.js": { "maxDuration": 30 }
-  },
-  "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ]
+  "functions": { "api/cines.js": { "maxDuration": 30 } },
+  "redirects": [
+    { "source": "/play", "destination": "https://play.google.com/store/apps/details?id=com.plottwisme.twa", "permanent": false }
+  ],
+  "rewrites": [ { "source": "/((?!api/).*)", "destination": "/index.html" } ]
 }
